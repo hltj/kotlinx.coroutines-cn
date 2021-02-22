@@ -1,7 +1,7 @@
 # 使用协程进行 UI 编程指南
 
 本教程假定你已经熟悉了<!--
--->包含 [kotlinx.coroutines 指南](../docs/coroutines-guide.md)在内的基础协程概念，而本教程提供了<!--
+-->包含 [kotlinx.coroutines 指南](../docs/topics/coroutines-guide.md)在内的基础协程概念，而本教程提供了<!--
 -->有关如何在 UI 应用程序中使用协程的具体示例。
 
 所有的 UI 程序库都有一个共同的特征。即所有的 UI 状态都被限制在单个的<!--
@@ -456,7 +456,7 @@ See [the corresponding documentation](https://developer.android.com/topic/librar
 Parent-child relation between jobs forms a hierarchy. A coroutine that performs some background job on behalf of
 the activity can create further children coroutines. The whole tree of coroutines gets cancelled
 when the parent job is cancelled. An example of that is shown in the
-["Children of a coroutine"](../docs/coroutine-context-and-dispatchers.md#children-of-a-coroutine) section of the guide to coroutines.
+["Children of a coroutine"](../docs/topics/coroutine-context-and-dispatchers.md#children-of-a-coroutine) section of the guide to coroutines.
 
 <!--- CLEAR -->
 
