@@ -1041,9 +1041,7 @@ as such, there is a family of flattening operators on flows.
 
 ### flatMapConcat
 
-Concatenating mode is implemented by [flatMapConcat] and [flattenConcat] operators. They are the most direct
-analogues of the corresponding sequence operators. They wait for the inner flow to complete before
-starting to collect the next one as the following example shows:
+连接模式由 [flatMapConcat] 与 [flattenConcat] 操作符实现。它们是相应序列操作符最相近的类似物。它们在等待内部流完成之后开始收集下一个值，如下面的示例所示：
 
 ```kotlin
 import kotlinx.coroutines.*
