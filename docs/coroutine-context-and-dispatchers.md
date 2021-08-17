@@ -8,6 +8,8 @@
   * [调度器与线程](#调度器与线程)
   * [非受限调度器 vs 受限调度器](#非受限调度器-vs-受限调度器)
   * [调试协程与线程](#调试协程与线程)
+    * [用 IDEA 调试](#用-idea-调试)
+    * [用日志调试](#用日志调试)
   * [在不同线程间跳转](#在不同线程间跳转)
   * [上下文中的作业](#上下文中的作业)
   * [子协程](#子协程)
@@ -30,8 +32,8 @@
 
 ### 调度器与线程
 
-协程上下文包含一个 _协程调度器_ （参见 [CoroutineDispatcher]）它确定了哪些线程或与线程<!--
--->相对应的协程执行。协程调度器可以将协程限制在<!--
+协程上下文包含一个 _协程调度器_ （参见 [CoroutineDispatcher]）它确定了相关的协程在哪个线程或哪些线程<!--
+-->上执行。协程调度器可以将协程限制在<!--
 -->一个特定的线程执行，或将它分派到一个线程池，亦或是让它不受限地运行。
 
 所有的协程构建器诸如 [launch] 和 [async] 接收一个可选的
@@ -85,10 +87,10 @@ main runBlocking      : I'm working in thread main
 [Dispatchers.Unconfined] 是一个特殊的调度器且似乎也运行在 `main` 线程中，但实际上，
 它是一种不同的机制，这会在后文中讲到。
 
-该默认调度器，当协程在 [GlobalScope] 中启动的时候使用，
-它代表 [Dispatchers.Default] 使用了共享的后台线程池，
-所以 `GlobalScope.launch { …… }` 也可以使用相同的调度器—— `launch(Dispatchers.Default) { …… }`。
-  
+当协程在 [GlobalScope] 中启动时，使用的是由 [Dispatchers.Default] 代表的默认调度器。
+默认调度器使用共享的后台线程池。
+所以 `launch(Dispatchers.Default) { …… }` 与 `GlobalScope.launch { …… }` 使用相同的调度器。
+
 [newSingleThreadContext] 为协程的运行启动了一个线程。
 一个专用的线程是一种非常昂贵的资源。
 在真实的应用程序中两者都必须被释放，当不再需要的时候，使用 [close][ExecutorCoroutineDispatcher.close]
@@ -154,9 +156,35 @@ main runBlocking: After delay in thread main
 ### 调试协程与线程
 
 协程可以在一个线程上挂起并在其它线程上恢复。
-甚至一个单线程的调度器也是难以<!--
--->弄清楚协程在何时何地正在做什么事情。使用通常调试应用程序的方法是让<!--
--->线程在每一个日志文件的日志声明中打印线程的名字。这种特性在日志框架中是<!--
+如果没有特殊工具，甚至对于一个单线程的调度器也是难以<!--
+-->弄清楚协程在何时何地正在做什么事情。 
+
+#### 用 IDEA 调试
+
+Kotlin 插件的协程调试器简化了 IntelliJ IDEA 中的协程调试.
+
+> 调试适用于 1.3.8 或更高版本的 `kotlinx-coroutines-core`。
+
+**调试**工具窗口包含 **Coroutines** 标签。在这个标签中，你可以同时找到运行中与已挂起的协程的相关信息。
+这些协程以它们所运行的调度器进行分组。
+
+![Debugging coroutines](images/coroutine-idea-debugging-1.png)
+
+使用协程调试器，你可以：
+* 检查每个协程的状态。
+* 查看正在运行的与挂起的的协程的局部变量以及捕获变量的值。
+* 查看完整的协程创建栈以及协程内部的调用栈。栈包含所有<!--
+-->带有变量的栈帧，甚至包含那些在标准调试期间会丢失的栈帧。
+* 获取包含每个协程的状态以及栈信息的完整报告。要获取它，请右键单击 **Coroutines** 选项卡，然后点击 **Get Coroutines Dump**。
+
+要开始协程调试，你只需要设置断点并在调试模式下运行应用程序即可。
+
+在这篇[教程](https://kotlinlang.org/docs/tutorials/coroutines/debug-coroutines-with-idea.html)中学习更多的协程调试知识。
+
+#### 用日志调试
+
+另一种调试线程应用程序<!--
+-->而不使用协程调试器的方法是让线程在每一个日志文件的日志声明中打印线程的名字。这种特性在日志框架中是<!--
 -->普遍受支持的。但是在使用协程时，单独的线程名称不会给出很多协程上下文信息，所以
 `kotlinx.coroutines` 包含了调试工具来让它更简单。
 
@@ -483,7 +511,7 @@ I'm working in thread DefaultDispatcher-worker-1 @test#2
 你应该已经熟悉了协程作用域，因为所有的协程构建器都声明为在它之上的扩展。
 
 我们通过创建一个 [CoroutineScope] 实例来管理协程的生命周期，并使它与
-activit 的生命周期相关联。`CoroutineScope` 可以通过 [CoroutineScope()] 创建或者通过[MainScope()]
+activity 的生命周期相关联。`CoroutineScope` 可以通过 [CoroutineScope()] 创建或者通过[MainScope()]
 工厂函数。前者创建了一个通用作用域，而后者为使用 [Dispatchers.Main] 作为默认调度器的 UI 应用程序
 创建作用域：
 
@@ -501,21 +529,8 @@ class Activity {
 
 </div>
 
-或者，我们可以在这个 `Activity` 类中实现 [CoroutineScope] 接口。最好的方法是<!--
--->使用具有默认工厂函数的委托。
-我们也可以将所需的调度器与作用域合并（我们在这个示例中使用 [Dispatchers.Default]）。
-
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
-
-```kotlin
-    class Activity : CoroutineScope by CoroutineScope(Dispatchers.Default) {
-    // 继续运行……
-```
-
-</div>
-
-现在，在这个 `Activity` 的作用域中启动协程，且没有明确<!--
--->指定它们的上下文。在示例中，我们启动了十个协程并延迟不同的时间：
+现在，我们可以使用定义的 `scope` 在这个 `Activity` 的作用域内启动协程。
+对于该示例，我们启动了十个协程，它们会延迟不同的时间：
 
 <div class="sample" markdown="1" theme="idea" data-highlight-only>
 
@@ -524,7 +539,7 @@ class Activity {
     fun doSomething() {
         // 在示例中启动了 10 个协程，且每个都工作了不同的时长
         repeat(10) { i ->
-            launch {
+            mainScope.launch {
                 delay((i + 1) * 200L) // 延迟 200 毫秒、400 毫秒、600 毫秒等等不同的时间
                 println("Coroutine $i is done")
             }
@@ -544,21 +559,19 @@ class Activity {
 <div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
 
 ```kotlin
-import kotlin.coroutines.*
 import kotlinx.coroutines.*
 
-class Activity : CoroutineScope by CoroutineScope(Dispatchers.Default) {
-
+class Activity {
+    private val mainScope = CoroutineScope(Dispatchers.Default) // use Default for test purposes
+    
     fun destroy() {
-        cancel() // Extension on CoroutineScope
+        mainScope.cancel()
     }
-    // 继续运行……
 
-    // class Activity continues
     fun doSomething() {
         // 在示例中启动了 10 个协程，且每个都工作了不同的时长
         repeat(10) { i ->
-            launch {
+            mainScope.launch {
                 delay((i + 1) * 200L) // 延迟 200 毫秒、400 毫秒、600 毫秒等等不同的时间
                 println("Coroutine $i is done")
             }
@@ -596,6 +609,9 @@ Destroying activity!
 
 你可以看到，只有前两个协程打印了消息，而另一个协程在
 `Activity.destroy()` 中单次调用了 `job.cancel()`。
+
+> 注意，Android 在所有具有生命周期的实体中都对协程作用域提供了一等的支持。
+请查看[相关文档](https://developer.android.com/topic/libraries/architecture/coroutines#lifecyclescope)。
 
 ### 线程局部数据
 
@@ -637,7 +653,7 @@ fun main() = runBlocking<Unit> {
 在这个例子中我们使用 [Dispatchers.Default] 在后台线程池中启动了一个新的协程，所以<!--
 -->它工作在线程池中的不同线程中，但它仍然具有线程局部变量的值，
 我们指定使用 `threadLocal.asContextElement(value = "launch")`，
-无论协程执行在什么线程中都是没有问题的。
+无论协程执行在哪个线程中都是没有问题的。
 因此，其输出如（[调试](#调试协程与线程)）所示：
 
 ```text

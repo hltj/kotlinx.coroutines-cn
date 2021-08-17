@@ -42,12 +42,15 @@ class IntegrationTest(
             if (delay) delay(1)
             // does not send anything
         }
-        assertNSE { pub.awaitFirst() }
+        assertFailsWith<NoSuchElementException> { pub.awaitFirst() }
         assertEquals("OK", pub.awaitFirstOrDefault("OK"))
         assertNull(pub.awaitFirstOrNull())
         assertEquals("ELSE", pub.awaitFirstOrElse { "ELSE" })
-        assertNSE { pub.awaitLast() }
-        assertNSE { pub.awaitSingle() }
+        assertFailsWith<NoSuchElementException> { pub.awaitLast() }
+        assertFailsWith<NoSuchElementException> { pub.awaitSingle() }
+        assertEquals("OK", pub.awaitSingleOrDefault("OK"))
+        assertNull(pub.awaitSingleOrNull())
+        assertEquals("ELSE", pub.awaitSingleOrElse { "ELSE" })
         var cnt = 0
         pub.collect { cnt++ }
         assertEquals(0, cnt)
@@ -65,6 +68,9 @@ class IntegrationTest(
         assertEquals("OK", pub.awaitFirstOrElse { "ELSE" })
         assertEquals("OK", pub.awaitLast())
         assertEquals("OK", pub.awaitSingle())
+        assertEquals("OK", pub.awaitSingleOrDefault("!"))
+        assertEquals("OK", pub.awaitSingleOrNull())
+        assertEquals("OK", pub.awaitSingleOrElse { "ELSE" })
         var cnt = 0
         pub.collect {
             assertEquals("OK", it)
@@ -84,10 +90,13 @@ class IntegrationTest(
         }
         assertEquals(1, pub.awaitFirst())
         assertEquals(1, pub.awaitFirstOrDefault(0))
-        assertEquals(n, pub.awaitLast())
         assertEquals(1, pub.awaitFirstOrNull())
         assertEquals(1, pub.awaitFirstOrElse { 0 })
-        assertIAE { pub.awaitSingle() }
+        assertEquals(n, pub.awaitLast())
+        assertFailsWith<IllegalArgumentException> { pub.awaitSingle() }
+        assertFailsWith<IllegalArgumentException> { pub.awaitSingleOrDefault(0) }
+        assertFailsWith<IllegalArgumentException> { pub.awaitSingleOrNull() }
+        assertFailsWith<IllegalArgumentException> { pub.awaitSingleOrElse { 0 } }
         checkNumbers(n, pub)
         val channel = pub.openSubscription()
         checkNumbers(n, channel.asPublisher(ctx(coroutineContext)))
@@ -129,21 +138,4 @@ class IntegrationTest(
         assertEquals(n, last)
     }
 
-    private inline fun assertIAE(block: () -> Unit) {
-        try {
-            block()
-            expectUnreached()
-        } catch (e: Throwable) {
-            assertTrue(e is IllegalArgumentException)
-        }
-    }
-
-    private inline fun assertNSE(block: () -> Unit) {
-        try {
-            block()
-            expectUnreached()
-        } catch (e: Throwable) {
-            assertTrue(e is NoSuchElementException)
-        }
-    }
 }

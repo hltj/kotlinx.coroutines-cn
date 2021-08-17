@@ -10,7 +10,7 @@
     * [挂起函数](#挂起函数)
     * [流](#流)
   * [流是冷的](#流是冷的)
-  * [流取消](#流取消)
+  * [流取消基础](#流取消基础)
   * [流构建器](#流构建器)
   * [过渡流操作符](#过渡流操作符)
     * [转换操作符](#转换操作符)
@@ -39,9 +39,11 @@
   * [流完成](#流完成)
     * [命令式 finally 块](#命令式-finally-块)
     * [声明式处理](#声明式处理)
-    * [仅限上游异常](#仅限上游异常)
+    * [成功完成](#成功完成)
   * [命令式还是声明式](#命令式还是声明式)
   * [启动流](#启动流)
+  * [流取消检测](#流取消检测)
+    * [让繁忙的流可取消](#让繁忙的流可取消)
   * [流（Flow）与响应式流（Reactive Streams）](#flow-and-reactive-streams)
 
 <!--- END -->
@@ -54,16 +56,16 @@
 ### 表示多个值
 
 在 Kotlin 中可以使用[集合][collections]来表示多个值。 
-比如说，我们可以拥有一个函数 `foo()`，它返回一个包含三个数字的 [List]，
+比如说，我们有一个 `simple` 函数，它返回一个包含三个数字的 [List]，
 然后使用 [forEach] 打印它们：
 
 
 
 ```kotlin
-fun foo(): List<Int> = listOf(1, 2, 3)
+fun simple(): List<Int> = listOf(1, 2, 3)
  
 fun main() {
-    foo().forEach { value -> println(value) } 
+    simple().forEach { value -> println(value) } 
 }
 ```
 
@@ -89,7 +91,7 @@ fun main() {
 
 
 ```kotlin
-fun foo(): Sequence<Int> = sequence { // 序列构建器
+fun simple(): Sequence<Int> = sequence { // 序列构建器
     for (i in 1..3) {
         Thread.sleep(100) // 假装我们正在计算
         yield(i) // 产生下一个值
@@ -97,13 +99,13 @@ fun foo(): Sequence<Int> = sequence { // 序列构建器
 }
 
 fun main() {
-    foo().forEach { value -> println(value) } 
+    simple().forEach { value -> println(value) } 
 }
 ```  
 
 
 
-> 你可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-02.kt)获取完整代码。
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-02.kt)获取完整代码。
 
 这段代码输出相同的数字，但在打印每个数字之前等待 100 毫秒。
 
@@ -116,7 +118,7 @@ fun main() {
 #### 挂起函数
 
 然而，计算过程阻塞运行该代码的主线程。
-当这些值由异步代码计算时，我们可以使用 `suspend` 修饰符标记函数 `foo`，
+当这些值由异步代码计算时，我们可以使用 `suspend` 修饰符标记函数 `simple`，
 这样它就可以在不阻塞的情况下执行其工作并将结果作为列表返回：
 
 
@@ -125,13 +127,13 @@ fun main() {
 import kotlinx.coroutines.*                 
                            
 //sampleStart
-suspend fun foo(): List<Int> {
+suspend fun simple(): List<Int> {
     delay(1000) // 假装我们在这里做了一些异步的事情
     return listOf(1, 2, 3)
 }
 
 fun main() = runBlocking<Unit> {
-    foo().forEach { value -> println(value) } 
+    simple().forEach { value -> println(value) } 
 }
 //sampleEnd
 ```  
@@ -160,7 +162,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart               
-fun foo(): Flow<Int> = flow { // 流构建器
+fun simple(): Flow<Int> = flow { // 流构建器
     for (i in 1..3) {
         delay(100) // 假装我们在这里做了一些有用的事情
         emit(i) // 发送下一个值
@@ -176,7 +178,7 @@ fun main() = runBlocking<Unit> {
         }
     }
     // 收集这个流
-    foo().collect { value -> println(value) } 
+    simple().collect { value -> println(value) } 
 }
 //sampleEnd
 ```  
@@ -201,18 +203,18 @@ I'm not blocked 3
 
 注意使用 [Flow] 的代码与先前示例的下述区别：
 
-* 名为 [flow] 的 [Flow] 类型构建器函数。
+* 名为 [flow] 的 [Flow][_flow] 类型构建器函数。
 * `flow { ... }` 构建块中的代码可以挂起。
-* 函数 `foo()` 不再标有 `suspend` 修饰符。  
+* 函数 `simple` 不再标有 `suspend` 修饰符。  
 * 流使用 [emit][FlowCollector.emit] 函数 _发射_ 值。 
 * 流使用 [collect][collect] 函数 _收集_ 值。
 
-> 我们可以在 `foo` 的 `flow { ... }` 函数体内使用 [delay] 代替 `Thread.sleep`
+> 我们可以在 `simple` 的 `flow { ... }` 函数体内使用 `Thread.sleep` 代替 [delay]
 以观察主线程在本案例中被阻塞了。
 
 ### 流是冷的
 
-Flow 是一种类似于序列的冷流 &mdash; 这段 [flow] 构建器中的代码<!--
+Flow 是一种类似于序列的冷流 &mdash; 这段 [flow][_flow] 构建器中的代码<!--
 -->直到流被收集的时候才运行。这在以下的示例中非常明显：
 
 
@@ -222,7 +224,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart      
-fun foo(): Flow<Int> = flow { 
+fun simple(): Flow<Int> = flow { 
     println("Flow started")
     for (i in 1..3) {
         delay(100)
@@ -231,8 +233,8 @@ fun foo(): Flow<Int> = flow {
 }
 
 fun main() = runBlocking<Unit> {
-    println("Calling foo...")
-    val flow = foo()
+    println("Calling simple function...")
+    val flow = simple()
     println("Calling collect...")
     flow.collect { value -> println(value) } 
     println("Calling collect again...")
@@ -248,7 +250,7 @@ fun main() = runBlocking<Unit> {
 打印如下：
 
 ```text
-Calling foo...
+Calling simple function...
 Calling collect...
 Flow started
 1
@@ -263,17 +265,15 @@ Flow started
 
 <!--- TEST -->
  
-这是返回一个流的 `foo()` 函数没有标记 `suspend` 修饰符的主要原因。
-通过它自己，`foo()` 会尽快返回且不会进行任何等待。该流在每次收集的时候启动，
+这是返回一个流的 `simple` 函数没有标记 `suspend` 修饰符的主要原因。
+通过它自己，`simple()` 调用会尽快返回且不会进行任何等待。该流在每次收集的时候启动，
 这就是为什么当我们再次调用 `collect` 时我们会看到“Flow started”。
 
-### 流取消
+### 流取消基础
 
-流采用与协程同样的协作取消。然而，流的基础设施未引入<!--
--->其他取消点。取消完全透明。像往常一样，流的收集可以在<!--
--->当流在一个可取消的挂起函数（例如 [delay]）中挂起的时候取消，否则不能取消。
-
-下面的示例展示了当 [withTimeoutOrNull] 块中代码在运行的时候流是如何在超时的情况下取消<!--
+流采用与协程同样的协作取消。像往常一样，流的收集可以在<!--
+-->当流在一个可取消的挂起函数（例如 [delay]）中挂起的时候取消。
+以下示例展示了当 [withTimeoutOrNull] 块中代码在运行的时候流是如何在超时的情况下取消<!--
 -->并停止执行其代码的：
 
 
@@ -283,7 +283,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart           
-fun foo(): Flow<Int> = flow { 
+fun simple(): Flow<Int> = flow { 
     for (i in 1..3) {
         delay(100)          
         println("Emitting $i")
@@ -293,7 +293,7 @@ fun foo(): Flow<Int> = flow {
 
 fun main() = runBlocking<Unit> {
     withTimeoutOrNull(250) { // 在 250 毫秒后超时
-        foo().collect { value -> println(value) } 
+        simple().collect { value -> println(value) } 
     }
     println("Done")
 }
@@ -304,7 +304,7 @@ fun main() = runBlocking<Unit> {
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-06.kt)获取完整代码。
 
-注意，在 `foo()` 函数中流仅发射两个数字，产生以下输出：
+注意，在 `simple` 函数中流仅发射两个数字，产生以下输出：
 
 ```text
 Emitting 1
@@ -316,9 +316,11 @@ Done
 
 <!--- TEST -->
 
+See [Flow cancellation checks](#flow-cancellation-checks) section for more details.
+
 ### 流构建器
 
-先前示例中的 `flow { ... }` 构建器是最基础的一个。还有其它构建器<!--
+先前示例中的 `flow { ... }` 构建器是最基础的一个。还有其他构建器<!--
 -->使流的声明更简单：
 
 * [flowOf] 构建器定义了一个发射固定值集的流。
@@ -590,14 +592,14 @@ Filter 5
 ### 流上下文
 
 流的收集总是在调用协程的上下文中发生。例如，如果有一个流
-`foo`，然后以下代码在它的编写者指定的上下文中<!--
--->运行，而无论流 `foo` 的实现细节如何：
+`simple`，然后以下代码在它的编写者指定的上下文中<!--
+-->运行，而无论流 `simple` 的实现细节如何：
 
 
 
 ```kotlin
 withContext(context) {
-    foo.collect { value ->
+    simple().collect { value ->
         println(value) // 运行在指定上下文中
     }
 }
@@ -610,7 +612,7 @@ withContext(context) {
 流的该属性称为 _上下文保存_ 。
 
 所以默认的，`flow { ... }` 构建器中的代码运行在相应流的收集器<!--
--->提供的上下文中。举例来说，考虑打印线程的 `foo` 的实现，
+-->提供的上下文中。举例来说，考虑打印线程的一个 `simple` 函数的实现，
 它被调用并发射三个数字：
 
 
@@ -622,15 +624,15 @@ import kotlinx.coroutines.flow.*
 fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
            
 //sampleStart
-fun foo(): Flow<Int> = flow {
-    log("Started foo flow")
+fun simple(): Flow<Int> = flow {
+    log("Started simple flow")
     for (i in 1..3) {
         emit(i)
     }
 }  
 
 fun main() = runBlocking<Unit> {
-    foo().collect { value -> log("Collected $value") } 
+    simple().collect { value -> log("Collected $value") } 
 }            
 //sampleEnd
 ```                
@@ -642,7 +644,7 @@ fun main() = runBlocking<Unit> {
 运行这段代码：
 
 ```text  
-[main @coroutine#1] Started foo flow
+[main @coroutine#1] Started simple flow
 [main @coroutine#1] Collected 1
 [main @coroutine#1] Collected 2
 [main @coroutine#1] Collected 3
@@ -650,7 +652,7 @@ fun main() = runBlocking<Unit> {
 
 <!--- TEST FLEXIBLE_THREAD -->
 
-由于 `foo().collect` 是在主线程调用的，则 `foo` 的流主体也是在主线程调用的。
+由于 `simple().collect` 是在主线程调用的，那么 `simple` 的流主体也是在主线程调用的。
 这是快速运行或异步代码的理想默认形式，它不关心执行的上下文并且不会<!--
 -->阻塞调用者。
 
@@ -670,7 +672,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
                       
 //sampleStart
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     // 在流构建器中更改消耗 CPU 代码的上下文的错误方式
     kotlinx.coroutines.withContext(Dispatchers.Default) {
         for (i in 1..3) {
@@ -681,7 +683,7 @@ fun foo(): Flow<Int> = flow {
 }
 
 fun main() = runBlocking<Unit> {
-    foo().collect { value -> println(value) } 
+    simple().collect { value -> println(value) } 
 }            
 //sampleEnd
 ```  
@@ -695,7 +697,7 @@ fun main() = runBlocking<Unit> {
 ```text
 Exception in thread "main" java.lang.IllegalStateException: Flow invariant is violated:
 		Flow was collected in [CoroutineId(1), "coroutine#1":BlockingCoroutine{Active}@5511c7f8, BlockingEventLoop@2eac3323],
-		but emission happened in [CoroutineId(1), "coroutine#1":DispatchedCoroutine{Active}@2dae0000, DefaultDispatcher].
+		but emission happened in [CoroutineId(1), "coroutine#1":DispatchedCoroutine{Active}@2dae0000, Dispatchers.Default].
 		Please refer to 'flow' documentation or use 'flowOn' instead
 	at ...
 ``` 
@@ -717,7 +719,7 @@ import kotlinx.coroutines.flow.*
 fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
            
 //sampleStart
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     for (i in 1..3) {
         Thread.sleep(100) // 假装我们以消耗 CPU 的方式进行计算
         log("Emitting $i")
@@ -726,7 +728,7 @@ fun foo(): Flow<Int> = flow {
 }.flowOn(Dispatchers.Default) // 在流构建器中改变消耗 CPU 代码上下文的正确方式
 
 fun main() = runBlocking<Unit> {
-    foo().collect { value ->
+    simple().collect { value ->
         log("Collected $value") 
     } 
 }            
@@ -757,7 +759,7 @@ fun main() = runBlocking<Unit> {
 
 从收集流所花费的时间来看，将流的不同部分运行在不同的协程中<!--
 -->将会很有帮助，特别是当涉及到长时间运行的异步操作时。例如，考虑一种情况，
-`foo()` 流的发射很慢，它每花费 100 毫秒才产生一个元素；而收集器也非常慢， 
+一个 `simple` 流的发射很慢，它每花费 100 毫秒才产生一个元素；而收集器也非常慢， 
 需要花费 300 毫秒来处理元素。让我们看看从该流收集三个数字要花费多长时间：
 
 
@@ -768,7 +770,7 @@ import kotlinx.coroutines.flow.*
 import kotlin.system.*
 
 //sampleStart
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     for (i in 1..3) {
         delay(100) // 假装我们异步等待了 100 毫秒
         emit(i) // 发射下一个值
@@ -777,7 +779,7 @@ fun foo(): Flow<Int> = flow {
 
 fun main() = runBlocking<Unit> { 
     val time = measureTimeMillis {
-        foo().collect { value -> 
+        simple().collect { value -> 
             delay(300) // 假装我们花费 300 毫秒来处理它
             println(value) 
         } 
@@ -802,7 +804,7 @@ Collected in 1220 ms
 
 <!--- TEST ARBITRARY_TIME -->
 
-我们可以在流上使用 [buffer] 操作符来并发运行 `foo()` 中发射元素的代码以及收集的代码，
+我们可以在流上使用 [buffer] 操作符来并发运行这个 `simple` 流中发射元素的代码以及收集的代码，
 而不是顺序运行它们：
 
 
@@ -812,7 +814,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.system.*
 
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     for (i in 1..3) {
         delay(100) // 假装我们异步等待了 100 毫秒
         emit(i) // 发射下一个值
@@ -822,7 +824,7 @@ fun foo(): Flow<Int> = flow {
 fun main() = runBlocking<Unit> { 
 //sampleStart
     val time = measureTimeMillis {
-        foo()
+        simple()
             .buffer() // 缓冲发射项，无需等待
             .collect { value -> 
                 delay(300) // 假装我们花费 300 毫秒来处理它
@@ -867,7 +869,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.system.*
 
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     for (i in 1..3) {
         delay(100) // 假装我们异步等待了 100 毫秒
         emit(i) // 发射下一个值
@@ -877,7 +879,7 @@ fun foo(): Flow<Int> = flow {
 fun main() = runBlocking<Unit> { 
 //sampleStart
     val time = measureTimeMillis {
-        foo()
+        simple()
             .conflate() // 合并发射项，不对每个值进行处理
             .collect { value -> 
                 delay(300) // 假装我们花费 300 毫秒来处理它
@@ -918,7 +920,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.system.*
 
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     for (i in 1..3) {
         delay(100) // 假装我们异步等待了 100 毫秒
         emit(i) // 发射下一个值
@@ -928,7 +930,7 @@ fun foo(): Flow<Int> = flow {
 fun main() = runBlocking<Unit> { 
 //sampleStart
     val time = measureTimeMillis {
-        foo()
+        simple()
             .collectLatest { value -> // 取消并重新发射最后一个值
                 println("Collecting $value") 
                 delay(300) // 假装我们花费 300 毫秒来处理它
@@ -1078,16 +1080,16 @@ fun main() = runBlocking<Unit> {
 
 ### 展平流
 
-Flows represent asynchronously received sequences of values, so it is quite easy to get in a situation where 
-each value triggers a request for another sequence of values. For example, we can have the following
-function that returns a flow of two strings 500 ms apart:
+流表示异步接收的值序列，所以很容易遇到这样的情况：
+每个值都会触发对另一个值序列的请求。比如说，我们可以拥有下面这样一个返回间隔 500
+毫秒的两个字符串流的函数：
 
 
 
 ```kotlin
 fun requestFlow(i: Int): Flow<String> = flow {
     emit("$i: First") 
-    delay(500) // wait 500 ms
+    delay(500) // 等待 500 毫秒
     emit("$i: Second")    
 }
 ```
@@ -1096,7 +1098,7 @@ fun requestFlow(i: Int): Flow<String> = flow {
 
 <!--- CLEAR -->
 
-Now if we have a flow of three integers and call `requestFlow` for each of them like this:
+现在，如果我们有一个包含三个整数的流，并为每个整数调用 `requestFlow`，如下所示：
 
 
 
@@ -1108,16 +1110,16 @@ Now if we have a flow of three integers and call `requestFlow` for each of them 
 
 <!--- CLEAR -->
 
-Then we end up with a flow of flows (`Flow<Flow<String>>`) that needs to be _flattened_ into a single flow for 
-further processing. Collections and sequences have [flatten][Sequence.flatten] and [flatMap][Sequence.flatMap]
-operators for this. However, due the asynchronous nature of flows they call for different _modes_ of flattening, 
-as such, there is a family of flattening operators on flows.
+然后我们得到了一个包含流的流（`Flow<Flow<String>>`），需要将其进行*展平*为单个流以进行<!--
+-->下一步处理。集合与序列都拥有 [flatten][Sequence.flatten] 与 [flatMap][Sequence.flatMap]
+操作符来做这件事。然而，由于流具有异步的性质，因此需要不同的展平*模式*，
+为此，存在一系列的流展平操作符。
 
 #### flatMapConcat
 
-Concatenating mode is implemented by [flatMapConcat] and [flattenConcat] operators. They are the most direct
-analogues of the corresponding sequence operators. They wait for the inner flow to complete before
-starting to collect the next one as the following example shows:
+连接模式由 [flatMapConcat] 与 [flattenConcat] 操作符实现。它们<!--
+-->是相应序列操作符最相近的类似物。它们在等待内部流完成之前<!--
+-->开始收集下一个值，如下面的示例所示：
 
 
 
@@ -1127,16 +1129,16 @@ import kotlinx.coroutines.flow.*
 
 fun requestFlow(i: Int): Flow<String> = flow {
     emit("$i: First") 
-    delay(500) // wait 500 ms
+    delay(500) // 等待 500 毫秒
     emit("$i: Second")    
 }
 
 fun main() = runBlocking<Unit> { 
 //sampleStart
-    val startTime = System.currentTimeMillis() // remember the start time 
-    (1..3).asFlow().onEach { delay(100) } // a number every 100 ms 
+    val startTime = System.currentTimeMillis() // 记录开始时间
+    (1..3).asFlow().onEach { delay(100) } // 每 100 毫秒发射一个数字 
         .flatMapConcat { requestFlow(it) }                                                                           
-        .collect { value -> // collect and print 
+        .collect { value -> // 收集并打印
             println("$value at ${System.currentTimeMillis() - startTime} ms from start") 
         } 
 //sampleEnd
@@ -1145,9 +1147,9 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-23.kt).            
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-23.kt)获取完整代码。     
 
-The sequential nature of [flatMapConcat] is clearly seen in the output:
+在输出中可以清楚地看到 [flatMapConcat] 的顺序性质：
 
 ```text                      
 1: First at 121 ms from start
@@ -1162,11 +1164,11 @@ The sequential nature of [flatMapConcat] is clearly seen in the output:
 
 #### flatMapMerge
 
-Another flattening mode is to concurrently collect all the incoming flows and merge their values into
-a single flow so that values are emitted as soon as possible.
-It is implemented by [flatMapMerge] and [flattenMerge] operators. They both accept an optional 
-`concurrency` parameter that limits the number of concurrent flows that are collected at the same time
-(it is equal to [DEFAULT_CONCURRENCY] by default). 
+另一种展平模式是并发收集所有传入的流，并将它们的值合并到<!--
+-->一个单独的流，以便尽快的发射值。
+它由 [flatMapMerge] 与 [flattenMerge] 操作符实现。他们都接收可选的<!--
+-->用于限制并发收集的流的个数的 `concurrency` 参数<!--
+-->（默认情况下，它等于 [DEFAULT_CONCURRENCY]）。
 
 
 
@@ -1176,16 +1178,16 @@ import kotlinx.coroutines.flow.*
 
 fun requestFlow(i: Int): Flow<String> = flow {
     emit("$i: First") 
-    delay(500) // wait 500 ms
+    delay(500) // 等待 500 毫秒
     emit("$i: Second")    
 }
 
 fun main() = runBlocking<Unit> { 
 //sampleStart
-    val startTime = System.currentTimeMillis() // remember the start time 
-    (1..3).asFlow().onEach { delay(100) } // a number every 100 ms 
+    val startTime = System.currentTimeMillis() // 记录开始时间
+    (1..3).asFlow().onEach { delay(100) } // 每 100 毫秒发射一个数字 
         .flatMapMerge { requestFlow(it) }                                                                           
-        .collect { value -> // collect and print 
+        .collect { value -> // 收集并打印
             println("$value at ${System.currentTimeMillis() - startTime} ms from start") 
         } 
 //sampleEnd
@@ -1194,9 +1196,9 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-24.kt).            
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-24.kt)获取完整代码。
 
-The concurrent nature of [flatMapMerge] is obvious:
+[flatMapMerge] 的并发性质很明显：
 
 ```text                      
 1: First at 136 ms from start
@@ -1209,16 +1211,16 @@ The concurrent nature of [flatMapMerge] is obvious:
 
 <!--- TEST ARBITRARY_TIME -->
 
-> Note that the [flatMapMerge] calls its block of code (`{ requestFlow(it) }` in this example) sequentially, but 
-collects the resulting flows concurrently, it is the equivalent of performing a sequential 
-`map { requestFlow(it) }` first and then calling [flattenMerge] on the result.   
+> 注意，[flatMapMerge] 会顺序调用代码块（本示例中的 `{ requestFlow(it) }`），但是<!--
+-->并发收集结果流，相当于执行顺序是首先执行
+`map { requestFlow(it) }` 然后在其返回结果上调用 [flattenMerge]。
 
 #### flatMapLatest   
 
-In a similar way to the [collectLatest] operator, that was shown in 
-["Processing the latest value"](#处理最新值) section, there is the corresponding "Latest" 
-flattening mode where a collection of the previous flow is cancelled as soon as new flow is emitted. 
-It is implemented by the [flatMapLatest] operator.
+与 [collectLatest] 操作符类似（在<!--
+-->["处理最新值"](#处理最新值) 小节中已经讨论过），也有相对应的“最新”<!--
+-->展平模式，在发出新流后立即取消先前流的收集。
+这由 [flatMapLatest] 操作符来实现。
 
 
 
@@ -1228,16 +1230,16 @@ import kotlinx.coroutines.flow.*
 
 fun requestFlow(i: Int): Flow<String> = flow {
     emit("$i: First") 
-    delay(500) // wait 500 ms
+    delay(500) // 等待 500 毫秒
     emit("$i: Second")    
 }
 
 fun main() = runBlocking<Unit> { 
 //sampleStart
-    val startTime = System.currentTimeMillis() // remember the start time 
-    (1..3).asFlow().onEach { delay(100) } // a number every 100 ms 
+    val startTime = System.currentTimeMillis() // 记录开始时间
+    (1..3).asFlow().onEach { delay(100) } // 每 100 毫秒发射一个数字 
         .flatMapLatest { requestFlow(it) }                                                                           
-        .collect { value -> // collect and print 
+        .collect { value -> // 收集并打印
             println("$value at ${System.currentTimeMillis() - startTime} ms from start") 
         } 
 //sampleEnd
@@ -1246,9 +1248,9 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-25.kt).            
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-25.kt)获取完整代码。
 
-The output here in this example is a good demonstration of how [flatMapLatest] works:
+该示例的输出很好的展示了 [flatMapLatest] 的工作方式：
 
 ```text                      
 1: First at 142 ms from start
@@ -1259,18 +1261,18 @@ The output here in this example is a good demonstration of how [flatMapLatest] w
 
 <!--- TEST ARBITRARY_TIME -->
   
-> Note that [flatMapLatest] cancels all the code in its block (`{ requestFlow(it) }` in this example) on a new value. 
-It makes no difference in this particular example, because the call to `requestFlow` itself is fast, not-suspending,
-and cannot be cancelled. However, it would show up if we were to use suspending functions like `delay` in there.
+> 注意，[flatMapLatest] 在一个新值到来时取消了块中的所有代码 (本示例中的 `{ requestFlow(it) }`）。 
+这在该特定示例中不会有什么区别，由于调用 `requestFlow` 自身的速度是很快的，不会发生挂起，
+所以不会被取消。然而，如果我们要在块中调用诸如 `delay` 之类的挂起函数，这将会被表现出来。
 
 ### 流异常
 
-Flow collection can complete with an exception when an emitter or code inside the operators throw an exception. 
-There are several ways to handle these exceptions.
+当运算符中的发射器或代码抛出异常时，流收集可以带有异常的完成。
+有几种处理异常的方法。
 
 #### 收集器 try 与 catch
 
-A collector can use Kotlin's [`try/catch`][exceptions] block to handle exceptions: 
+收集者可以使用 Kotlin 的 [`try/catch`][exceptions] 块来处理异常：
 
 
 
@@ -1279,16 +1281,16 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     for (i in 1..3) {
         println("Emitting $i")
-        emit(i) // emit next value
+        emit(i) // 发射下一个值
     }
 }
 
 fun main() = runBlocking<Unit> {
     try {
-        foo().collect { value ->         
+        simple().collect { value ->         
             println(value)
             check(value <= 1) { "Collected $value" }
         }
@@ -1301,10 +1303,10 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-26.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-26.kt)获取完整代码。
 
-This code successfully catches an exception in [collect] terminal operator and, 
-as we see, no more values are emitted after that:
+这段代码成功的在末端操作符 [collect] 中捕获了异常，并且， 
+如我们所见，在这之后不再发出任何值：
 
 ```text 
 Emitting 1
@@ -1318,9 +1320,9 @@ Caught java.lang.IllegalStateException: Collected 2
 
 #### 一切都已捕获
 
-The previous example actually catches any exception happening in the emitter or in any intermediate or terminal operators.
-For example, let's change the code so that emitted values are [mapped][map] to strings,
-but the corresponding code produces an exception:
+前面的示例实际上捕获了在发射器或任何过渡或末端操作符中发生的任何异常。
+例如，让我们修改代码以便将发出的值[映射][map]为字符串，
+但是相应的代码会产生一个异常：
 
 
 
@@ -1329,11 +1331,11 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart
-fun foo(): Flow<String> = 
+fun simple(): Flow<String> = 
     flow {
         for (i in 1..3) {
             println("Emitting $i")
-            emit(i) // emit next value
+            emit(i) // 发射下一个值
         }
     }
     .map { value ->
@@ -1343,7 +1345,7 @@ fun foo(): Flow<String> =
 
 fun main() = runBlocking<Unit> {
     try {
-        foo().collect { value -> println(value) }
+        simple().collect { value -> println(value) }
     } catch (e: Throwable) {
         println("Caught $e")
     } 
@@ -1353,9 +1355,9 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-27.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-27.kt)获取完整代码。
 
-This exception is still caught and collection is stopped:
+仍然会捕获该异常并停止收集：
 
 ```text 
 Emitting 1
@@ -1368,21 +1370,21 @@ Caught java.lang.IllegalStateException: Crashed on 2
 
 ### 异常透明性
 
-But how can code of the emitter encapsulate its exception handling behavior?  
+但是，发射器的代码如何封装其异常处理行为？
 
-Flows must be _transparent to exceptions_ and it is a violation of the exception transparency to [emit][FlowCollector.emit] values in the 
-`flow { ... }` builder from inside of a `try/catch` block. This guarantees that a collector throwing an exception
-can always catch it using `try/catch` as in the previous example.
+流必须*对异常透明*，即在 `flow { ... }` 构建器内部的 `try/catch`
+块中[发射][FlowCollector.emit]值是违反异常透明性的。这样可以保证收集器抛出的一个异常<!--
+-->能被像先前示例中那样的 `try/catch` 块捕获。
 
-The emitter can use a [catch] operator that preserves this exception transparency and allows encapsulation
-of its exception handling. The body of the `catch` operator can analyze an exception
-and react to it in different ways depending on which exception was caught:
+发射器可以使用 [catch] 操作符来保留此异常的透明性并允许封装<!--
+-->它的异常处理。catch 操作符的代码块可以分析异常<!--
+-->并根据捕获到的异常以不同的方式对其做出反应：
 
-* Exceptions can be rethrown using `throw`.
-* Exceptions can be turned into emission of values using [emit][FlowCollector.emit] from the body of [catch].
-* Exceptions can be ignored, logged, or processed by some other code.
+* 可以使用 `throw` 重新抛出异常。
+* 可以使用 [catch] 代码块中的 [emit][FlowCollector.emit] 将异常转换为值发射出去。
+* 可以将异常忽略，或用日志打印，或使用一些其他代码处理它。
 
-For example, let us emit the text on catching an exception:
+例如，让我们在捕获异常的时候发射文本：
 
 
 
@@ -1390,22 +1392,22 @@ For example, let us emit the text on catching an exception:
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-fun foo(): Flow<String> = 
+fun simple(): Flow<String> = 
     flow {
         for (i in 1..3) {
             println("Emitting $i")
-            emit(i) // emit next value
+            emit(i) // 发射下一个值
         }
     }
     .map { value ->
-        check(value <= 1) { "Crashed on $value" }                 
+        check(value <= 1) { "Crashed on $value" }
         "string $value"
     }
 
 fun main() = runBlocking<Unit> {
 //sampleStart
-    foo()
-        .catch { e -> emit("Caught $e") } // emit on exception
+    simple()
+        .catch { e -> emit("Caught $e") } // 发射一个异常
         .collect { value -> println(value) }
 //sampleEnd
 }            
@@ -1413,9 +1415,9 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-28.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-28.kt)获取完整代码。
  
-The output of the example is the same, even though we do not have `try/catch` around the code anymore. 
+即使我们不再在代码的外层使用 `try/catch`，示例的输出也是相同的。
 
 <!--- TEST  
 Emitting 1
@@ -1426,9 +1428,9 @@ Caught java.lang.IllegalStateException: Crashed on 2
 
 #### 透明捕获
 
-The [catch] intermediate operator, honoring exception transparency, catches only upstream exceptions
-(that is an exception from all the operators above `catch`, but not below it).
-If the block in `collect { ... }` (placed below `catch`) throws an exception then it escapes:  
+[catch] 过渡操作符遵循异常透明性，仅捕获上游异常<!--
+-->（`catch` 操作符上游的异常，但是它下面的不是）。
+如果 `collect { ... }` 块（位于 `catch` 之下）抛出一个异常，那么异常会逃逸：
 
 
 
@@ -1437,7 +1439,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     for (i in 1..3) {
         println("Emitting $i")
         emit(i)
@@ -1445,8 +1447,8 @@ fun foo(): Flow<Int> = flow {
 }
 
 fun main() = runBlocking<Unit> {
-    foo()
-        .catch { e -> println("Caught $e") } // does not catch downstream exceptions
+    simple()
+        .catch { e -> println("Caught $e") } // 不会捕获下游异常
         .collect { value ->
             check(value <= 1) { "Collected $value" }                 
             println(value) 
@@ -1457,23 +1459,25 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-29.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-29.kt)获取完整代码。
  
-A "Caught ..." message is not printed despite there being a `catch` operator: 
+尽管有 `catch` 操作符，但不会打印“Caught ...”消息：
 
-<!--- TEST EXCEPTION  
+```text  
 Emitting 1
 1
 Emitting 2
 Exception in thread "main" java.lang.IllegalStateException: Collected 2
 	at ...
--->
+```
+
+<!--- TEST EXCEPTION -->
 
 #### 声明式捕获
 
-We can combine the declarative nature of the [catch] operator with a desire to handle all the exceptions, by moving the body
-of the [collect] operator into [onEach] and putting it before the `catch` operator. Collection of this flow must
-be triggered by a call to `collect()` without parameters:
+我们可以将 [catch] 操作符的声明性与处理所有异常的期望相结合，将 [collect]
+操作符的代码块移动到 [onEach] 中，并将其放到 `catch` 操作符之前。收集该流必须由调用<!--
+-->无参的 `collect()` 来触发：
 
 
 
@@ -1481,7 +1485,7 @@ be triggered by a call to `collect()` without parameters:
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     for (i in 1..3) {
         println("Emitting $i")
         emit(i)
@@ -1490,7 +1494,7 @@ fun foo(): Flow<Int> = flow {
 
 fun main() = runBlocking<Unit> {
 //sampleStart
-    foo()
+    simple()
         .onEach { value ->
             check(value <= 1) { "Collected $value" }                 
             println(value) 
@@ -1503,27 +1507,29 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-30.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-30.kt)获取完整代码。
  
-Now we can see that a "Caught ..." message is printed and so we can catch all the exceptions without explicitly
-using a `try/catch` block: 
+现在我们可以看到已经打印了“Caught ...”消息，并且我们可以在没有显式使用
+`try/catch` 块的情况下捕获所有异常： 
 
-<!--- TEST EXCEPTION  
+```text 
 Emitting 1
 1
 Emitting 2
 Caught java.lang.IllegalStateException: Collected 2
--->
+```
+
+<!--- TEST EXCEPTION -->
 
 ### 流完成
 
-When flow collection completes (normally or exceptionally) it may need to execute an action. 
-As you may have already noticed, it can be done in two ways: imperative or declarative.
+当流收集完成时（普通情况或异常情况），它可能需要执行一个动作。
+你可能已经注意到，它可以通过两种方式完成：命令式或声明式。
 
 #### 命令式 finally 块
 
-In addition to `try`/`catch`, a collector can also use a `finally` block to execute an action 
-upon `collect` completion.
+除了 `try`/`catch` 之外，收集器还能使用 `finally` 块在 `collect`
+完成时执行一个动作。
 
 
 
@@ -1532,11 +1538,11 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart
-fun foo(): Flow<Int> = (1..3).asFlow()
+fun simple(): Flow<Int> = (1..3).asFlow()
 
 fun main() = runBlocking<Unit> {
     try {
-        foo().collect { value -> println(value) }
+        simple().collect { value -> println(value) }
     } finally {
         println("Done")
     }
@@ -1546,9 +1552,9 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-31.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-31.kt)获取完整代码。
 
-This code prints three numbers produced by the `foo()` flow followed by a "Done" string:
+这段代码打印出 `simple` 流产生的三个数字，后面跟一个“Done”字符串：
 
 ```text
 1
@@ -1561,10 +1567,10 @@ Done
 
 #### 声明式处理
 
-For the declarative approach, flow has [onCompletion] intermediate operator that is invoked
-when the flow has completely collected.
+对于声明式，流拥有 [onCompletion] 过渡操作符，它在流完全收集<!--
+-->时调用。
 
-The previous example can be rewritten using an [onCompletion] operator and produces the same output:
+可以使用 [onCompletion] 操作符重写前面的示例，并产生相同的输出：
 
 
 
@@ -1572,11 +1578,11 @@ The previous example can be rewritten using an [onCompletion] operator and produ
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-fun foo(): Flow<Int> = (1..3).asFlow()
+fun simple(): Flow<Int> = (1..3).asFlow()
 
 fun main() = runBlocking<Unit> {
 //sampleStart
-    foo()
+    simple()
         .onCompletion { println("Done") }
         .collect { value -> println(value) }
 //sampleEnd
@@ -1584,7 +1590,7 @@ fun main() = runBlocking<Unit> {
 ```
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-32.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-32.kt)获取完整代码。
 
 <!--- TEST 
 1
@@ -1593,9 +1599,9 @@ fun main() = runBlocking<Unit> {
 Done
 -->
 
-The key advantage of [onCompletion] is a nullable `Throwable` parameter of the lambda that can be used
-to determine whether the flow collection was completed normally or exceptionally. In the following
-example the `foo()` flow throws an exception after emitting the number 1:
+[onCompletion] 的主要优点是其 lambda 表达式的可空参数
+`Throwable` 可以用于确定流收集是正常完成还是有异常发生。在下面的<!--
+-->示例中 `simple` 流在发射数字 1 之后抛出了一个异常：
 
 
 
@@ -1604,13 +1610,13 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart
-fun foo(): Flow<Int> = flow {
+fun simple(): Flow<Int> = flow {
     emit(1)
     throw RuntimeException()
 }
 
 fun main() = runBlocking<Unit> {
-    foo()
+    simple()
         .onCompletion { cause -> if (cause != null) println("Flow completed exceptionally") }
         .catch { cause -> println("Caught exception") }
         .collect { value -> println(value) }
@@ -1619,9 +1625,9 @@ fun main() = runBlocking<Unit> {
 ```
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-33.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-33.kt)获取完整代码。
 
-As you may expect, it prints:
+如你所期望的，它打印了：
 
 ```text
 1
@@ -1631,14 +1637,14 @@ Caught exception
 
 <!--- TEST -->
 
-The [onCompletion] operator, unlike [catch], does not handle the exception. As we can see from the above
-example code, the exception still flows downstream. It will be delivered to further `onCompletion` operators
-and can be handled with a `catch` operator. 
+[onCompletion] 操作符与 [catch] 不同，它不处理异常。我们可以看到前面的<!--
+-->示例代码，异常仍然流向下游。它将被提供给后面的 `onCompletion`
+操作符，并可以由 `catch` 操作符处理。
 
-#### 仅限上游异常
+#### 成功完成
 
-Just like the [catch] operator, [onCompletion] only sees exceptions coming from upstream and does not
-see downstream exceptions. For example, run the following code:
+与 [catch] 操作符的另一个不同点是 [onCompletion] 能观察到所有异常并且<!--
+-->仅在上游流成功完成（没有取消或失败）的情况下接收一个 `null` 异常。
 
 
 
@@ -1647,10 +1653,10 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart
-fun foo(): Flow<Int> = (1..3).asFlow()
+fun simple(): Flow<Int> = (1..3).asFlow()
 
 fun main() = runBlocking<Unit> {
-    foo()
+    simple()
         .onCompletion { cause -> println("Flow completed with $cause") }
         .collect { value ->
             check(value <= 1) { "Collected $value" }                 
@@ -1662,13 +1668,13 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-34.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-34.kt)获取完整代码。
 
-We can see the completion cause is null, yet collection failed with exception:
+我们可以看到完成时 cause 不为空，因为流由于下游异常而中止：
 
 ```text 
 1
-Flow completed with null
+Flow completed with java.lang.IllegalStateException: Collected 2
 Exception in thread "main" java.lang.IllegalStateException: Collected 2
 ```
 
@@ -1676,20 +1682,20 @@ Exception in thread "main" java.lang.IllegalStateException: Collected 2
 
 ### 命令式还是声明式
 
-Now we know how to collect flow, and handle its completion and exceptions in both imperative and declarative ways.
-The natural question here is, which approach is preferred and why?
-As a library, we do not advocate for any particular approach and believe that both options
-are valid and should be selected according to your own preferences and code style. 
+现在我们知道如何收集流，并以命令式与声明式的方式处理其完成及异常情况。
+这里有一个很自然的问题是，哪种方式应该是首选的？为什么？
+作为一个库，我们不主张采用任何特定的方式，并且相信这两种选择都是有效的，
+应该根据自己的喜好与代码风格进行选择。
 
 ### 启动流
 
-It is easy to use flows to represent asynchronous events that are coming from some source.
-In this case, we need an analogue of the `addEventListener` function that registers a piece of code with a reaction
-for incoming events and continues further work. The [onEach] operator can serve this role. 
-However, `onEach` is an intermediate operator. We also need a terminal operator to collect the flow. 
-Otherwise, just calling `onEach` has no effect.
+使用流表示来自一些源的异步事件是很简单的。
+在这个案例中，我们需要一个类似 `addEventListener` 的函数，该函数注册一段响应的代码<!--
+-->处理即将到来的事件，并继续进行进一步的处理。[onEach] 操作符可以担任该角色。
+然而，`onEach` 是一个过渡操作符。我们也需要一个末端操作符来收集流。
+否则仅调用 `onEach` 是无效的。
  
-If we use the [collect] terminal operator after `onEach`, then the code after it will wait until the flow is collected:
+如果我们在 `onEach` 之后使用 [collect] 末端操作符，那么后面的代码会一直等待直至流被收集：
 
 
 
@@ -1698,13 +1704,13 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 //sampleStart
-// Imitate a flow of events
+// 模仿事件流
 fun events(): Flow<Int> = (1..3).asFlow().onEach { delay(100) }
 
 fun main() = runBlocking<Unit> {
     events()
         .onEach { event -> println("Event: $event") }
-        .collect() // <--- Collecting the flow waits
+        .collect() // <--- 等待流收集
     println("Done")
 }            
 //sampleEnd
@@ -1712,9 +1718,9 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-35.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-35.kt)获取完整代码。
   
-As you can see, it prints:
+你可以看到它的输出：
 
 ```text 
 Event: 1
@@ -1725,9 +1731,9 @@ Done
 
 <!--- TEST -->
  
-The [launchIn] terminal operator comes in handy here. By replacing `collect` with `launchIn` we can
-launch a collection of the flow in a separate coroutine, so that execution of further code 
-immediately continues:
+[launchIn] 末端操作符可以在这里派上用场。使用 `launchIn` 替换 `collect` 我们可以<!--
+-->在单独的协程中启动流的收集，这样就可以立即继续<!--
+-->进一步执行代码：
 
 
 
@@ -1735,14 +1741,14 @@ immediately continues:
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-// Imitate a flow of events
+// 模仿事件流
 fun events(): Flow<Int> = (1..3).asFlow().onEach { delay(100) }
 
 //sampleStart
 fun main() = runBlocking<Unit> {
     events()
         .onEach { event -> println("Event: $event") }
-        .launchIn(this) // <--- Launching the flow in a separate coroutine
+        .launchIn(this) // <--- 在单独的协程中执行流
     println("Done")
 }            
 //sampleEnd
@@ -1750,9 +1756,9 @@ fun main() = runBlocking<Unit> {
 
 
 
-> You can get the full code from [here](../kotlinx-coroutines-core/jvm/test/guide/example-flow-36.kt). 
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-36.kt)获取完整代码。
   
-It prints:
+它打印了：
 
 ```text          
 Done
@@ -1763,32 +1769,152 @@ Event: 3
 
 <!--- TEST -->
 
-The required parameter to `launchIn` must specify a [CoroutineScope] in which the coroutine to collect the flow is 
-launched. In the above example this scope comes from the [runBlocking]
-coroutine builder, so while the flow is running, this [runBlocking] scope waits for completion of its child coroutine
-and keeps the main function from returning and terminating this example. 
+`launchIn` 必要的参数 [CoroutineScope] 指定了用哪一个协程来启动流的<!--
+-->收集。在先前的示例中这个作用域来自 [runBlocking]
+协程构建器，在这个流运行的时候，[runBlocking] 作用域等待它的子协程执行完毕<!--
+-->并防止 main 函数返回并终止此示例。
 
-In actual applications a scope will come from an entity with a limited 
-lifetime. As soon as the lifetime of this entity is terminated the corresponding scope is cancelled, cancelling
-the collection of the corresponding flow. This way the pair of `onEach { ... }.launchIn(scope)` works
-like the `addEventListener`. However, there is no need for the corresponding `removeEventListener` function, 
-as cancellation and structured concurrency serve this purpose.
+在实际的应用中，作用域来自于一个寿命有限的<!--
+-->实体。在该实体的寿命终止后，相应的作用域就会被取消，即取消<!--
+-->相应流的收集。这种成对的 `onEach { ... }.launchIn(scope)` 工作方式<!--
+-->就像 `addEventListener` 一样。而且，这不需要相应的 `removeEventListener` 函数，
+因为取消与结构化并发可以达成这个目的。
 
-Note that [launchIn] also returns a [Job], which can be used to [cancel][Job.cancel] the corresponding flow collection
-coroutine only without cancelling the whole scope or to [join][Job.join] it.
+注意，[launchIn] 也会返回一个 [Job]，可以在不取消整个作用域的情况下仅[取消][Job.cancel]相应的流收集<!--
+-->或对其进行 [join][Job.join]。
+ 
+### 流取消检测
 
+为方便起见，[流][_flow]构建器对每个发射值执行附加的 [ensureActive] 检测以进行取消。
+这意味着从 `flow { ... }` 发出的繁忙循环是可以取消的：
+ 
+<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
+```kotlin
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+
+//sampleStart           
+fun foo(): Flow<Int> = flow { 
+    for (i in 1..5) {
+        println("Emitting $i") 
+        emit(i) 
+    }
+}
+
+fun main() = runBlocking<Unit> {
+    foo().collect { value -> 
+        if (value == 3) cancel()  
+        println(value)
+    } 
+}
+//sampleEnd
+```  
+
+</div>
+
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-37.kt)获取完整的代码。
+
+仅得到不超过 3 的数字，在尝试发出 4 之后抛出 [CancellationException]；
+
+```text 
+Emitting 1
+1
+Emitting 2
+2
+Emitting 3
+3
+Emitting 4
+Exception in thread "main" kotlinx.coroutines.JobCancellationException: BlockingCoroutine was cancelled; job="coroutine#1":BlockingCoroutine{Cancelled}@6d7b4f4c
+```
+
+<!--- TEST EXCEPTION -->
+
+但是，出于性能原因，大多数其他流操作不会自行执行其他取消检测。
+例如，如果使用 [IntRange.asFlow] 扩展来编写相同的繁忙循环，
+并且没有在任何地方暂停，那么就没有取消的检测；
+
+<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
+```kotlin
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+
+//sampleStart           
+fun main() = runBlocking<Unit> {
+    (1..5).asFlow().collect { value -> 
+        if (value == 3) cancel()  
+        println(value)
+    } 
+}
+//sampleEnd
+```  
+
+</div>
+
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-38.kt)获取完整的代码。
+
+收集从 1 到 5 的所有数字，并且仅在从 `runBlocking` 返回之前检测到取消：
+
+```text
+1
+2
+3
+4
+5
+Exception in thread "main" kotlinx.coroutines.JobCancellationException: BlockingCoroutine was cancelled; job="coroutine#1":BlockingCoroutine{Cancelled}@3327bd23
+```
+
+<!--- TEST EXCEPTION -->
+
+#### 让繁忙的流可取消
+
+在协程处于繁忙循环的情况下，必须明确检测是否取消。
+可以添加 `.onEach { currentCoroutineContext().ensureActive() }`，
+但是这里提供了一个现成的 [cancellable] 操作符来执行此操作：
+
+<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
+```kotlin
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+
+//sampleStart           
+fun main() = runBlocking<Unit> {
+    (1..5).asFlow().cancellable().collect { value -> 
+        if (value == 3) cancel()  
+        println(value)
+    } 
+}
+//sampleEnd
+```  
+
+</div>
+
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-39.kt)获取完整的代码。
+
+使用 `cancellable` 操作符，仅收集从 1 到 3 的数字：
+
+```text
+1
+2
+3
+Exception in thread "main" kotlinx.coroutines.JobCancellationException: BlockingCoroutine was cancelled; job="coroutine#1":BlockingCoroutine{Cancelled}@5ec0a365
+```
+
+<!--- TEST EXCEPTION -->
+ 
 {:#flow-and-reactive-streams}
-
 ### 流（Flow）与响应式流（Reactive Streams）
 
 对于熟悉响应式流（[Reactive Streams](https://www.reactive-streams.org/)）或诸如 RxJava 与 Project Reactor 这样的响应式框架的人来说，
 Flow 的设计也许看起来会非常熟悉。
 
 确实，其设计灵感来源于响应式流以及其各种实现。但是 Flow 的主要目标是拥有尽可能简单的设计，
-对 Kotlin 以及挂起友好且遵从结构化并发。没有响应式的先驱及他们大量的工作，就不可能实现这一目标。您可以阅读 [Reactive Streams and Kotlin Flows](https://medium.com/@elizarov/reactive-streams-and-kotlin-flows-bfd12772cda4) 这篇文章来了解完成 Flow 的故事。
+对 Kotlin 以及挂起友好且遵从结构化并发。没有响应式的先驱及他们大量的工作，就不可能实现这一目标。你可以阅读 [Reactive Streams and Kotlin Flows](https://medium.com/@elizarov/reactive-streams-and-kotlin-flows-bfd12772cda4) 这篇文章来了解完成 Flow 的故事。
 
 虽然有所不同，但从概念上讲，Flow *依然是*响应式流，并且可以将它转换为响应式（规范及符合 TCK）的发布者（Publisher），反之亦然。
-这些开箱即用的转换器可以在 `kotlinx.coroutines` 提供的相关响应式模块（`kotlinx-coroutines-reactive` 用于 Reactive Streams，`kotlinx-coroutines-reactor` 用于 Project Reactor，以及 `kotlinx-coroutines-rx2` 用于 RxJava2）中找到。
+这些开箱即用的转换器可以在 `kotlinx.coroutines` 提供的相关响应式模块（`kotlinx-coroutines-reactive` 用于 Reactive Streams，`kotlinx-coroutines-reactor` 用于 Project Reactor，以及 `kotlinx-coroutines-rx2`/`kotlinx-coroutines-rx3` 用于 RxJava2/RxJava3）中找到。
 集成模块包含 `Flow` 与其他实现之间的转换，与 Reactor 的 `Context` 集成以及与一系列响应式实体配合使用的挂起友好的使用方式。
  
 <!-- stdlib references -->
@@ -1815,9 +1941,11 @@ Flow 的设计也许看起来会非常熟悉。
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
 [Job.cancel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/cancel.html
 [Job.join]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html
+[ensureActive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/ensure-active.html
+[CancellationException]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html
 <!--- INDEX kotlinx.coroutines.flow -->
 [Flow]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html
-[flow]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow.html
+[_flow]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow.html
 [FlowCollector.emit]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow-collector/emit.html
 [collect]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/collect.html
 [flowOf]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow-of.html
@@ -1847,4 +1975,6 @@ Flow 的设计也许看起来会非常熟悉。
 [catch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/catch.html
 [onCompletion]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/on-completion.html
 [launchIn]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/launch-in.html
+[IntRange.asFlow]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/kotlin.ranges.-int-range/as-flow.html
+[cancellable]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/cancellable.html
 <!--- END -->

@@ -308,7 +308,7 @@ Completed in 1085 ms
 让我们使用[使用 async 的并发](#使用-async-的结构化并发)这一小节的例子并且提取出一个函数<!--
 -->并发的调用 `doSomethingUsefulOne` 与 `doSomethingUsefulTwo` 并且返回它们两个的结果之和。
 由于 [async] 被定义为了 [CoroutineScope] 上的扩展，我们需要将它写在<!--
--->作用域内，并且这是 [coroutineScope] 函数所提供的：
+-->作用域内，并且这是 [coroutineScope][_coroutineScope] 函数所提供的：
 
 <div class="sample" markdown="1" theme="idea" data-highlight-only>
 
@@ -431,5 +431,5 @@ Computation failed with ArithmeticException
 [Job.start]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/start.html
 [GlobalScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
-[coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
+[_coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
 <!--- END -->

@@ -721,7 +721,19 @@ internal class CoroutineScheduler(
             }
             assert { localQueue.size == 0 }
             workerCtl.value = PARKED // Update value once
-            while (inStack()) { // Prevent spurious wakeups
+            /*
+             * inStack() prevents spurious wakeups, while workerCtl.value == PARKED
+             * prevents the following race:
+             *
+             * - T2 scans the queue, adds itself to the stack, goes to rescan
+             * - T2 suspends in 'workerCtl.value = PARKED' line
+             * - T1 pops T2 from the stack, claims workerCtl, suspends
+             * - T2 fails 'while (inStack())' check, goes to full rescan
+             * - T2 adds itself to the stack, parks
+             * - T1 unparks T2, bails out with success
+             * - T2 unparks and loops in 'while (inStack())'
+             */
+            while (inStack() && workerCtl.value == PARKED) { // Prevent spurious wakeups
                 if (isTerminated || state == WorkerState.TERMINATED) break
                 tryReleaseCpu(WorkerState.PARKING)
                 interrupted() // Cleanup interruptions
@@ -951,3 +963,20 @@ internal class CoroutineScheduler(
         TERMINATED
     }
 }
+
+/**
+ * Checks if the thread is part of a thread pool that supports coroutines.
+ * This function is needed for integration with BlockHound.
+ */
+@Suppress("UNUSED")
+@JvmName("isSchedulerWorker")
+internal fun isSchedulerWorker(thread: Thread) = thread is CoroutineScheduler.Worker
+
+/**
+ * Checks if the thread is running a CPU-bound task.
+ * This function is needed for integration with BlockHound.
+ */
+@Suppress("UNUSED")
+@JvmName("mayNotBlock")
+internal fun mayNotBlock(thread: Thread) = thread is CoroutineScheduler.Worker &&
+    thread.state == CoroutineScheduler.WorkerState.CPU_ACQUIRED

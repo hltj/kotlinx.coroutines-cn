@@ -18,22 +18,22 @@
 
 ## 异常处理
 
-
-这部分内容包括异常处理以及取消异常。
-我们已经知道当协程被取消的时候会在挂起点抛出 [CancellationException]，并且它<!--
--->在协程机制中被忽略了。但是如果一个异常在取消期间被抛出或多个子协程在同一个<!--
--->父协程中抛出异常将会发生什么？
+本节内容涵盖了异常处理与在异常上取消。
+我们已经知道被取消的协程会在挂起点抛出 [CancellationException]
+并且它会被协程的机制所忽略。在这里我们会看看在取消过程中抛出异常或同一个协程的<!--
+-->多个子协程抛出异常时会发生什么。
 
 ### 异常的传播
 
-协程构建器有两种风格：自动的传播异常（[launch] 以及 [actor]）
-或者将它们暴露给用户（[async] 以及 [produce]）。
-前者对待异常是不处理的，类似于 Java 的 `Thread.uncaughtExceptionHandler`，
-而后者依赖用户来最终消耗<!--
--->异常，比如说，通过 [await][Deferred.await] 或 [receive][ReceiveChannel.receive]
-（[produce] 以及 [receive][ReceiveChannel.receive] 在[通道](https://www.kotlincn.net/docs/reference/coroutines/channels.html)中介绍过）。
+协程构建器有两种形式：自动传播异常（[launch] 与 [actor]）或<!--
+-->向用户暴露异常（[async] 与 [produce]）。
+当这些构建器用于创建一个*根*协程时，即该协程不是另一个协程的*子*协程，
+前者这类构建器将异常视为**未捕获**异常，类似 Java 的 `Thread.uncaughtExceptionHandler`，
+而后者则依赖用户来最终消费<!--
+-->异常，例如通过 [await][Deferred.await] 或 [receive][ReceiveChannel.receive]<!--
+-->（[produce] 与 [receive][ReceiveChannel.receive] 的相关内容包含于[通道](https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/channels.md)章节）。
 
-可以通过一个在 [GlobalScope] 中创建协程的简单示例来进行演示：
+可以通过一个使用 [GlobalScope] 创建根协程的简单示例来进行演示：
 
 <div class="sample" markdown="1" theme="idea" data-highlight-only>
 
@@ -41,13 +41,13 @@
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-    val job = GlobalScope.launch {
+    val job = GlobalScope.launch { // launch 根协程
         println("Throwing exception from launch")
         throw IndexOutOfBoundsException() // 我们将在控制台打印 Thread.defaultUncaughtExceptionHandler
     }
     job.join()
     println("Joined failed job")
-    val deferred = GlobalScope.async {
+    val deferred = GlobalScope.async { // async 根协程
         println("Throwing exception from async")
         throw ArithmeticException() // 没有打印任何东西，依赖用户去调用等待
     }
@@ -78,19 +78,30 @@ Caught ArithmeticException
 
 ### CoroutineExceptionHandler
 
-但是如果不想将所有的异常打印在控制台中呢？
-[CoroutineExceptionHandler] 上下文元素被用来将通用的 `catch` 代码块用于在协程中自定义日志记录或异常处理。
-它和使用 [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 很相似。
+将**未捕获**异常打印到控制台的默认行为是可自定义的。
+*根*协程中的 [CoroutineExceptionHandler] 上下文元素可以被用于这个根协程<!--
+-->通用的 `catch` 块，及其所有可能自定义了异常处理的子协程。
+它类似于 [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 。
+你无法从 `CoroutineExceptionHandler` 的异常中恢复。当调用处理者的时候，协程已经完成<!--
+-->并带有相应的异常。通常，该处理者用于<!--
+-->记录异常，显示某种错误消息，终止和（或）重新启动应用程序。
 
 在 JVM 中可以重定义一个全局的异常处理者来将所有的协程通过
 [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) 注册到 [CoroutineExceptionHandler]。
 全局异常处理者就如同
 [`Thread.defaultUncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 
 一样，在没有更多的指定的异常处理者被注册的时候被使用。
-在 Android 中， `uncaughtExceptionPreHandler` 被设置在全局协程异常处理者中。
+在 Android 中，`uncaughtExceptionPreHandler` 被设置在全局协程异常处理者中。
 
-[CoroutineExceptionHandler] 仅在预计不会由用户处理的异常上调用，
-所以在 [async] 构建器中注册它没有任何效果。
+`CoroutineExceptionHandler` 仅在**未捕获**的异常上调用 &mdash; 没有以其他任何方式处理的异常。
+特别是，所有*子*协程（在另一个 [Job] 上下文中创建的协程）委托<!--
+它们的父协程处理它们的异常，然后它们也委托给其父协程，以此类推直到根协程，
+因此永远不会使用在其上下文中设置的 `CoroutineExceptionHandler`。
+除此之外，[async] 构建器始终会捕获所有异常并将其表示在结果 [Deferred] 对象中，
+因此它的 `CoroutineExceptionHandler` 也无效。
+
+> 在监督作用域内运行的协程不会将异常传播到其父协程，并且<!--
+-->会从此规则中排除。本文档的另一个小节——[监督](#监督)提供了更多细节。
 
 <div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
 
@@ -100,12 +111,12 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
 //sampleStart
     val handler = CoroutineExceptionHandler { _, exception -> 
-        println("Caught $exception") 
+        println("CoroutineExceptionHandler got $exception") 
     }
-    val job = GlobalScope.launch(handler) {
+    val job = GlobalScope.launch(handler) { // 根协程，运行在 GlobalScope 中
         throw AssertionError()
     }
-    val deferred = GlobalScope.async(handler) {
+    val deferred = GlobalScope.async(handler) { // 同样是根协程，但使用 async 代替了 launch
         throw ArithmeticException() // 没有打印任何东西，依赖用户去调用 deferred.await()
     }
     joinAll(job, deferred)
@@ -120,7 +131,7 @@ fun main() = runBlocking {
 这段代码的输出如下：
 
 ```text
-Caught java.lang.AssertionError
+CoroutineExceptionHandler got java.lang.AssertionError
 ```
 
 <!--- TEST-->
@@ -173,16 +184,18 @@ Parent is not cancelled
 
 <!--- TEST-->
 
-如果协程遇到除 `CancellationException` 以外的异常，它将取消具有该异常的父协程。
-这种行为不能被覆盖，且它被用来提供一个稳定的协程层次结构来进行<!--
--->[结构化并发](https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/composing-suspending-functions.md#structured-concurrency-with-async)而无需依赖
-[CoroutineExceptionHandler] 的实现。
-且当所有的子协程被终止的时候，原本的异常被父协程所处理。
+如果一个协程遇到了 `CancellationException` 以外的异常，它将使用该异常取消它的父协程。
+这个行为无法被覆盖，并且用于为<!--
+-->[结构化的并发（structured concurrency）](https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/composing-suspending-functions.md#structured-concurrency-with-async) 提供稳定的协程层级结构。
+[CoroutineExceptionHandler] 的实现并不是用于子协程。
 
-> 这也是为什么，在这个例子中，[CoroutineExceptionHandler] 总是被设置在由 [GlobalScope]
+> 在本例中，[CoroutineExceptionHandler] 总是被设置在由 [GlobalScope]
 启动的协程中。将异常处理者设置在
 [runBlocking] 主作用域内启动的协程中是没有意义的，尽管子协程已经设置了异常处理者，
 但是主协程也总是会被取消的。
+
+当父协程的所有子协程都结束后，原始的异常才会被父协程处理，
+见下面这个例子。
 
 <div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
 
@@ -192,7 +205,7 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
 //sampleStart
     val handler = CoroutineExceptionHandler { _, exception -> 
-        println("Caught $exception") 
+        println("CoroutineExceptionHandler got $exception") 
     }
     val job = GlobalScope.launch(handler) {
         launch { // 第一个子协程
@@ -227,22 +240,15 @@ fun main() = runBlocking {
 Second child throws an exception
 Children are cancelled, but exception is not handled until all children terminate
 The first child finished its non cancellable block
-Caught java.lang.ArithmeticException
+CoroutineExceptionHandler got java.lang.ArithmeticException
 ```
 <!--- TEST-->
 
 ### 异常聚合
 
-如果一个协程的多个子协程抛出异常将会发生什么？
-通常的规则是“第一个异常赢得了胜利”，所以第一个被抛出的异常将会暴露给处理者。
-但也许这会是异常丢失的原因，比如说一个协程在 `finally` 块中抛出了一个异常。
-这时，多余的异常将会被压制。
-
-> 其中一个解决方法是分别抛出异常，
-但是接下来 [Deferred.await] 应该有相同的机制来避免行为不一致并且会导致<!--
--->协程的实现细节（是否已将其部分工作委托给子协程）
-泄漏到异常处理者中。
-
+当协程的多个子协程因异常而失败时，
+一般规则是“取第一个异常”，因此将处理第一个异常。
+在第一个异常之后发生的所有其他异常都作为被抑制的异常绑定至第一个异常。
 
 <!--- INCLUDE
 import kotlinx.coroutines.exceptions.*
@@ -256,19 +262,19 @@ import java.io.*
 
 fun main() = runBlocking {
     val handler = CoroutineExceptionHandler { _, exception ->
-        println("Caught $exception with suppressed ${exception.suppressed.contentToString()}")
+        println("CoroutineExceptionHandler got $exception with suppressed ${exception.suppressed.contentToString()}")
     }
     val job = GlobalScope.launch(handler) {
         launch {
             try {
-                delay(Long.MAX_VALUE)
+                delay(Long.MAX_VALUE) // 当另一个同级的协程因 IOException  失败时，它将被取消
             } finally {
-                throw ArithmeticException()
+                throw ArithmeticException() // 第二个异常
             }
         }
         launch {
             delay(100)
-            throw IOException()
+            throw IOException() // 首个异常
         }
         delay(Long.MAX_VALUE)
     }
@@ -285,15 +291,15 @@ fun main() = runBlocking {
 这段代码的输出如下：
 
 ```text
-Caught java.io.IOException with suppressed [java.lang.ArithmeticException]
+CoroutineExceptionHandler got java.io.IOException with suppressed [java.lang.ArithmeticException]
 ```
 
 <!--- TEST-->
 
 > 注意，这个机制当前只能在 Java 1.7 以上的版本中使用。
-在 JS 和原生环境下暂时会受到限制，但将来会被修复。
+在 JS 和原生环境下暂时会受到限制，但将来会取消。
 
-取消异常是透明的并且会在默认情况下解包：
+取消异常是透明的，默认情况下是未包装的：
 
 <div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
 
@@ -304,13 +310,13 @@ import java.io.*
 fun main() = runBlocking {
 //sampleStart
     val handler = CoroutineExceptionHandler { _, exception ->
-        println("Caught original $exception")
+        println("CoroutineExceptionHandler got $exception")
     }
     val job = GlobalScope.launch(handler) {
-        val inner = launch {
+        val inner = launch { // 该栈内的协程都将被取消
             launch {
                 launch {
-                    throw IOException()
+                    throw IOException() // 原始异常
                 }
             }
         }
@@ -318,7 +324,7 @@ fun main() = runBlocking {
             inner.join()
         } catch (e: CancellationException) {
             println("Rethrowing CancellationException with original cause")
-            throw e
+            throw e // 取消异常被重新抛出，但原始 IOException 得到了处理
         }
     }
     job.join()
@@ -334,14 +340,14 @@ fun main() = runBlocking {
 
 ```text
 Rethrowing CancellationException with original cause
-Caught original java.io.IOException
+CoroutineExceptionHandler got java.io.IOException
 ```
 <!--- TEST-->
 
 ### 监督
 
-正如我们之前研究的那样，取消是一种双向机制，在协程的整个层次结构<!--
--->之间传播。但是如果需要单向取消怎么办？
+正如我们之前研究的那样，取消是在协程的整个层次结构中传播的双<!--
+-->向关系。让我们看一下需要单向取消的情况。
 
 此类需求的一个良好示例是在其作用域内定义作业的 UI 组件。如果任何一个 UI 的子作业<!--
 -->执行失败了，它并不总是有必要取消（有效地杀死）整个 UI 组件，
@@ -352,8 +358,9 @@ Caught original java.io.IOException
 
 #### 监督作业
 
-[SupervisorJob][SupervisorJob()] 可以被用于这些目的。它类似于常规的 [Job][Job()]，唯一的不同是：<!--
--->SupervisorJob 的取消只会向下传播。这是非常容易从示例中观察到的：
+[SupervisorJob][SupervisorJob()] 可以用于这些目的。
+它类似于常规的 [Job][Job()]，唯一的不同是：<!--
+-->SupervisorJob 的取消只会向下传播。这是很容易用以下示例演示：
 
 <div class="sample" markdown="1" theme="idea" data-highlight-only>
 
@@ -365,24 +372,24 @@ fun main() = runBlocking {
     with(CoroutineScope(coroutineContext + supervisor)) {
         // 启动第一个子作业——这个示例将会忽略它的异常（不要在实践中这么做！）
         val firstChild = launch(CoroutineExceptionHandler { _, _ ->  }) {
-            println("First child is failing")
-            throw AssertionError("First child is cancelled")
+            println("The first child is failing")
+            throw AssertionError("The first child is cancelled")
         }
-        // 启动第两个子作业
+        // 启动第二个子作业
         val secondChild = launch {
             firstChild.join()
             // 取消了第一个子作业且没有传播给第二个子作业
-            println("First child is cancelled: ${firstChild.isCancelled}, but second one is still active")
+            println("The first child is cancelled: ${firstChild.isCancelled}, but the second one is still active")
             try {
                 delay(Long.MAX_VALUE)
             } finally {
                 // 但是取消了监督的传播
-                println("Second child is cancelled because supervisor is cancelled")
+                println("The second child is cancelled because the supervisor was cancelled")
             }
         }
         // 等待直到第一个子作业失败且执行完成
         firstChild.join()
-        println("Cancelling supervisor")
+        println("Cancelling the supervisor")
         supervisor.cancel()
         secondChild.join()
     }
@@ -396,19 +403,19 @@ fun main() = runBlocking {
 这段代码的输出如下：
 
 ```text
-First child is failing
-First child is cancelled: true, but second one is still active
-Cancelling supervisor
-Second child is cancelled because supervisor is cancelled
+The first child is failing
+The first child is cancelled: true, but the second one is still active
+Cancelling the supervisor
+The second child is cancelled because the supervisor was cancelled
 ```
 <!--- TEST-->
 
 
 #### 监督作用域
 
-对于*作用域*的并发，[supervisorScope] 可以被用来替代 [coroutineScope] 来实现相同的目的。它只会单向的传播<!--
+对于*作用域*的并发，可以用 [supervisorScope][_supervisorScope] 来替代 [coroutineScope][_coroutineScope] 来实现相同的目的。它只会单向的传播<!--
 -->并且当作业自身执行失败的时候将所有子作业全部取消。作业自身也会在所有的子作业执行结束前等待，
-就像 [coroutineScope] 所做的那样。
+就像 [coroutineScope][_coroutineScope] 所做的那样。
 
 <div class="sample" markdown="1" theme="idea" data-highlight-only>
 
@@ -421,19 +428,19 @@ fun main() = runBlocking {
         supervisorScope {
             val child = launch {
                 try {
-                    println("Child is sleeping")
+                    println("The child is sleeping")
                     delay(Long.MAX_VALUE)
                 } finally {
-                    println("Child is cancelled")
+                    println("The child is cancelled")
                 }
             }
             // 使用 yield 来给我们的子作业一个机会来执行打印
             yield()
-            println("Throwing exception from scope")
+            println("Throwing an exception from the scope")
             throw AssertionError()
         }
     } catch(e: AssertionError) {
-        println("Caught assertion error")
+        println("Caught an assertion error")
     }
 }
 ```
@@ -445,10 +452,10 @@ fun main() = runBlocking {
 这段代码的输出如下：
 
 ```text
-Child is sleeping
-Throwing exception from scope
-Child is cancelled
-Caught assertion error
+The child is sleeping
+Throwing an exception from the scope
+The child is cancelled
+Caught an assertion error
 ```
 <!--- TEST-->
 
@@ -457,6 +464,9 @@ Caught assertion error
 常规的作业和监督作业之间的另一个重要区别是异常处理。
 监督协程中的每一个子作业应该通过异常处理机制处理自身的异常。
 这种差异来自于子作业的执行失败不会传播给它的父作业的事实。
+这意味着在 [supervisorScope][_supervisorScope] 内部直接启动的协程*确实*使用了<!--
+-->设置在它们作用域内的 [CoroutineExceptionHandler]，与父协程的方式相同
+（参见 [CoroutineExceptionHandler](#coroutineexceptionhandler) 小节以获知更多细节）。
 
 <div class="sample" markdown="1" theme="idea" data-highlight-only>
 
@@ -466,16 +476,16 @@ import kotlinx.coroutines.*
 
 fun main() = runBlocking {
     val handler = CoroutineExceptionHandler { _, exception -> 
-        println("Caught $exception") 
+        println("CoroutineExceptionHandler got $exception") 
     }
     supervisorScope {
         val child = launch(handler) {
-            println("Child throws an exception")
+            println("The child throws an exception")
             throw AssertionError()
         }
-        println("Scope is completing")
+        println("The scope is completing")
     }
-    println("Scope is completed")
+    println("The scope is completed")
 }
 ```
 
@@ -486,10 +496,10 @@ fun main() = runBlocking {
 这段代码的输出如下：
 
 ```text
-Scope is completing
-Child throws an exception
-Caught java.lang.AssertionError
-Scope is completed
+The scope is completing
+The child throws an exception
+CoroutineExceptionHandler got java.lang.AssertionError
+The scope is completed
 ```
 <!--- TEST-->
 
@@ -501,12 +511,14 @@ Scope is completed
 [Deferred.await]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/await.html
 [GlobalScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html
 [CoroutineExceptionHandler]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-exception-handler/index.html
+[Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
+[Deferred]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/index.html
 [Job.cancel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/cancel.html
 [runBlocking]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html
 [SupervisorJob()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-supervisor-job.html
 [Job()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job.html
-[supervisorScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html
-[coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
+[_coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
+[_supervisorScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html
 <!--- INDEX kotlinx.coroutines.channels -->
 [actor]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/actor.html
 [produce]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/produce.html

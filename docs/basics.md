@@ -5,7 +5,7 @@
 <!--- TOC -->
 
 * [协程基础](#协程基础)
-  * [你的第一个协程程序](#你的第一个协程程序)
+  * [第一个协程程序](#第一个协程程序)
   * [桥接阻塞与非阻塞的世界](#桥接阻塞与非阻塞的世界)
   * [等待一个作业](#等待一个作业)
   * [结构化的并发](#结构化的并发)
@@ -20,7 +20,7 @@
 
 这一部分包括基础的协程概念。
 
-### 你的第一个协程程序
+### 第一个协程程序
 
 运行以下代码：
 
@@ -58,7 +58,7 @@ World!
 -->生命周期只受整个应用程序的生命周期限制。
 
 可以将
-`GlobalScope.launch { …… }` 替换为 `thread { …… }`，将 `delay(……)` 替换为 `Thread.sleep(……)` 达到同样目的。
+`GlobalScope.launch { …… }` 替换为 `thread { …… }`，并将 `delay(……)` 替换为 `Thread.sleep(……)` 达到同样目的。
 试试看（不要忘记导入 `kotlin.concurrent.thread`）。
 
 如果你首先将 `GlobalScope.launch` 替换为 `thread`，编译器会报以下错误：
@@ -233,14 +233,14 @@ World!
 -->
 
 ### 作用域构建器
-除了由不同的构建器提供协程作用域之外，还可以使用
-[coroutineScope] 构建器声明自己的作用域。它会创建一个协程作用域并且在所有已启动子协程执行完毕之前不会<!--
--->结束。
 
-[runBlocking] 与 [coroutineScope] 可能看起来很类似，因为它们都会等待其协程体以及所有子协程结束。
-这两者的主要区别在于，[runBlocking] 方法会*阻塞*当前线程来等待，
-而 [coroutineScope] 只是挂起，会释放底层线程用于其他用途。
-由于存在这点差异，[runBlocking] 是常规函数，而 [coroutineScope] 是挂起函数。
+除了由不同的构建器提供协程作用域之外，还可以使用
+[coroutineScope][_coroutineScope] 构建器声明自己的作用域。它会创建一个协程作用域并且在所有已启动子协程执行完毕之前不会结束。
+
+[runBlocking] 与 [coroutineScope][_coroutineScope] 可能看起来很类似，因为它们都会等待其协程体以及所有子协程结束。
+主要区别在于，[runBlocking] 方法会*阻塞*当前线程来等待，
+而 [coroutineScope][_coroutineScope] 只是挂起，会释放底层线程用于其他用途。
+由于存在这点差异，[runBlocking] 是常规函数，而 [coroutineScope][_coroutineScope] 是挂起函数。
 
 可以通过以下示例来演示：
 
@@ -280,14 +280,14 @@ Task from nested launch
 Coroutine scope is over
 -->
 
-请注意，当等待内嵌 launch 时，紧挨“Task from coroutine scope”消息之后，
-就会执行并输出“Task from runBlocking”，尽管 coroutineScope 尚未结束。
+请注意，（当等待内嵌 launch 时）紧挨“Task from coroutine scope”消息之后，
+就会执行并输出“Task from runBlocking”——尽管 [coroutineScope][_coroutineScope] 尚未结束。
 
 ### 提取函数重构
 
 我们来将  `launch { …… }` 内部的代码块提取到独立的函数中。当你<!--
 -->对这段代码执行“提取函数”重构时，你会得到一个带有 `suspend` 修饰符的新函数。
-那是你的第一个*挂起函数*。在协程内部可以像普通函数一样使用挂起函数，
+这是你的第一个*挂起函数*。在协程内部可以像普通函数一样使用挂起函数，
 不过其额外特性是，同样<!--
 -->可以使用其他挂起函数（如本例中的 `delay`）来*挂起*协程的执行。
 
@@ -338,7 +338,7 @@ import kotlinx.coroutines.*
 fun main() = runBlocking {
     repeat(100_000) { // 启动大量的协程
         launch {
-            delay(1000L)
+            delay(5000L)
             print(".")
         }
     }
@@ -351,7 +351,8 @@ fun main() = runBlocking {
 
 <!--- TEST lines.size == 1 && lines[0] == ".".repeat(100_000) -->
 
-它启动了 10 万个协程，并且在一秒钟后，每个协程都输出一个点。
+它启动了 10 万个协程，并且在 5 秒钟后，每个协程都输出一个点。
+
 现在，尝试使用线程来实现。会发生什么？（很可能你的代码会产生某种内存不足的错误）
 
 ### 全局协程像守护线程
@@ -402,7 +403,7 @@ I'm sleeping 2 ...
 [runBlocking]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
 [Job.join]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html
-[coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
+[_coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
 [CoroutineScope()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope.html
 <!--- END -->
 

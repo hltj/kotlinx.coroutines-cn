@@ -223,7 +223,7 @@ fun main() = runBlocking<Unit> {
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-02.kt)获取完整代码。
 
-这段代码的结果非常有趣，所以我们将在细节中分析它：
+这段代码的结果非常有趣，所以我们会在更多细节中分析它：
 
 ```text
 a -> 'Hello 0'

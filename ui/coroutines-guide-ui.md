@@ -110,7 +110,7 @@ fun setup(hello: TextView, fab: FloatingActionButton) {
 部分中添加 `kotlinx-coroutines-android` 模块的依赖：
 
 ```groovy
-implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.4"
+implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2"
 ```
 
 可以在 Github 上 clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 这个项目到你的<!--
@@ -310,7 +310,7 @@ fun View.onClick(action: suspend (View) -> Unit) {
 -->控制此 actor 用于其邮箱的通道的实现。所有关于可用选项的描述于
 [`Channel()`][Channel] 工厂函数的文档中给出。
 
-我们修改代码使用 `ConflatedChannel` 通过 [Channel.CONFLATED] 修改容量值。这<!--
+我们修改代码使用归并的通道通过 [Channel.CONFLATED] 修改容量值。这<!--
 -->只需要在创建 actor 的这一行作出修改：
 
 ```kotlin
@@ -412,43 +412,36 @@ fun setup(hello: Text, fab: Circle) {
 -->计算时，会保留持有相关 UI 元素的引用超过所需要的时间，并阻止垃圾<!--
 -->回收机制在整个 UI 对象树不再需要被显示时将其销毁。
 
-这个问题的一个自然的解决方式是关联每一个拥有生命周期并在该 job 的上下文中创建协程的
-UI 对象的 job 对象。但是通过关联每一个协程构建器的 job 对象是容易出错的，
-它是非常容易被忘记的。对于这个目的，UI 的所有者可以实现 [CoroutineScope] 接口，那么每一个<!--
--->协程构建器被定义为了 [CoroutineScope] 上的扩展并承袭了没有显示声明的 UI job。
-为了简单起见，可以使用 [MainScope()] 工厂函数。它将会自动提供 `Dispatchers.Main` 以及父级<!--
--->作业。
+The natural solution to this problem is to associate a [CoroutineScope] object with each UI object that has a
+lifecycle and create all the coroutines in the context of this scope.
+For the sake of simplicity, [MainScope()] factory can be used. It automatically provides `Dispatchers.Main` and
+a parent job for all the children coroutines.
 
 举例来说，在 Android 应用程序中一个 `Activity` 最初被 _created_ 以及被当它不再被<!--
 -->需要时 _destroyed_ 并且当内存必须被释放时。一个自然的解决方式是绑定一个
-`Job` 作为 `Activity` 的单例：
+`CoroutineScope` 作为 `Activity` 的单例：
+
 <!--- CLEAR -->
 
 ```kotlin
-abstract class ScopedAppActivity: AppCompatActivity(), CoroutineScope by MainScope() {
+class MainActivity : AppCompatActivity() {
+    private val scope = MainScope()
+
     override fun onDestroy() {
         super.onDestroy()
-        cancel() // CoroutineScope.cancel
+        scope.cancel()
     } 
-}
-```
 
-现在，一个继承自 ScopedAppActivity 的 Activity 和 job 发生了关联。
-
-```kotlin
-class MainActivity : ScopedAppActivity() {
-
-    fun asyncShowData() = launch { // Activity 的 job 作为父结构时，这里将在 UI 上下文中被调用
-        // 实际实现
+    fun asyncShowData() = scope.launch { // Is invoked in UI context with Activity's scope as a parent
+        // actual implementation
     }
     
     suspend fun showIOData() {
-        val deferred = async(Dispatchers.IO) {
-            // 实现
+        val data = withContext(Dispatchers.IO) {
+            // compute data in background thread      
         }
         withContext(Dispatchers.Main) {
-          val data = deferred.await()
-          // 在 UI 中展示数据
+            // 在 UI 中展示数据
         }
     }
 }
@@ -457,43 +450,14 @@ class MainActivity : ScopedAppActivity() {
 每一个在 `MainActivity` 中启动的协程都以该 Activity 的 job 作为父级结构并会在 activity
 被销毁的时候立即取消。
 
-将 activity 作用域传播给它的视图与 presenters，很多技术可以被使用：
-- [coroutineScope] 构建起提供了一个嵌套 scope
-- 在 presenter 方法参数中接收 [CoroutineScope]
-- 使方法在 [CoroutineScope] 上实现扩展（仅适用于顶层方法）
+> Note, that Android has first-party support for coroutine scope in all entities with the lifecycle.
+See [the corresponding documentation](https://developer.android.com/topic/libraries/architecture/coroutines#lifecyclescope).
 
-```kotlin
-class ActivityWithPresenters: ScopedAppActivity() {
-    fun init() {
-        val presenter = Presenter()
-        val presenter2 = ScopedPresenter(this)
-    }
-}
+Parent-child relation between jobs forms a hierarchy. A coroutine that performs some background job on behalf of
+the activity can create further children coroutines. The whole tree of coroutines gets cancelled
+when the parent job is cancelled. An example of that is shown in the
+["Children of a coroutine"](../docs/coroutine-context-and-dispatchers.md#children-of-a-coroutine) section of the guide to coroutines.
 
-class Presenter {
-    suspend fun loadData() = coroutineScope {
-        // 外部 activity 的嵌套作用域
-    }
-    
-    suspend fun loadData(uiScope: CoroutineScope) = uiScope.launch {
-      // 在 UI 作用域中调用
-    }
-}
-
-class ScopedPresenter(scope: CoroutineScope): CoroutineScope by scope {
-    fun loadData() = launch { // 作为 ActivityWithPresenters 的作用域的扩展
-    }
-}
-
-suspend fun CoroutineScope.launchInIO() = launch(Dispatchers.IO) {
-   // 在调用者的作用域中启动，但使用 IO 调度器
-}
-``` 
-
-Job 之间的父子关系形成层级结构。代表执行某些后台工作的协程<!--
--->视图及其上下文可以创建更多的子协程。当父作业被取消时，
-整个协程树都会被取消。请参见协程指南中<!--
--->[“子协程”](../docs/coroutine-context-and-dispatchers.md#children-of-a-coroutine)这一小节的示例。
 <!--- CLEAR -->
 
 ### 阻塞操作
@@ -649,7 +613,6 @@ After delay
 [Job.cancel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/cancel.html
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [MainScope()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-main-scope.html
-[coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
 [withContext]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
 [CoroutineStart]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-start/index.html

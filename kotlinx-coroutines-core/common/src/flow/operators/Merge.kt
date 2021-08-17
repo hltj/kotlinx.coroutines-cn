@@ -19,14 +19,14 @@ import kotlinx.coroutines.flow.internal.unsafeFlow as flow
  * Name of the property that defines the value of [DEFAULT_CONCURRENCY].
  */
 @FlowPreview
-public const val DEFAULT_CONCURRENCY_PROPERTY_NAME = "kotlinx.coroutines.flow.defaultConcurrency"
+public const val DEFAULT_CONCURRENCY_PROPERTY_NAME: String = "kotlinx.coroutines.flow.defaultConcurrency"
 
 /**
  * Default concurrency limit that is used by [flattenMerge] and [flatMapMerge] operators.
  * It is 16 by default and can be changed on JVM using [DEFAULT_CONCURRENCY_PROPERTY_NAME] property.
  */
 @FlowPreview
-public val DEFAULT_CONCURRENCY = systemProp(DEFAULT_CONCURRENCY_PROPERTY_NAME,
+public val DEFAULT_CONCURRENCY: Int = systemProp(DEFAULT_CONCURRENCY_PROPERTY_NAME,
     16, 1, Int.MAX_VALUE
 )
 
@@ -34,7 +34,7 @@ public val DEFAULT_CONCURRENCY = systemProp(DEFAULT_CONCURRENCY_PROPERTY_NAME,
  * Transforms elements emitted by the original flow by applying [transform], that returns another flow,
  * and then concatenating and flattening these flows.
  *
- * This method is is a shortcut for `map(transform).flattenConcat()`. See [flattenConcat].
+ * This method is a shortcut for `map(transform).flattenConcat()`. See [flattenConcat].
  *
  * Note that even though this operator looks very familiar, we discourage its usage in a regular application-specific flows.
  * Most likely, suspending operation in [map] operator will be sufficient and linear transformations are much easier to reason about.

@@ -26,6 +26,7 @@ internal open class ChannelCoroutine<E>(
     }
 
     final override fun cancel(cause: CancellationException?) {
+        if (isClosedForReceive) return // Do not create an exception if channel is already cancelled
         cancelInternal(cause ?: defaultCancellationException())
     }
 
@@ -33,10 +34,5 @@ internal open class ChannelCoroutine<E>(
         val exception = cause.toCancellationException()
         _channel.cancel(exception) // cancel the channel
         cancelCoroutine(exception) // cancel the job
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    suspend fun sendFair(element: E) {
-        (_channel as AbstractSendChannel<E>).sendFair(element)
     }
 }
