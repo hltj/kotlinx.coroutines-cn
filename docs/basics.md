@@ -24,7 +24,7 @@
 
 运行以下代码：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -39,7 +39,7 @@ fun main() {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-01.kt)获取完整代码。
 
@@ -76,7 +76,7 @@ Error: Kotlin: Suspend functions are only allowed to be called from a coroutine 
 这容易让我们记混哪个是阻塞的、哪个是非阻塞的。
 让我们显式使用 [runBlocking] 协程构建器来阻塞：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -93,7 +93,7 @@ fun main() {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-02.kt)获取完整代码。
 
@@ -108,7 +108,7 @@ World!
 这个示例可以使用更合乎惯用法的方式重写，使用 `runBlocking` 来包装
 main 函数的执行：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -123,7 +123,7 @@ fun main() = runBlocking<Unit> { // 开始执行主协程
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-03.kt)获取完整代码。
 
@@ -141,7 +141,7 @@ World!
 import kotlinx.coroutines.*
 -->
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
  
 ```kotlin
 class MyTest {
@@ -152,7 +152,7 @@ class MyTest {
 }
 ```
 
-</div>
+
 
 <!--- CLEAR -->
  
@@ -161,7 +161,7 @@ class MyTest {
 延迟一段时间来等待另一个协程运行并不是一个好的选择。让我们显式<!--
 -->（以非阻塞方式）等待所启动的后台 [Job] 执行结束：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -178,7 +178,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-04.kt)获取完整代码。
 
@@ -209,7 +209,7 @@ World!
 -->外部协程（示例中的 `runBlocking`）直到在其作用域中启动的所有协程<!--
 -->都执行完毕后才会结束。因此，可以将我们的示例简化为：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -223,7 +223,7 @@ fun main() = runBlocking { // this: CoroutineScope
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-05.kt)获取完整代码。
 
@@ -244,7 +244,7 @@ World!
 
 可以通过以下示例来演示：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -269,7 +269,7 @@ fun main() = runBlocking { // this: CoroutineScope
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-06.kt)获取完整代码。
 
@@ -291,7 +291,7 @@ Coroutine scope is over
 不过其额外特性是，同样<!--
 -->可以使用其他挂起函数（如本例中的 `delay`）来*挂起*协程的执行。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -308,7 +308,7 @@ suspend fun doWorld() {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-07.kt)获取完整代码。
 
@@ -330,7 +330,7 @@ World!
 
 运行以下代码：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -345,7 +345,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-08.kt)获取完整代码。
 
@@ -360,7 +360,7 @@ fun main() = runBlocking {
 以下代码在 [GlobalScope] 中启动了一个长期运行的协程，该协程每秒输出“I'm sleeping”两次，之后<!--
 -->在主函数中延迟一段时间后返回。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -378,7 +378,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-09.kt)获取完整代码。
 

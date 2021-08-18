@@ -27,7 +27,7 @@ select 表达式可以同时等待多个挂起函数，并 _选择_
 
 我们现在有两个字符串生产者：`fizz` 和 `buzz` 。其中 `fizz` 每 300 毫秒生成一个“Fizz”字符串：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.fizz() = produce<String> {
@@ -38,11 +38,11 @@ fun CoroutineScope.fizz() = produce<String> {
 }
 ```
 
-</div>
+
 
 接着 `buzz` 每 500 毫秒生成一个 “Buzz!” 字符串：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.buzz() = produce<String> {
@@ -53,13 +53,13 @@ fun CoroutineScope.buzz() = produce<String> {
 }
 ```
 
-</div>
+
 
 使用 [receive][ReceiveChannel.receive] 挂起函数，我们可以从两个通道接收 _其中一个_ 的数据。
 但是 [select] 表达式允许我们使用其
 [onReceive][ReceiveChannel.onReceive] 子句 _同时_ 从两者接收：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<String>) {
@@ -74,13 +74,13 @@ suspend fun selectFizzBuzz(fizz: ReceiveChannel<String>, buzz: ReceiveChannel<St
 }
 ```
 
-</div>
+
 
 让我们运行代码 7 次：
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -124,7 +124,7 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-01.kt)获取完整代码。
 
@@ -149,7 +149,7 @@ select 中的 [onReceive][ReceiveChannel.onReceive] 子句在已经关闭的通�
 -->特定操作。以下示例还显示了 `select` 是一个返回<!--
 -->其查询方法结果的表达式：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): String =
@@ -169,7 +169,7 @@ suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): St
     }
 ```
 
-</div>
+
 
 注意，[onReceiveOrNull][onReceiveOrNull] 是一个仅在用于不可空元素的通道上<!--
 -->定义的扩展函数，以使关闭的通道与空值之间<!--
@@ -180,7 +180,7 @@ suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): St
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -219,7 +219,7 @@ fun main() = runBlocking<Unit> {
 }    
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-02.kt)获取完整代码。
 
@@ -256,7 +256,7 @@ Select 表达式具有 [onSend][SendChannel.onSend] 子句，可以很好的与<
 我们来编写一个整数生成器的示例，当主通道上的<!--
 -->消费者无法跟上它时，它会将值发送到 `side` 通道上：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.produceNumbers(side: SendChannel<Int>) = produce<Int> {
@@ -270,13 +270,13 @@ fun CoroutineScope.produceNumbers(side: SendChannel<Int>) = produce<Int> {
 }
 ```
 
-</div>
+
 
 消费者将会非常缓慢，每个数值处理需要 250 毫秒：
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -309,7 +309,7 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div> 
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-03.kt)获取完整代码。
 
@@ -337,7 +337,7 @@ Done consuming
 让我们启动一个异步函数，它在随机的延迟后<!--
 -->会延迟返回字符串：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.asyncString(time: Int) = async {
@@ -346,11 +346,11 @@ fun CoroutineScope.asyncString(time: Int) = async {
 }
 ```
 
-</div>
+
 
 让我们随机启动十余个异步函数，每个都延迟随机的时间。
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
@@ -359,7 +359,7 @@ fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
 }
 ```
 
-</div>
+
 
 现在 main 函数在等待第一个函数完成，并统计仍处于<!--
 -->激活状态的延迟值的数量。注意，我们在这里使用 `select` 表达式事实上是作为一种 Kotlin DSL，
@@ -368,7 +368,7 @@ fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -402,7 +402,7 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-04.kt)获取完整代码。
 
@@ -421,7 +421,7 @@ Deferred 4 produced answer 'Waited for 128 ms'
 -->延迟值，但它只在下一个延迟值到达或者通道关闭之前处于运行状态。此示例将
 [onReceiveOrNull][onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句放在同一个 `select` 中：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) = produce<String> {
@@ -446,12 +446,12 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
 }
 ```
 
-</div>
+
 
 为了测试它，我们将用一个简单的异步函数，它在特定的延迟后返回特定的字符串：
 
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.asyncString(str: String, time: Long) = async {
@@ -460,14 +460,14 @@ fun CoroutineScope.asyncString(str: String, time: Long) = async {
 }
 ```
 
-</div>
+
 
 main 函数只是启动一个协程来打印 `switchMapDeferreds` 的结果并向它发送一些<!--
 -->测试数据：
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -521,7 +521,7 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-05.kt)获取完整代码。
 

@@ -35,7 +35,7 @@
 
 可以通过一个使用 [GlobalScope] 创建根协程的简单示例来进行演示：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -60,7 +60,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-01.kt)获取完整代码。
 
@@ -103,7 +103,7 @@ Caught ArithmeticException
 > 在监督作用域内运行的协程不会将异常传播到其父协程，并且<!--
 -->会从此规则中排除。本文档的另一个小节——[监督](#监督)提供了更多细节。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -124,7 +124,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-02.kt)获取完整代码。
 
@@ -143,7 +143,7 @@ CoroutineExceptionHandler got java.lang.AssertionError
 -->仅仅应该被用来作为额外调试信息的资源。
 当一个协程使用 [Job.cancel] 取消的时候，它会被终止，但是它不会取消它的父协程。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -170,7 +170,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-03.kt)获取完整代码。
 
@@ -197,7 +197,7 @@ Parent is not cancelled
 当父协程的所有子协程都结束后，原始的异常才会被父协程处理，
 见下面这个例子。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -230,7 +230,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-04.kt)获取完整代码。
 
@@ -254,7 +254,7 @@ CoroutineExceptionHandler got java.lang.ArithmeticException
 import kotlinx.coroutines.exceptions.*
 -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -282,7 +282,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-05.kt)获取完整代码。
 
@@ -301,7 +301,7 @@ CoroutineExceptionHandler got java.io.IOException with suppressed [java.lang.Ari
 
 取消异常是透明的，默认情况下是未包装的：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -332,7 +332,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-06.kt)获取完整代码。
 
@@ -362,7 +362,7 @@ CoroutineExceptionHandler got java.io.IOException
 它类似于常规的 [Job][Job()]，唯一的不同是：<!--
 -->SupervisorJob 的取消只会向下传播。这是很容易用以下示例演示：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -396,7 +396,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-supervision-01.kt)获取完整代码。
 
@@ -417,7 +417,7 @@ The second child is cancelled because the supervisor was cancelled
 -->并且当作业自身执行失败的时候将所有子作业全部取消。作业自身也会在所有的子作业执行结束前等待，
 就像 [coroutineScope][_coroutineScope] 所做的那样。
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 import kotlin.coroutines.*
@@ -445,7 +445,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-supervision-02.kt)获取完整代码。
 
@@ -468,7 +468,7 @@ Caught an assertion error
 -->设置在它们作用域内的 [CoroutineExceptionHandler]，与父协程的方式相同
 （参见 [CoroutineExceptionHandler](#coroutineexceptionhandler) 小节以获知更多细节）。
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 import kotlin.coroutines.*
@@ -489,7 +489,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-supervision-03.kt)获取完整代码。
 

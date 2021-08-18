@@ -1788,7 +1788,7 @@ Event: 3
 为方便起见，[流][_flow]构建器对每个发射值执行附加的 [ensureActive] 检测以进行取消。
 这意味着从 `flow { ... }` 发出的繁忙循环是可以取消的：
  
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -1811,7 +1811,7 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 ```  
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-37.kt)获取完整的代码。
 
@@ -1834,7 +1834,7 @@ Exception in thread "main" kotlinx.coroutines.JobCancellationException: Blocking
 例如，如果使用 [IntRange.asFlow] 扩展来编写相同的繁忙循环，
 并且没有在任何地方暂停，那么就没有取消的检测；
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -1850,7 +1850,7 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 ```  
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-38.kt)获取完整的代码。
 
@@ -1873,7 +1873,7 @@ Exception in thread "main" kotlinx.coroutines.JobCancellationException: Blocking
 可以添加 `.onEach { currentCoroutineContext().ensureActive() }`，
 但是这里提供了一个现成的 [cancellable] 操作符来执行此操作：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -1889,7 +1889,7 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 ```  
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-39.kt)获取完整的代码。
 

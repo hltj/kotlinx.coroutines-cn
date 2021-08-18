@@ -30,7 +30,7 @@
 -->阻塞的 `take` 操作并提供了挂起的 [receive][ReceiveChannel.receive]。
 
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -50,7 +50,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-01.kt)获取完整代码。
 
@@ -77,7 +77,7 @@ Done!
 这个迭代停止就说明关闭指令已经被接收了。所以这里保证<!--
 -->所有先前发送出去的元素都在通道关闭前被接收到。
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -97,7 +97,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-02.kt)获取完整代码。
 
@@ -120,7 +120,7 @@ Done!
 这里有一个名为 [produce] 的便捷的协程构建器，可以很容易的在生产者端正确工作，
 并且我们使用扩展函数 [consumeEach] 在消费者端替代 `for` 循环：
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -139,7 +139,7 @@ fun main() = runBlocking {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-03.kt)获取完整代码。
 
@@ -156,7 +156,7 @@ Done!
 
 管道是一种一个协程在流中开始生产可能无穷多个元素的模式：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.produceNumbers() = produce<Int> {
@@ -165,12 +165,12 @@ fun CoroutineScope.produceNumbers() = produce<Int> {
 }
 ```
 
-</div>
+
 
 并且另一个或多个协程开始消费这些流，做一些操作，并生产了一些额外的结果。
 在下面的例子中，对这些数字仅仅做了平方操作：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = produce {
@@ -178,13 +178,13 @@ fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = p
 }
 ```
 
-</div>
+
 
 主要的代码启动并连接了整个管道：
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -212,7 +212,7 @@ fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = p
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-04.kt)获取完整代码。
 
@@ -234,7 +234,7 @@ Done!
 让我们来展示一个极端的例子——在协程中使用一个管道来生成<!--
 -->素数。我们开启了一个数字的无限序列。
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
  
 ```kotlin
 fun CoroutineScope.numbersFrom(start: Int) = produce<Int> {
@@ -243,12 +243,12 @@ fun CoroutineScope.numbersFrom(start: Int) = produce<Int> {
 }
 ```
 
-</div>
+
 
 在下面的管道阶段中过滤了来源于流中的数字，删除了所有<!--
 -->可以被给定素数整除的数字。
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<Int> {
@@ -256,7 +256,7 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 }
 ```
 
-</div>
+
 
 现在我们开启了一个从 2 开始的数字流管道，从当前的通道中取一个素数，
 并为每一个我们发现的素数启动一个流水线阶段：
@@ -275,7 +275,7 @@ numbersFrom(2) -> filter(2) -> filter(3) -> filter(5) -> filter(7) ……
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -303,7 +303,7 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-05.kt)获取完整代码。
 
@@ -343,7 +343,7 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 让我们启动一个定期产生整数的生产者协程
 （每秒十个数字）：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.produceNumbers() = produce<Int> {
@@ -355,12 +355,12 @@ fun CoroutineScope.produceNumbers() = produce<Int> {
 }
 ```
 
-</div>
+
 
 接下来我们可以得到几个处理器协程。在这个示例中，它们只是打印它们的 id 和<!--
 -->接收到的数字：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = launch {
@@ -370,13 +370,13 @@ fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = laun
 }
 ```
 
-</div>
+
 
 现在让我们启动五个处理器协程并让它们工作将近一秒。看看发生了什么：
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -406,7 +406,7 @@ fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = laun
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-06.kt)获取完整代码。
 
@@ -442,7 +442,7 @@ Processor #3 received 10
 比如说，让我们创建一个字符串的通道，和一个在这个通道中<!--
 -->以指定的延迟反复发送一个指定字符串的挂起函数：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
@@ -453,14 +453,14 @@ suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
 }
 ```
 
-</div>
+
 
 现在，我们启动了几个发送字符串的协程，让我们看看会发生什么
 （在示例中，我们在主线程的上下文中作为主协程的子协程来启动它们）：
 
 <!--- CLEAR -->
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -486,7 +486,7 @@ suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-07.kt)获取完整代码。
 
@@ -516,7 +516,7 @@ BAR!
 看看如下代码的表现：
 
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -538,7 +538,7 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-08.kt)获取完整代码。
 
@@ -564,7 +564,7 @@ Sending 4
 -->从共享的“桌子”通道接收到这个“球”元素。
 
 
-<div class="sample" markdown="1" theme="idea" data-min-compiler-version="1.3">
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -593,7 +593,7 @@ suspend fun player(name: String, table: Channel<Ball>) {
 //sampleEnd
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-09.kt)得到完整代码
 
@@ -625,7 +625,7 @@ pong Ball(hits=4)
 
 现在让我们看看它是如何在实践中工作的：
 
-<div class="sample" markdown="1" theme="idea" data-highlight-only>
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -656,7 +656,7 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-</div>
+
 
 > 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-10.kt)获取完整代码。
 
