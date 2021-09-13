@@ -1,15 +1,15 @@
 <!--- TEST_NAME ChannelsGuideTest -->
 
-[//]: # (title: Channels)
+[//]: # (title: 通道)
 
-Deferred values provide a convenient way to transfer a single value between coroutines.
-Channels provide a way to transfer a stream of values.
+延期的值提供了一种便捷的方法使单个值在多个协程之间进行相互传输。
+通道提供了一种在流中传输值的方法。
 
-## Channel basics
+## 通道基础
 
-A [Channel] is conceptually very similar to `BlockingQueue`. One key difference is that
-instead of a blocking `put` operation it has a suspending [send][SendChannel.send], and instead of
-a blocking `take` operation it has a suspending [receive][ReceiveChannel.receive].
+一个 [Channel] 是一个和 `BlockingQueue` 非常相似的概念。其中一个不同是<!--
+-->它代替了阻塞的 `put` 操作并提供了挂起的 [send][SendChannel.send]，还替代了<!--
+-->阻塞的 `take` 操作并提供了挂起的 [receive][ReceiveChannel.receive]。
 
 
 ```kotlin
@@ -20,19 +20,19 @@ fun main() = runBlocking {
 //sampleStart
     val channel = Channel<Int>()
     launch {
-        // this might be heavy CPU-consuming computation or async logic, we'll just send five squares
+        // 这里可能是消耗大量 CPU 运算的异步逻辑，我们将仅仅做 5 次整数的平方并发送
         for (x in 1..5) channel.send(x * x)
     }
-    // here we print five received integers:
+    // 这里我们打印了 5 次被接收的整数：
     repeat(5) { println(channel.receive()) }
     println("Done!")
 //sampleEnd
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-01.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-01.kt)获取完整代码。
 
-The output of this code is:
+这段代码的输出如下：
 
 ```text
 1
@@ -45,15 +45,15 @@ Done!
 
 <!--- TEST -->
 
-## Closing and iteration over channels
+## 关闭与迭代通道
 
-Unlike a queue, a channel can be closed to indicate that no more elements are coming.
-On the receiver side it is convenient to use a regular `for` loop to receive elements
-from the channel.
+和队列不同，一个通道可以通过被关闭来表明没有更多的元素将会进入通道。
+在接收者中可以定期的使用 `for` 循环来从通道中<!--
+-->接收元素。
 
-Conceptually, a [close][SendChannel.close] is like sending a special close token to the channel.
-The iteration stops as soon as this close token is received, so there is a guarantee
-that all previously sent elements before the close are received:
+从概念上来说，一个 [close][SendChannel.close] 操作就像向通道发送了一个特殊的关闭指令。
+这个迭代停止就说明关闭指令已经被接收了。所以这里保证<!--
+-->所有先前发送出去的元素都在通道关闭前被接收到。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -64,16 +64,16 @@ fun main() = runBlocking {
     val channel = Channel<Int>()
     launch {
         for (x in 1..5) channel.send(x * x)
-        channel.close() // we're done sending
+        channel.close() // 我们结束发送
     }
-    // here we print received values using `for` loop (until the channel is closed)
+    // 这里我们使用 `for` 循环来打印所有被接收到的元素（直到通道被关闭）
     for (y in channel) println(y)
     println("Done!")
 //sampleEnd
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-02.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-02.kt)获取完整代码。
 
 <!--- TEST 
 1
@@ -84,15 +84,15 @@ fun main() = runBlocking {
 Done!
 -->
 
-## Building channel producers
+## 构建通道生产者
 
-The pattern where a coroutine is producing a sequence of elements is quite common.
-This is a part of _producer-consumer_ pattern that is often found in concurrent code.
-You could abstract such a producer into a function that takes channel as its parameter, but this goes contrary
-to common sense that results must be returned from functions.
+协程生成一系列元素的模式很常见。
+这是 _生产者——消费者_ 模式的一部分，并且经常能在并发的代码中看到它。
+你可以将生产者抽象成一个函数，并且使通道作为它的参数，但这与<!--
+-->必须从函数中返回结果的常识相违悖。
 
-There is a convenient coroutine builder named [produce] that makes it easy to do it right on producer side,
-and an extension function [consumeEach], that replaces a `for` loop on the consumer side:
+这里有一个名为 [produce] 的便捷的协程构建器，可以很容易的在生产者端正确工作，
+并且我们使用扩展函数 [consumeEach] 在消费者端替代 `for` 循环：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -111,7 +111,7 @@ fun main() = runBlocking {
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-03.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-03.kt)获取完整代码。
 
 <!--- TEST 
 1
@@ -122,19 +122,19 @@ fun main() = runBlocking {
 Done!
 -->
 
-## Pipelines
+## 管道
 
-A pipeline is a pattern where one coroutine is producing, possibly infinite, stream of values:
+管道是一种一个协程在流中开始生产可能无穷多个元素的模式：
 
 ```kotlin
 fun CoroutineScope.produceNumbers() = produce<Int> {
     var x = 1
-    while (true) send(x++) // infinite stream of integers starting from 1
+    while (true) send(x++) // 在流中开始从 1 生产无穷多个整数
 }
 ```
 
-And another coroutine or coroutines are consuming that stream, doing some processing, and producing some other results.
-In the example below, the numbers are just squared:
+并且另一个或多个协程开始消费这些流，做一些操作，并生产了一些额外的结果。
+在下面的例子中，对这些数字仅仅做了平方操作：
 
 ```kotlin
 fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = produce {
@@ -142,7 +142,7 @@ fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = p
 }
 ```
 
-The main code starts and connects the whole pipeline:
+主要的代码启动并连接了整个管道：
 
 <!--- CLEAR -->
 
@@ -152,19 +152,19 @@ import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking {
 //sampleStart
-    val numbers = produceNumbers() // produces integers from 1 and on
-    val squares = square(numbers) // squares integers
+    val numbers = produceNumbers() // 从 1 开始生成整数
+    val squares = square(numbers) // 整数求平方
     repeat(5) {
-        println(squares.receive()) // print first five
+        println(squares.receive()) // 输出前五个
     }
-    println("Done!") // we are done
-    coroutineContext.cancelChildren() // cancel children coroutines
+    println("Done!") // 至此已完成
+    coroutineContext.cancelChildren() // 取消子协程
 //sampleEnd
 }
 
 fun CoroutineScope.produceNumbers() = produce<Int> {
     var x = 1
-    while (true) send(x++) // infinite stream of integers starting from 1
+    while (true) send(x++) // 从 1 开始的无限的整数流
 }
 
 fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = produce {
@@ -172,7 +172,7 @@ fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = p
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-04.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-04.kt)获取完整代码。
 
 <!--- TEST 
 1
@@ -183,24 +183,24 @@ fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = p
 Done!
 -->
 
-> All functions that create coroutines are defined as extensions on [CoroutineScope],
-so that we can rely on [structured concurrency](https://kotlinlang.org/docs/reference/coroutines/composing-suspending-functions.html#structured-concurrency-with-async) to make
-sure that we don't have lingering global coroutines in our application.
+> 所有创建了协程的函数被定义在了 [CoroutineScope] 的扩展上，
+所以我们可以依靠[结构化并发](https://kotlinlang.org/docs/reference/coroutines/composing-suspending-functions.html#structured-concurrency-with-async)来确保<!--
+-->没有常驻在我们的应用程序中的全局协程。
 
-## Prime numbers with pipeline
+## 使用管道的素数
 
-Let's take pipelines to the extreme with an example that generates prime numbers using a pipeline
-of coroutines. We start with an infinite sequence of numbers.
+让我们来展示一个极端的例子——在协程中使用一个管道来生成<!--
+-->素数。我们开启了一个数字的无限序列。
 
 ```kotlin
 fun CoroutineScope.numbersFrom(start: Int) = produce<Int> {
     var x = start
-    while (true) send(x++) // infinite stream of integers from start
+    while (true) send(x++) // 开启了一个无限的整数流
 }
 ```
 
-The following pipeline stage filters an incoming stream of numbers, removing all the numbers
-that are divisible by the given prime number:
+在下面的管道阶段中过滤了来源于流中的数字，删除了所有<!--
+-->可以被给定素数整除的数字。
 
 ```kotlin
 fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<Int> {
@@ -208,20 +208,20 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 }
 ```
 
-Now we build our pipeline by starting a stream of numbers from 2, taking a prime number from the current channel,
-and launching new pipeline stage for each prime number found:
+现在我们开启了一个从 2 开始的数字流管道，从当前的通道中取一个素数，
+并为每一个我们发现的素数启动一个流水线阶段：
 
 ```
-numbersFrom(2) -> filter(2) -> filter(3) -> filter(5) -> filter(7) ... 
+numbersFrom(2) -> filter(2) -> filter(3) -> filter(5) -> filter(7) ……
 ``` 
 
-The following example prints the first ten prime numbers,
-running the whole pipeline in the context of the main thread. Since all the coroutines are launched in
-the scope of the main [runBlocking] coroutine
-we don't have to keep an explicit list of all the coroutines we have started.
-We use [cancelChildren][kotlin.coroutines.CoroutineContext.cancelChildren]
-extension function to cancel all the children coroutines after we have printed
-the first ten prime numbers.
+下面的例子打印了前十个素数，
+在主线程的上下文中运行整个管道。直到所有的协程在<!--
+-->该主协程 [runBlocking] 的作用域中被启动完成。
+我们不必使用一个显式的列表来保存所有被我们已经启动的协程。
+我们使用 [cancelChildren][kotlin.coroutines.CoroutineContext.cancelChildren]
+扩展函数在我们打印了前十个素数以后<!--
+-->来取消所有的子协程。
 
 <!--- CLEAR -->
 
@@ -237,13 +237,13 @@ fun main() = runBlocking {
         println(prime)
         cur = filter(cur, prime)
     }
-    coroutineContext.cancelChildren() // cancel all children to let main finish
+    coroutineContext.cancelChildren() // 取消所有的子协程来让主协程结束
 //sampleEnd    
 }
 
 fun CoroutineScope.numbersFrom(start: Int) = produce<Int> {
     var x = start
-    while (true) send(x++) // infinite stream of integers from start
+    while (true) send(x++) // 从 start 开始过滤整数流
 }
 
 fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<Int> {
@@ -251,9 +251,9 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-05.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-05.kt)获取完整代码。
 
-The output of this code is:
+这段代码的输出如下：
 
 ```text
 2
@@ -270,37 +270,37 @@ The output of this code is:
 
 <!--- TEST -->
 
-Note that you can build the same pipeline using
+注意，你可以在标准库中使用
 [`iterator`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/iterator.html)
-coroutine builder from the standard library.
-Replace `produce` with `iterator`, `send` with `yield`, `receive` with `next`,
-`ReceiveChannel` with `Iterator`, and get rid of the coroutine scope. You will not need `runBlocking` either.
-However, the benefit of a pipeline that uses channels as shown above is that it can actually use
-multiple CPU cores if you run it in [Dispatchers.Default] context.
+协程构建器来构建一个相似的管道。
+使用 `iterator` 替换 `produce`、`yield` 替换 `send`、`next` 替换 `receive`、
+`Iterator` 替换 `ReceiveChannel` 来摆脱协程作用域，你将不再需要 `runBlocking`。
+然而，如上所示，如果你在 [Dispatchers.Default] 上下文中运行它，使用通道的管道的好处在于<!--
+-->它可以充分利用多核心 CPU。
 
-Anyway, this is an extremely impractical way to find prime numbers. In practice, pipelines do involve some
-other suspending invocations (like asynchronous calls to remote services) and these pipelines cannot be
-built using `sequence`/`iterator`, because they do not allow arbitrary suspension, unlike
-`produce`, which is fully asynchronous.
+不过，这是一种非常不切实际的寻找素数的方法。在实践中，管道调用了另外的一些<!--
+-->挂起中的调用（就像异步调用远程服务）并且这些管道不能<!--
+-->内置使用 `sequence`/`iterator`，因为它们不被允许随意的挂起，不像
+`produce` 是完全异步的。
 
-## Fan-out
+## 扇出
 
-Multiple coroutines may receive from the same channel, distributing work between themselves.
-Let us start with a producer coroutine that is periodically producing integers
-(ten numbers per second):
+多个协程也许会接收相同的管道，在它们之间进行分布式工作。
+让我们启动一个定期产生整数的生产者协程
+（每秒十个数字）：
 
 ```kotlin
 fun CoroutineScope.produceNumbers() = produce<Int> {
-    var x = 1 // start from 1
+    var x = 1 // 从 1 开始
     while (true) {
-        send(x++) // produce next
-        delay(100) // wait 0.1s
+        send(x++) // 产生下一个数字
+        delay(100) // 等待 0.1 秒
     }
 }
 ```
 
-Then we can have several processor coroutines. In this example, they just print their id and
-received number:
+接下来我们可以得到几个处理器协程。在这个示例中，它们只是打印它们的 id 和<!--
+-->接收到的数字：
 
 ```kotlin
 fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = launch {
@@ -310,7 +310,7 @@ fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = laun
 }
 ```
 
-Now let us launch five processors and let them work for almost a second. See what happens:
+现在让我们启动五个处理器协程并让它们工作将近一秒。看看发生了什么：
 
 <!--- CLEAR -->
 
@@ -323,15 +323,15 @@ fun main() = runBlocking<Unit> {
     val producer = produceNumbers()
     repeat(5) { launchProcessor(it, producer) }
     delay(950)
-    producer.cancel() // cancel producer coroutine and thus kill them all
+    producer.cancel() // 取消协程生产者从而将它们全部杀死
 //sampleEnd
 }
 
 fun CoroutineScope.produceNumbers() = produce<Int> {
     var x = 1 // start from 1
     while (true) {
-        send(x++) // produce next
-        delay(100) // wait 0.1s
+        send(x++) // 产生下一个数字
+        delay(100) // 等待 0.1 秒
     }
 }
 
@@ -342,10 +342,10 @@ fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = laun
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-06.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-06.kt)获取完整代码。
 
-The output will be similar to the the following one, albeit the processor ids that receive
-each specific integer may be different:
+该输出将类似于如下所示，尽管接收<!--
+-->每个特定整数的处理器 id 可能会不同：
 
 ```
 Processor #2 received 1
@@ -362,19 +362,19 @@ Processor #3 received 10
 
 <!--- TEST lines.size == 10 && lines.withIndex().all { (i, line) -> line.startsWith("Processor #") && line.endsWith(" received ${i + 1}") } -->
 
-Note that cancelling a producer coroutine closes its channel, thus eventually terminating iteration
-over the channel that processor coroutines are doing.
+注意，取消生产者协程将关闭它的通道，从而最终终止<!--
+-->处理器协程正在执行的此通道上的迭代。
 
-Also, pay attention to how we explicitly iterate over channel with `for` loop to perform fan-out in `launchProcessor` code.
-Unlike `consumeEach`, this `for` loop pattern is perfectly safe to use from multiple coroutines. If one of the processor
-coroutines fails, then others would still be processing the channel, while a processor that is written via `consumeEach`
-always consumes (cancels) the underlying channel on its normal or abnormal completion.
+还有，注意我们如何使用 `for` 循环显式迭代通道以在 `launchProcessor` 代码中执行扇出。
+与 `consumeEach` 不同，这个 `for` 循环是安全完美地使用多个协程的。如果其中一个处理器<!--
+-->协程执行失败，其它的处理器协程仍然会继续处理通道，而通过 `consumeEach`
+编写的处理器始终在正常或非正常完成时消耗（取消）底层通道。
 
-## Fan-in
+## 扇入
 
-Multiple coroutines may send to the same channel.
-For example, let us have a channel of strings, and a suspending function that
-repeatedly sends a specified string to this channel with a specified delay:
+多个协程可以发送到同一个通道。
+比如说，让我们创建一个字符串的通道，和一个在这个通道中<!--
+-->以指定的延迟反复发送一个指定字符串的挂起函数：
 
 ```kotlin
 suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
@@ -385,8 +385,8 @@ suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
 }
 ```
 
-Now, let us see what happens if we launch a couple of coroutines sending strings
-(in this example we launch them in the context of the main thread as main coroutine's children):
+现在，我们启动了几个发送字符串的协程，让我们看看会发生什么
+（在示例中，我们在主线程的上下文中作为主协程的子协程来启动它们）：
 
 <!--- CLEAR -->
 
@@ -399,10 +399,10 @@ fun main() = runBlocking {
     val channel = Channel<String>()
     launch { sendString(channel, "foo", 200L) }
     launch { sendString(channel, "BAR!", 500L) }
-    repeat(6) { // receive first six
+    repeat(6) { // 接收前六个
         println(channel.receive())
     }
-    coroutineContext.cancelChildren() // cancel all children to let main finish
+    coroutineContext.cancelChildren() // 取消所有子协程来让主协程结束
 //sampleEnd
 }
 
@@ -414,9 +414,9 @@ suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-07.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-07.kt)获取完整代码。
 
-The output is:
+输出如下：
 
 ```text
 foo
@@ -429,17 +429,17 @@ BAR!
 
 <!--- TEST -->
 
-## Buffered channels
+## 带缓冲的通道
 
-The channels shown so far had no buffer. Unbuffered channels transfer elements when sender and receiver
-meet each other (aka rendezvous). If send is invoked first, then it is suspended until receive is invoked,
-if receive is invoked first, it is suspended until send is invoked.
+到目前为止展示的通道都是没有缓冲区的。无缓冲的通道在发送者和接收者相遇时<!--
+-->传输元素（也称“对接”）。如果发送先被调用，则它将被挂起直到接收被调用，
+如果接收先被调用，它将被挂起直到发送被调用。
 
-Both [Channel()] factory function and [produce] builder take an optional `capacity` parameter to
-specify _buffer size_. Buffer allows senders to send multiple elements before suspending,
-similar to the `BlockingQueue` with a specified capacity, which blocks when buffer is full.
+[Channel()] 工厂函数与 [produce] 建造器通过一个可选的参数 `capacity`
+来指定 _缓冲区大小_ 。缓冲允许发送者在被挂起前发送多个元素，
+就像 `BlockingQueue` 有指定的容量一样，当缓冲区被占满的时候将会引起阻塞。
 
-Take a look at the behavior of the following code:
+看看如下代码的表现：
 
 
 ```kotlin
@@ -448,23 +448,23 @@ import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking<Unit> {
 //sampleStart
-    val channel = Channel<Int>(4) // create buffered channel
-    val sender = launch { // launch sender coroutine
+    val channel = Channel<Int>(4) // 启动带缓冲的通道
+    val sender = launch { // 启动发送者协程
         repeat(10) {
-            println("Sending $it") // print before sending each element
-            channel.send(it) // will suspend when buffer is full
+            println("Sending $it") // 在每一个元素发送前打印它们
+            channel.send(it) // 将在缓冲区被占满时挂起
         }
     }
-    // don't receive anything... just wait....
+    // 没有接收到东西……只是等待……
     delay(1000)
-    sender.cancel() // cancel sender coroutine
+    sender.cancel() // 取消发送者协程
 //sampleEnd    
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-08.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-08.kt)获取完整代码。
 
-It prints "sending" _five_ times using a buffered channel with capacity of _four_:
+使用缓冲通道并给 capacity 参数传入 _四_ 它将打印“sending” _五_ 次：
 
 ```text
 Sending 0
@@ -476,14 +476,14 @@ Sending 4
 
 <!--- TEST -->
 
-The first four elements are added to the buffer and the sender suspends when trying to send the fifth one.
+前四个元素被加入到了缓冲区并且发送者在试图发送第五个元素的时候被挂起。
 
-## Channels are fair
+## 通道是公平的
 
-Send and receive operations to channels are _fair_ with respect to the order of their invocation from
-multiple coroutines. They are served in first-in first-out order, e.g. the first coroutine to invoke `receive`
-gets the element. In the following example two coroutines "ping" and "pong" are
-receiving the "ball" object from the shared "table" channel.
+发送和接收操作是 _公平的_ 并且尊重调用它们的<!--
+-->多个协程。它们遵守先进先出原则，可以看到第一个协程调用 `receive`
+并得到了元素。在下面的例子中两个协程“乒”和“乓”都<!--
+-->从共享的“桌子”通道接收到这个“球”元素。
 
 
 ```kotlin
@@ -494,30 +494,30 @@ import kotlinx.coroutines.channels.*
 data class Ball(var hits: Int)
 
 fun main() = runBlocking {
-    val table = Channel<Ball>() // a shared table
+    val table = Channel<Ball>() // 一个共享的 table（桌子）
     launch { player("ping", table) }
     launch { player("pong", table) }
-    table.send(Ball(0)) // serve the ball
-    delay(1000) // delay 1 second
-    coroutineContext.cancelChildren() // game over, cancel them
+    table.send(Ball(0)) // 乒乓球
+    delay(1000) // 延迟 1 秒钟
+    coroutineContext.cancelChildren() // 游戏结束，取消它们
 }
 
 suspend fun player(name: String, table: Channel<Ball>) {
-    for (ball in table) { // receive the ball in a loop
+    for (ball in table) { // 在循环中接收球
         ball.hits++
         println("$name $ball")
-        delay(300) // wait a bit
-        table.send(ball) // send the ball back
+        delay(300) // 等待一段时间
+        table.send(ball) // 将球发送回去
     }
 }
 //sampleEnd
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-09.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-09.kt)得到完整代码
 
-The "ping" coroutine is started first, so it is the first one to receive the ball. Even though "ping"
-coroutine immediately starts receiving the ball again after sending it back to the table, the ball gets
-received by the "pong" coroutine, because it was already waiting for it:
+“乒”协程首先被启动，所以它首先接收到了球。甚至虽然“乒”
+协程在将球发送会桌子以后立即开始接收，但是球还是被“乓”
+协程接收了，因为它一直在等待着接收球：
 
 ```text
 ping Ball(hits=1)
@@ -528,27 +528,27 @@ pong Ball(hits=4)
 
 <!--- TEST -->
 
-Note that sometimes channels may produce executions that look unfair due to the nature of the executor
-that is being used. See [this issue](https://github.com/Kotlin/kotlinx.coroutines/issues/111) for details.
+注意，有时候通道执行时由于执行者的性质而看起来<!--
+-->不那么公平。点击[这个提案](https://github.com/Kotlin/kotlinx.coroutines/issues/111)来查看更多细节。
 
-## Ticker channels
+## 计时器通道
 
-Ticker channel is a special rendezvous channel that produces `Unit` every time given delay passes since last consumption from this channel.
-Though it may seem to be useless standalone, it is a useful building block to create complex time-based [produce]
-pipelines and operators that do windowing and other time-dependent processing.
-Ticker channel can be used in [select] to perform "on tick" action.
+计时器通道是一种特别的会合通道，每次经过特定的延迟都会从该通道进行消费并产生 `Unit`。
+虽然它看起来似乎没用，它被用来构建分段来创建复杂的基于时间的 [produce]
+管道和进行窗口化操作以及其它时间相关的处理。
+可以在 [select] 中使用计时器通道来进行“打勾”操作。
 
-To create such channel use a factory method [ticker].
-To indicate that no further elements are needed use [ReceiveChannel.cancel] method on it.
+使用工厂方法 [ticker] 来创建这些通道。
+为了表明不需要其它元素，请使用 [ReceiveChannel.cancel] 方法。
 
-Now let's see how it works in practice:
+现在让我们看看它是如何在实践中工作的：
 
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
 fun main() = runBlocking<Unit> {
-    val tickerChannel = ticker(delayMillis = 100, initialDelayMillis = 0) // create ticker channel
+    val tickerChannel = ticker(delayMillis = 100, initialDelayMillis = 0) //创建计时器通道
     var nextElement = withTimeoutOrNull(1) { tickerChannel.receive() }
     println("Initial element is available immediately: $nextElement") // no initial delay
 
@@ -558,23 +558,23 @@ fun main() = runBlocking<Unit> {
     nextElement = withTimeoutOrNull(60) { tickerChannel.receive() }
     println("Next element is ready in 100 ms: $nextElement")
 
-    // Emulate large consumption delays
+    // 模拟大量消费延迟
     println("Consumer pauses for 150ms")
     delay(150)
-    // Next element is available immediately
+    // 下一个元素立即可用
     nextElement = withTimeoutOrNull(1) { tickerChannel.receive() }
     println("Next element is available immediately after large consumer delay: $nextElement")
-    // Note that the pause between `receive` calls is taken into account and next element arrives faster
+    // 请注意，`receive` 调用之间的暂停被考虑在内，下一个元素的到达速度更快
     nextElement = withTimeoutOrNull(60) { tickerChannel.receive() } 
     println("Next element is ready in 50ms after consumer pause in 150ms: $nextElement")
 
-    tickerChannel.cancel() // indicate that no more elements are needed
+    tickerChannel.cancel() // 表明不再需要更多的元素
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-10.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-10.kt)获取完整代码。
 
-It prints following lines:
+它的打印如下：
 
 ```text
 Initial element is available immediately: kotlin.Unit
@@ -587,11 +587,11 @@ Next element is ready in 50ms after consumer pause in 150ms: kotlin.Unit
 
 <!--- TEST -->
 
-Note that [ticker] is aware of possible consumer pauses and, by default, adjusts next produced element
-delay if a pause occurs, trying to maintain a fixed rate of produced elements.
+请注意，[ticker] 知道可能的消费者暂停，并且默认情况下会调整下一个生成的元素<!--
+-->如果发生暂停则延迟，试图保持固定的生成元素率。
 
-Optionally, a `mode` parameter equal to [TickerMode.FIXED_DELAY] can be specified to maintain a fixed
-delay between elements.
+给可选的 `mode` 参数传入 [TickerMode.FIXED_DELAY] 可以保持固定<!--
+-->元素之间的延迟。
 
 
 <!--- MODULE kotlinx-coroutines-core -->

@@ -1,29 +1,29 @@
 <!--- TEST_NAME BasicsGuideTest -->
 
-[//]: # (title: Coroutine basics)
+[//]: # (title: 协程基础)
 
-This section covers basic coroutine concepts.
+这一部分包括基础的协程概念。
 
-## Your first coroutine
+## 第一个协程程序
 
-Run the following code:
+运行以下代码：
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() {
-    GlobalScope.launch { // launch a new coroutine in background and continue
-        delay(1000L) // non-blocking delay for 1 second (default time unit is ms)
-        println("World!") // print after delay
+    GlobalScope.launch { // 在后台启动一个新的协程并继续
+        delay(1000L) // 非阻塞的等待 1 秒钟（默认时间单位是毫秒）
+        println("World!") // 在延迟后打印输出
     }
-    println("Hello,") // main thread continues while coroutine is delayed
-    Thread.sleep(2000L) // block main thread for 2 seconds to keep JVM alive
+    println("Hello,") // 协程已在等待时主线程还在继续
+    Thread.sleep(2000L) // 阻塞主线程 2 秒钟来保证 JVM 存活
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-01.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-01.kt)获取完整代码。
 
-You will see the following result:
+代码运行的结果：
 
 ```text
 Hello,
@@ -32,82 +32,82 @@ World!
 
 <!--- TEST -->
 
-Essentially, coroutines are light-weight threads.
-They are launched with [launch] _coroutine builder_ in a context of some [CoroutineScope].
-Here we are launching a new coroutine in the [GlobalScope], meaning that the lifetime of the new
-coroutine is limited only by the lifetime of the whole application.
+本质上，协程是轻量级的线程。
+它们在某些 [CoroutineScope] 上下文中与 [launch] _协程构建器_ 一起启动。
+这里我们在 [GlobalScope] 中启动了一个新的协程，这意味着新协程的<!--
+-->生命周期只受整个应用程序的生命周期限制。
 
-You can achieve the same result by replacing
-`GlobalScope.launch { ... }` with `thread { ... }`, and `delay(...)` with `Thread.sleep(...)`.
-Try it (don't forget to import `kotlin.concurrent.thread`).
+可以将
+`GlobalScope.launch { …… }` 替换为 `thread { …… }`，并将 `delay(……)` 替换为 `Thread.sleep(……)` 达到同样目的。
+试试看（不要忘记导入 `kotlin.concurrent.thread`）。
 
-If you start by replacing `GlobalScope.launch` with `thread`, the compiler produces the following error:
+如果你首先将 `GlobalScope.launch` 替换为 `thread`，编译器会报以下错误：
 
 ```
 Error: Kotlin: Suspend functions are only allowed to be called from a coroutine or another suspend function
 ```
 
-That is because [delay] is a special _suspending function_ that does not block a thread, but _suspends_ the
-coroutine, and it can be only used from a coroutine.
+这是因为 [delay] 是一个特殊的 _挂起函数_ ，它不会造成线程阻塞，但是会 _挂起_
+协程，并且只能在协程中使用。
 
-## Bridging blocking and non-blocking worlds
+## 桥接阻塞与非阻塞的世界
 
-The first example mixes _non-blocking_ `delay(...)` and _blocking_ `Thread.sleep(...)` in the same code.
-It is easy to lose track of which one is blocking and which one is not.
-Let's be explicit about blocking using the [runBlocking] coroutine builder:
+第一个示例在同一段代码中混用了 _非阻塞的_ `delay(……)` 与 _阻塞的_ `Thread.sleep(……)`。
+这容易让我们记混哪个是阻塞的、哪个是非阻塞的。
+让我们显式使用 [runBlocking] 协程构建器来阻塞：
 
 ```kotlin
 import kotlinx.coroutines.*
 
-fun main() { 
-    GlobalScope.launch { // launch a new coroutine in background and continue
+fun main() {
+    GlobalScope.launch { // 在后台启动一个新的协程并继续
         delay(1000L)
         println("World!")
     }
-    println("Hello,") // main thread continues here immediately
-    runBlocking {     // but this expression blocks the main thread
-        delay(2000L)  // ... while we delay for 2 seconds to keep JVM alive
+    println("Hello,") // 主线程中的代码会立即执行
+    runBlocking {     // 但是这个表达式阻塞了主线程
+        delay(2000L)  // ……我们延迟 2 秒来保证 JVM 的存活
     } 
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-02.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-02.kt)获取完整代码。
 
 <!--- TEST
 Hello,
 World!
 -->
 
-The result is the same, but this code uses only non-blocking [delay].
-The main thread invoking `runBlocking` _blocks_ until the coroutine inside `runBlocking` completes.
+结果是相似的，但是这些代码只使用了非阻塞的函数 [delay]。
+调用了 `runBlocking` 的主线程会一直 _阻塞_ 直到 `runBlocking` 内部的协程执行完毕。
 
-This example can be also rewritten in a more idiomatic way, using `runBlocking` to wrap
-the execution of the main function:
+这个示例可以使用更合乎惯用法的方式重写，使用 `runBlocking` 来包装
+main 函数的执行：
 
 ```kotlin
 import kotlinx.coroutines.*
 
-fun main() = runBlocking<Unit> { // start main coroutine
-    GlobalScope.launch { // launch a new coroutine in background and continue
+fun main() = runBlocking<Unit> { // 开始执行主协程
+    GlobalScope.launch { // 在后台启动一个新的协程并继续
         delay(1000L)
         println("World!")
     }
-    println("Hello,") // main coroutine continues here immediately
-    delay(2000L)      // delaying for 2 seconds to keep JVM alive
+    println("Hello,") // 主协程在这里会立即执行
+    delay(2000L)      // 延迟 2 秒来保证 JVM 存活
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-03.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-03.kt)获取完整代码。
 
 <!--- TEST
 Hello,
 World!
 -->
 
-Here `runBlocking<Unit> { ... }` works as an adaptor that is used to start the top-level main coroutine.
-We explicitly specify its `Unit` return type, because a well-formed `main` function in Kotlin has to return `Unit`.
+这里的 `runBlocking<Unit> { …… }` 作为用来启动顶层主协程的适配器。
+我们显式指定了其返回类型 `Unit`，因为在 Kotlin 中 `main` 函数必须返回 `Unit` 类型。
 
-This is also a way to write unit tests for suspending functions:
+这也是为挂起函数编写单元测试的一种方式：
 
 <!--- INCLUDE
 import kotlinx.coroutines.*
@@ -117,67 +117,67 @@ import kotlinx.coroutines.*
 class MyTest {
     @Test
     fun testMySuspendingFunction() = runBlocking<Unit> {
-        // here we can use suspending functions using any assertion style that we like
+        // 这里我们可以使用任何喜欢的断言风格来使用挂起函数
     }
 }
 ```
 
 <!--- CLEAR -->
 
-## Waiting for a job
+## 等待一个作业
 
-Delaying for a time while another coroutine is working is not a good approach. Let's explicitly
-wait (in a non-blocking way) until the background [Job] that we have launched is complete:
+延迟一段时间来等待另一个协程运行并不是一个好的选择。让我们显式<!--
+-->（以非阻塞方式）等待所启动的后台 [Job] 执行结束：
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
 //sampleStart
-    val job = GlobalScope.launch { // launch a new coroutine and keep a reference to its Job
+    val job = GlobalScope.launch { // 启动一个新协程并保持对这个作业的引用
         delay(1000L)
         println("World!")
     }
     println("Hello,")
-    job.join() // wait until child coroutine completes
-//sampleEnd    
+    job.join() // 等待直到子协程执行结束
+//sampleEnd
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-04.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-04.kt)获取完整代码。
 
 <!--- TEST
 Hello,
 World!
 -->
 
-Now the result is still the same, but the code of the main coroutine is not tied to the duration of
-the background job in any way. Much better.
+现在，结果仍然相同，但是主协程与后台作业的持续时间<!--
+-->没有任何关系了。好多了。
 
-## Structured concurrency
+## 结构化的并发
 
-There is still something to be desired for practical usage of coroutines.
-When we use `GlobalScope.launch`, we create a top-level coroutine. Even though it is light-weight, it still
-consumes some memory resources while it runs. If we forget to keep a reference to the newly launched
-coroutine, it still runs. What if the code in the coroutine hangs (for example, we erroneously
-delay for too long), what if we launched too many coroutines and ran out of memory?
-Having to manually keep references to all the launched coroutines and [join][Job.join] them is error-prone.
+协程的实际使用还有一些需要改进的地方。
+当我们使用 `GlobalScope.launch` 时，我们会创建一个顶层协程。虽然它很轻量，但它运行时仍会<!--
+-->消耗一些内存资源。如果我们忘记保持对新启动的<!--
+-->协程的引用，它还会继续运行。如果协程中的代码挂起了会怎么样（例如，我们错误地<!--
+-->延迟了太长时间），如果我们启动了太多的协程并导致内存不足会怎么样？
+必须手动保持对所有已启动协程的引用并 [join][Job.join] 之很容易出错。
 
-There is a better solution. We can use structured concurrency in our code.
-Instead of launching coroutines in the [GlobalScope], just like we usually do with threads (threads are always global),
-we can launch coroutines in the specific scope of the operation we are performing.
+有一个更好的解决办法。我们可以在代码中使用结构化并发。
+我们可以在执行操作所在的指定作用域内启动协程，
+而不是像通常使用线程（线程总是全局的）那样在 [GlobalScope] 中启动。
 
-In our example, we have a `main` function that is turned into a coroutine using the [runBlocking] coroutine builder.
-Every coroutine builder, including `runBlocking`, adds an instance of [CoroutineScope] to the scope of its code block.
-We can launch coroutines in this scope without having to `join` them explicitly, because
-an outer coroutine (`runBlocking` in our example) does not complete until all the coroutines launched
-in its scope complete. Thus, we can make our example simpler:
+在我们的示例中，我们使用 [runBlocking] 协程构建器将  `main` 函数转换为协程。
+包括 `runBlocking` 在内的每个协程构建器都将 [CoroutineScope] 的实例添加到其代码块所在的作用域中。
+我们可以在这个作用域中启动协程而无需显式 `join` 之，因为<!--
+-->外部协程（示例中的 `runBlocking`）直到在其作用域中启动的所有协程<!--
+-->都执行完毕后才会结束。因此，可以将我们的示例简化为：
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking { // this: CoroutineScope
-    launch { // launch a new coroutine in the scope of runBlocking
+    launch { // 在 runBlocking 作用域中启动一个新协程
         delay(1000L)
         println("World!")
     }
@@ -185,24 +185,24 @@ fun main() = runBlocking { // this: CoroutineScope
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-05.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-05.kt)获取完整代码。
 
 <!--- TEST
 Hello,
 World!
 -->
 
-## Scope builder
+## 作用域构建器
 
-In addition to the coroutine scope provided by different builders, it is possible to declare your own scope using the
-[coroutineScope][_coroutineScope] builder. It creates a coroutine scope and does not complete until all launched children complete.
+除了由不同的构建器提供协程作用域之外，还可以使用
+[coroutineScope][_coroutineScope] 构建器声明自己的作用域。它会创建一个协程作用域并且在所有已启动子协程执行完毕之前不会结束。
 
-[runBlocking] and [coroutineScope][_coroutineScope] may look similar because they both wait for their body and all its children to complete.
-The main difference is that the [runBlocking] method _blocks_ the current thread for waiting,
-while [coroutineScope][_coroutineScope] just suspends, releasing the underlying thread for other usages.
-Because of that difference, [runBlocking] is a regular function and [coroutineScope][_coroutineScope] is a suspending function.
+[runBlocking] 与 [coroutineScope][_coroutineScope] 可能看起来很类似，因为它们都会等待其协程体以及所有子协程结束。
+主要区别在于，[runBlocking] 方法会*阻塞*当前线程来等待，
+而 [coroutineScope][_coroutineScope] 只是挂起，会释放底层线程用于其他用途。
+由于存在这点差异，[runBlocking] 是常规函数，而 [coroutineScope][_coroutineScope] 是挂起函数。
 
-It can be demonstrated by the following example:
+可以通过以下示例来演示：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -213,21 +213,21 @@ fun main() = runBlocking { // this: CoroutineScope
         println("Task from runBlocking")
     }
     
-    coroutineScope { // Creates a coroutine scope
+    coroutineScope { // 创建一个协程作用域
         launch {
             delay(500L) 
             println("Task from nested launch")
         }
     
         delay(100L)
-        println("Task from coroutine scope") // This line will be printed before the nested launch
+        println("Task from coroutine scope") // 这一行会在内嵌 launch 之前输出
     }
     
-    println("Coroutine scope is over") // This line is not printed until the nested launch completes
+    println("Coroutine scope is over") // 这一行在内嵌 launch 执行完毕后才输出
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-06.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-06.kt)获取完整代码。
 
 <!--- TEST
 Task from coroutine scope
@@ -236,16 +236,16 @@ Task from nested launch
 Coroutine scope is over
 -->
 
-Note that right after the "Task from coroutine scope" message (while waiting for nested launch)
-"Task from runBlocking" is executed and printed — even though the [coroutineScope][_coroutineScope] is not completed yet.
+请注意，（当等待内嵌 launch 时）紧挨“Task from coroutine scope”消息之后，
+就会执行并输出“Task from runBlocking”——尽管 [coroutineScope][_coroutineScope] 尚未结束。
 
-## Extract function refactoring
+## 提取函数重构
 
-Let's extract the block of code inside `launch { ... }` into a separate function. When you
-perform "Extract function" refactoring on this code, you get a new function with the `suspend` modifier.
-This is your first _suspending function_. Suspending functions can be used inside coroutines
-just like regular functions, but their additional feature is that they can, in turn,
-use other suspending functions (like `delay` in this example) to _suspend_ execution of a coroutine.
+我们来将  `launch { …… }` 内部的代码块提取到独立的函数中。当你<!--
+-->对这段代码执行“提取函数”重构时，你会得到一个带有 `suspend` 修饰符的新函数。
+这是你的第一个*挂起函数*。在协程内部可以像普通函数一样使用挂起函数，
+不过其额外特性是，同样<!--
+-->可以使用其他挂起函数（如本例中的 `delay`）来*挂起*协程的执行。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -255,14 +255,14 @@ fun main() = runBlocking {
     println("Hello,")
 }
 
-// this is your first suspending function
+// 这是你的第一个挂起函数
 suspend fun doWorld() {
     delay(1000L)
     println("World!")
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-07.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-07.kt)获取完整代码。
 
 <!--- TEST
 Hello,
@@ -270,23 +270,23 @@ World!
 -->
 
 
-But what if the extracted function contains a coroutine builder which is invoked on the current scope?
-In this case, the `suspend` modifier on the extracted function is not enough. Making `doWorld` an extension
-method on `CoroutineScope` is one of the solutions, but it may not always be applicable as it does not make the API clearer.
-The idiomatic solution is to have either an explicit `CoroutineScope` as a field in a class containing the target function
-or an implicit one when the outer class implements `CoroutineScope`.
-As a last resort, [CoroutineScope(coroutineContext)][CoroutineScope()] can be used, but such an approach is structurally unsafe
-because you no longer have control on the scope of execution of this method. Only private APIs can use this builder.
+但是如果提取出的函数包含一个在当前作用域中调用的协程构建器的话，该怎么办？
+在这种情况下，所提取函数上只有 `suspend` 修饰符是不够的。为 `CoroutineScope` 写一个 `doWorld` 扩展<!--
+-->方法是其中一种解决方案，但这可能并非总是适用，因为它并没有使 API 更加清晰。
+惯用的解决方案是要么显式将 `CoroutineScope` 作为包含该函数的类的一个字段，
+要么当外部类实现了 `CoroutineScope` 时隐式取得。
+作为最后的手段，可以使用 [CoroutineScope(coroutineContext)][CoroutineScope()]，不过这种方法结构上不安全，
+因为你不能再控制该方法执行的作用域。只有私有 API 才能使用这个构建器。
 
-## Coroutines ARE light-weight
+## 协程很轻量
 
-Run the following code:
+运行以下代码：
 
 ```kotlin
 import kotlinx.coroutines.*
 
 fun main() = runBlocking {
-    repeat(100_000) { // launch a lot of coroutines
+    repeat(100_000) { // 启动大量的协程
         launch {
             delay(5000L)
             print(".")
@@ -295,18 +295,18 @@ fun main() = runBlocking {
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-08.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-08.kt)获取完整代码。
 
 <!--- TEST lines.size == 1 && lines[0] == ".".repeat(100_000) -->
 
-It launches 100K coroutines and, after 5 seconds, each coroutine prints a dot.
+它启动了 10 万个协程，并且在 5 秒钟后，每个协程都输出一个点。
 
-Now, try that with threads. What would happen? (Most likely your code will produce some sort of out-of-memory error)
+现在，尝试使用线程来实现。会发生什么？（很可能你的代码会产生某种内存不足的错误）
 
-## Global coroutines are like daemon threads
+## 全局协程像守护线程
 
-The following code launches a long-running coroutine in [GlobalScope] that prints "I'm sleeping" twice a second and then
-returns from the main function after some delay:
+以下代码在 [GlobalScope] 中启动了一个长期运行的协程，该协程每秒输出“I'm sleeping”两次，之后<!--
+-->在主函数中延迟一段时间后返回。
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -319,14 +319,14 @@ fun main() = runBlocking {
             delay(500L)
         }
     }
-    delay(1300L) // just quit after delay
-//sampleEnd    
+    delay(1300L) // 在延迟后退出
+//sampleEnd
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-basic-09.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-09.kt)获取完整代码。
 
-You can run and see that it prints three lines and terminates:
+你可以运行这个程序并看到它输出了以下三行后终止：
 
 ```text
 I'm sleeping 0 ...
@@ -336,7 +336,7 @@ I'm sleeping 2 ...
 
 <!--- TEST -->
 
-Active coroutines that were launched in [GlobalScope] do not keep the process alive. They are like daemon threads.
+在 [GlobalScope] 中启动的活动协程并不会使进程保活。它们就像守护线程。
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->

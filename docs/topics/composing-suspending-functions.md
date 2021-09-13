@@ -1,36 +1,36 @@
 <!--- TEST_NAME ComposingGuideTest -->
 
-[//]: # (title: Composing suspending functions)
+[//]: # (title: 组合挂起函数)
 
-This section covers various approaches to composition of suspending functions.
+本节介绍了将挂起函数组合的各种方法。
 
-## Sequential by default
+## 默认顺序调用
 
-Assume that we have two suspending functions defined elsewhere that do something useful like some kind of
-remote service call or computation. We just pretend they are useful, but actually each one just
-delays for a second for the purpose of this example:
+假设我们在不同的地方定义了两个进行某种调用远程服务或者进行计算的<!--
+-->挂起函数。我们只假设它们都是有用的，但是实际上它们在这个示例中只是<!--
+-->为了该目的而延迟了一秒钟：
 
 ```kotlin
 suspend fun doSomethingUsefulOne(): Int {
-    delay(1000L) // pretend we are doing something useful here
+    delay(1000L) // 假设我们在这里做了一些有用的事
     return 13
 }
 
 suspend fun doSomethingUsefulTwo(): Int {
-    delay(1000L) // pretend we are doing something useful here, too
+    delay(1000L) // 假设我们在这里也做了一些有用的事
     return 29
 }
 ```
 
 
-What do we do if we need them to be invoked _sequentially_ &mdash; first `doSomethingUsefulOne` _and then_
-`doSomethingUsefulTwo`, and compute the sum of their results?
-In practice we do this if we use the result of the first function to make a decision on whether we need
-to invoke the second one or to decide on how to invoke it.
+如果需要按 _顺序_ 调用它们，我们接下来会做什么——首先调用 `doSomethingUsefulOne` _接下来_
+调用 `doSomethingUsefulTwo`，并且计算它们结果的和吗？
+实际上，如果我们要根据第一个函数的结果来决定是否我们需要<!--
+-->调用第二个函数或者决定如何调用它时，我们就会这样做。
 
-We use a normal sequential invocation, because the code in the coroutine, just like in the regular
-code, is _sequential_ by default. The following example demonstrates it by measuring the total
-time it takes to execute both suspending functions:
+我们使用普通的顺序来进行调用，因为这些代码是运行在协程中的，只要像常规的<!--
+-->代码一样 _顺序_ 都是默认的。下面的示例展示了测量<!--
+-->执行两个挂起函数所需要的总时间：
 
 <!--- CLEAR -->
 
@@ -50,19 +50,19 @@ fun main() = runBlocking<Unit> {
 }
 
 suspend fun doSomethingUsefulOne(): Int {
-    delay(1000L) // pretend we are doing something useful here
+    delay(1000L) // 假设我们在这里做了些有用的事
     return 13
 }
 
 suspend fun doSomethingUsefulTwo(): Int {
-    delay(1000L) // pretend we are doing something useful here, too
+    delay(1000L) // 假设我们在这里也做了一些有用的事
     return 29
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-compose-01.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-01.kt)获取完整代码。
 
-It produces something like this:
+它的打印输出如下：
 
 ```text
 The answer is 42
@@ -71,16 +71,16 @@ Completed in 2017 ms
 
 <!--- TEST ARBITRARY_TIME -->
 
-## Concurrent using async
+## 使用 async 并发
 
-What if there are no dependencies between invocations of `doSomethingUsefulOne` and `doSomethingUsefulTwo` and
-we want to get the answer faster, by doing both _concurrently_? This is where [async] comes to help.
+如果 `doSomethingUsefulOne` 与 `doSomethingUsefulTwo` 之间没有依赖，并且<!--
+-->我们想更快的得到结果，让它们进行 _并发_ 吗？这就是 [async] 可以帮助我们的地方。
 
-Conceptually, [async] is just like [launch]. It starts a separate coroutine which is a light-weight thread
-that works concurrently with all the other coroutines. The difference is that `launch` returns a [Job] and
-does not carry any resulting value, while `async` returns a [Deferred] &mdash; a light-weight non-blocking future
-that represents a promise to provide a result later. You can use `.await()` on a deferred value to get its eventual result,
-but `Deferred` is also a `Job`, so you can cancel it if needed.
+在概念上，[async] 就类似于 [launch]。它启动了一个单独的协程，这是一个轻量级的线程<!--
+-->并与其它所有的协程一起并发的工作。不同之处在于 `launch` 返回一个 [Job] 并且<!--
+-->不附带任何结果值，而 `async` 返回一个 [Deferred] —— 一个轻量级的非阻塞 future，
+这代表了一个将会在稍后提供结果的 promise。你可以使用 `.await()` 在一个延期的值上得到它的最终结果，
+但是 `Deferred` 也是一个 `Job`，所以如果需要的话，你可以取消它。
 
 
 ```kotlin
@@ -99,19 +99,19 @@ fun main() = runBlocking<Unit> {
 }
 
 suspend fun doSomethingUsefulOne(): Int {
-    delay(1000L) // pretend we are doing something useful here
+    delay(1000L) // 假设我们在这里做了些有用的事
     return 13
 }
 
 suspend fun doSomethingUsefulTwo(): Int {
-    delay(1000L) // pretend we are doing something useful here, too
+    delay(1000L) // 假设我们在这里也做了些有用的事
     return 29
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-compose-02.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-02.kt)获取完整代码。
 
-It produces something like this:
+它的打印输出如下：
 
 ```text
 The answer is 42
@@ -120,15 +120,15 @@ Completed in 1017 ms
 
 <!--- TEST ARBITRARY_TIME -->
 
-This is twice as fast, because the two coroutines execute concurrently.
-Note that concurrency with coroutines is always explicit.
+这里快了两倍，因为两个协程并发执行。
+请注意，使用协程进行并发总是显式的。
 
-## Lazily started async
+## 惰性启动的 async
 
-Optionally, [async] can be made lazy by setting its `start` parameter to [CoroutineStart.LAZY].
-In this mode it only starts the coroutine when its result is required by
-[await][Deferred.await], or if its `Job`'s [start][Job.start] function
-is invoked. Run the following example:
+可选的，[async] 可以通过将 `start` 参数设置为 [CoroutineStart.LAZY] 而变为惰性的。
+在这个模式下，只有结果通过 [await][Deferred.await]
+获取的时候协程才会启动，或者在 `Job` 的 [start][Job.start]
+函数调用的时候。运行下面的示例：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -139,9 +139,9 @@ fun main() = runBlocking<Unit> {
     val time = measureTimeMillis {
         val one = async(start = CoroutineStart.LAZY) { doSomethingUsefulOne() }
         val two = async(start = CoroutineStart.LAZY) { doSomethingUsefulTwo() }
-        // some computation
-        one.start() // start the first one
-        two.start() // start the second one
+        // 执行一些计算
+        one.start() // 启动第一个
+        two.start() // 启动第二个
         println("The answer is ${one.await() + two.await()}")
     }
     println("Completed in $time ms")
@@ -149,19 +149,19 @@ fun main() = runBlocking<Unit> {
 }
 
 suspend fun doSomethingUsefulOne(): Int {
-    delay(1000L) // pretend we are doing something useful here
+    delay(1000L) // 假设我们在这里做了些有用的事
     return 13
 }
 
 suspend fun doSomethingUsefulTwo(): Int {
-    delay(1000L) // pretend we are doing something useful here, too
+    delay(1000L) // 假设我们在这里也做了些有用的事
     return 29
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-compose-03.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-03.kt)获取完整代码。
 
-It produces something like this:
+它的打印输出如下：
 
 ```text
 The answer is 42
@@ -170,41 +170,41 @@ Completed in 1017 ms
 
 <!--- TEST ARBITRARY_TIME -->
 
-So, here the two coroutines are defined but not executed as in the previous example, but the control is given to
-the programmer on when exactly to start the execution by calling [start][Job.start]. We first
-start `one`, then start `two`, and then await for the individual coroutines to finish.
+因此，在先前的例子中这里定义的两个协程没有执行，但是控制权在于<!--
+-->程序员准确的在开始执行时调用 [start][Job.start]。我们首先
+调用 `one`，然后调用 `two`，接下来等待这个协程执行完毕。
 
-Note that if we just call [await][Deferred.await] in `println` without first calling [start][Job.start] on individual
-coroutines, this will lead to sequential behavior, since [await][Deferred.await] starts the coroutine
-execution and waits for its finish, which is not the intended use-case for laziness.
-The use-case for `async(start = CoroutineStart.LAZY)` is a replacement for the
-standard `lazy` function in cases when computation of the value involves suspending functions.
+注意，如果我们只是在 `println` 中调用 [await][Deferred.await]，而没有在<!--
+-->单独的协程中调用 [start][Job.start]，这将会导致顺序行为，直到 [await][Deferred.await] 启动该协程
+执行并等待至它结束，这并不是惰性的预期用例。
+在计算一个值涉及挂起函数时，这个 `async(start = CoroutineStart.LAZY)` 的用例用于替代<!--
+-->标准库中的 `lazy` 函数。
 
-## Async-style functions
+## async 风格的函数
 
-We can define async-style functions that invoke `doSomethingUsefulOne` and `doSomethingUsefulTwo`
-_asynchronously_ using the [async] coroutine builder with an explicit [GlobalScope] reference.
-We name such functions with the
-"...Async" suffix to highlight the fact that they only start asynchronous computation and one needs
-to use the resulting deferred value to get the result.
+我们可以定义异步风格的函数来 _异步_ 的调用 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo`
+并使用 [async] 协程建造器并带有一个显式的 [GlobalScope] 引用。
+我们给这样的函数的名称中加上<!--
+-->“……Async”后缀来突出表明：事实上，它们只做异步计算并且需要<!--
+-->使用延期的值来获得结果。
 
 ```kotlin
-// The result type of somethingUsefulOneAsync is Deferred<Int>
+// somethingUsefulOneAsync 函数的返回值类型是 Deferred<Int>
 fun somethingUsefulOneAsync() = GlobalScope.async {
     doSomethingUsefulOne()
 }
 
-// The result type of somethingUsefulTwoAsync is Deferred<Int>
+// somethingUsefulTwoAsync 函数的返回值类型是 Deferred<Int>
 fun somethingUsefulTwoAsync() = GlobalScope.async {
     doSomethingUsefulTwo()
 }
 ```
 
-Note that these `xxxAsync` functions are **not** _suspending_ functions. They can be used from anywhere.
-However, their use always implies asynchronous (here meaning _concurrent_) execution of their action
-with the invoking code.
+注意，这些 `xxxAsync` 函数**不是** _挂起_ 函数。它们可以在任何地方使用。
+然而，它们总是在调用它们的代码中意味着<!--
+-->异步（这里的意思是 _并发_ ）执行。
 
-The following example shows their use outside of coroutine:
+下面的例子展示了它们在协程的外面是如何使用的：
 
 <!--- CLEAR -->
 
@@ -213,14 +213,14 @@ import kotlinx.coroutines.*
 import kotlin.system.*
 
 //sampleStart
-// note that we don't have `runBlocking` to the right of `main` in this example
+// 注意，在这个示例中我们在 `main` 函数的右边没有加上 `runBlocking`
 fun main() {
     val time = measureTimeMillis {
-        // we can initiate async actions outside of a coroutine
+        // 我们可以在协程外面启动异步执行
         val one = somethingUsefulOneAsync()
         val two = somethingUsefulTwoAsync()
-        // but waiting for a result must involve either suspending or blocking.
-        // here we use `runBlocking { ... }` to block the main thread while waiting for the result
+        // 但是等待结果必须调用其它的挂起或者阻塞
+        // 当我们等待结果的时候，这里我们使用 `runBlocking { …… }` 来阻塞主线程
         runBlocking {
             println("The answer is ${one.await() + two.await()}")
         }
@@ -238,40 +238,40 @@ fun somethingUsefulTwoAsync() = GlobalScope.async {
 }
 
 suspend fun doSomethingUsefulOne(): Int {
-    delay(1000L) // pretend we are doing something useful here
+    delay(1000L) // 假设我们在这里做了些有用的事
     return 13
 }
 
 suspend fun doSomethingUsefulTwo(): Int {
-    delay(1000L) // pretend we are doing something useful here, too
+    delay(1000L) // 假设我们在这里也做了些有用的事
     return 29
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-compose-04.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-04.kt)获取完整代码。
 
 <!--- TEST ARBITRARY_TIME
 The answer is 42
 Completed in 1085 ms
 -->
 
-> This programming style with async functions is provided here only for illustration, because it is a popular style
-in other programming languages. Using this style with Kotlin coroutines is **strongly discouraged** for the
-reasons explained below.
+> 这种带有异步函数的编程风格仅供参考，因为这在其它编程语言中<!--
+-->是一种受欢迎的风格。在 Kotlin 的协程中使用这种风格是**强烈不推荐**的，
+原因如下所述。
 
-Consider what happens if between the `val one = somethingUsefulOneAsync()` line and `one.await()` expression there is some logic
-error in the code and the program throws an exception and the operation that was being performed by the program aborts.
-Normally, a global error-handler could catch this exception, log and report the error for developers, but the program
-could otherwise continue doing other operations. But here we have `somethingUsefulOneAsync` still running in the background,
-even though the operation that initiated it was aborted. This problem does not happen with structured
-concurrency, as shown in the section below.
+考虑一下如果 `val one = somethingUsefulOneAsync()` 这一行和 `one.await()` 表达式这里在代码中有逻辑错误，
+并且程序抛出了异常以及程序在操作的过程中中止，将会发生什么。
+通常情况下，一个全局的异常处理者会捕获这个异常，将异常打印成日记并报告给开发者，但是反之<!--
+-->该程序将会继续执行其它操作。但是这里我们的 `somethingUsefulOneAsync` 仍然在后台执行，
+尽管如此，启动它的那次操作也会被终止。这个程序将不会进行结构化<!--
+-->并发，如下一小节所示。
 
-## Structured concurrency with async
+## 使用 async 的结构化并发
 
-Let us take the [Concurrent using async](#concurrent-using-async) example and extract a function that
-concurrently performs `doSomethingUsefulOne` and `doSomethingUsefulTwo` and returns the sum of their results.
-Because the [async] coroutine builder is defined as an extension on [CoroutineScope], we need to have it in the
-scope and that is what the [coroutineScope][_coroutineScope] function provides:
+让我们使用[使用 async 的并发](#使用-async-的结构化并发)这一小节的例子并且提取出一个函数<!--
+-->并发的调用 `doSomethingUsefulOne` 与 `doSomethingUsefulTwo` 并且返回它们两个的结果之和。
+由于 [async] 被定义为了 [CoroutineScope] 上的扩展，我们需要将它写在<!--
+-->作用域内，并且这是 [coroutineScope][_coroutineScope] 函数所提供的：
 
 ```kotlin
 suspend fun concurrentSum(): Int = coroutineScope {
@@ -281,8 +281,8 @@ suspend fun concurrentSum(): Int = coroutineScope {
 }
 ```
 
-This way, if something goes wrong inside the code of the `concurrentSum` function and it throws an exception,
-all the coroutines that were launched in its scope will be cancelled.
+这种情况下，如果在 `concurrentSum` 函数内部发生了错误，并且它抛出了一个异常，
+所有在作用域中启动的协程都会被取消。
 
 <!--- CLEAR -->
 
@@ -306,19 +306,19 @@ suspend fun concurrentSum(): Int = coroutineScope {
 }
 
 suspend fun doSomethingUsefulOne(): Int {
-    delay(1000L) // pretend we are doing something useful here
+    delay(1000L) // 假设我们在这里做了些有用的事
     return 13
 }
 
 suspend fun doSomethingUsefulTwo(): Int {
-    delay(1000L) // pretend we are doing something useful here, too
+    delay(1000L) // 假设我们在这里也做了些有用的事
     return 29
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-compose-05.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-05.kt)获取完整代码。
 
-We still have concurrent execution of both operations, as evident from the output of the above `main` function:
+从上面的 `main` 函数的输出可以看出，我们仍然可以同时执行这两个操作：
 
 ```text
 The answer is 42
@@ -327,7 +327,7 @@ Completed in 1017 ms
 
 <!--- TEST ARBITRARY_TIME -->
 
-Cancellation is always propagated through coroutines hierarchy:
+取消始终通过协程的层次结构来进行传递：
 
 <!--- CLEAR -->
 
@@ -345,7 +345,7 @@ fun main() = runBlocking<Unit> {
 suspend fun failedConcurrentSum(): Int = coroutineScope {
     val one = async<Int> { 
         try {
-            delay(Long.MAX_VALUE) // Emulates very long computation
+            delay(Long.MAX_VALUE) // 模拟一个长时间的运算
             42
         } finally {
             println("First child was cancelled")
@@ -359,10 +359,10 @@ suspend fun failedConcurrentSum(): Int = coroutineScope {
 }
 ```
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-compose-06.kt).
+> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-06.kt)获取完整代码。
 
-Note how both the first `async` and the awaiting parent are cancelled on failure of one of the children
-(namely, `two`):
+请注意，如果其中一个子协程（即 `two`）失败，第一个 `async` 以及等待中的父协程都会被取消<!--
+-->：
 ```text
 Second child throws an exception
 First child was cancelled
