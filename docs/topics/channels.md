@@ -8,8 +8,9 @@ Channels provide a way to transfer a stream of values.
 ## Channel basics
 
 A [Channel] is conceptually very similar to `BlockingQueue`. One key difference is that
-instead of a blocking `put` operation it has a suspending [send][SendChannel.send], and instead of 
+instead of a blocking `put` operation it has a suspending [send][SendChannel.send], and instead of
 a blocking `take` operation it has a suspending [receive][ReceiveChannel.receive].
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -28,11 +29,8 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-01.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-01.kt).
 
 The output of this code is:
 
@@ -47,14 +45,14 @@ Done!
 
 <!--- TEST -->
 
-## Closing and iteration over channels 
+## Closing and iteration over channels
 
-Unlike a queue, a channel can be closed to indicate that no more elements are coming. 
-On the receiver side it is convenient to use a regular `for` loop to receive elements 
-from the channel. 
- 
-Conceptually, a [close][SendChannel.close] is like sending a special close token to the channel. 
-The iteration stops as soon as this close token is received, so there is a guarantee 
+Unlike a queue, a channel can be closed to indicate that no more elements are coming.
+On the receiver side it is convenient to use a regular `for` loop to receive elements
+from the channel.
+
+Conceptually, a [close][SendChannel.close] is like sending a special close token to the channel.
+The iteration stops as soon as this close token is received, so there is a guarantee
 that all previously sent elements before the close are received:
 
 ```kotlin
@@ -74,11 +72,8 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-02.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-02.kt).
 
 <!--- TEST 
 1
@@ -91,10 +86,10 @@ Done!
 
 ## Building channel producers
 
-The pattern where a coroutine is producing a sequence of elements is quite common. 
-This is a part of _producer-consumer_ pattern that is often found in concurrent code. 
+The pattern where a coroutine is producing a sequence of elements is quite common.
+This is a part of _producer-consumer_ pattern that is often found in concurrent code.
 You could abstract such a producer into a function that takes channel as its parameter, but this goes contrary
-to common sense that results must be returned from functions. 
+to common sense that results must be returned from functions.
 
 There is a convenient coroutine builder named [produce] that makes it easy to do it right on producer side,
 and an extension function [consumeEach], that replaces a `for` loop on the consumer side:
@@ -115,11 +110,8 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-03.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-03.kt).
 
 <!--- TEST 
 1
@@ -179,11 +171,8 @@ fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = p
     for (x in numbers) send(x * x)
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-04.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-04.kt).
 
 <!--- TEST 
 1
@@ -195,14 +184,12 @@ Done!
 -->
 
 > All functions that create coroutines are defined as extensions on [CoroutineScope],
-> so that we can rely on [structured concurrency](composing-suspending-functions.md#structured-concurrency-with-async) to make
-> sure that we don't have lingering global coroutines in our application.
->
-{type="note"}
+so that we can rely on [structured concurrency](https://kotlinlang.org/docs/reference/coroutines/composing-suspending-functions.html#structured-concurrency-with-async) to make
+sure that we don't have lingering global coroutines in our application.
 
 ## Prime numbers with pipeline
 
-Let's take pipelines to the extreme with an example that generates prime numbers using a pipeline 
+Let's take pipelines to the extreme with an example that generates prime numbers using a pipeline
 of coroutines. We start with an infinite sequence of numbers.
 
 ```kotlin
@@ -212,7 +199,7 @@ fun CoroutineScope.numbersFrom(start: Int) = produce<Int> {
 }
 ```
 
-The following pipeline stage filters an incoming stream of numbers, removing all the numbers 
+The following pipeline stage filters an incoming stream of numbers, removing all the numbers
 that are divisible by the given prime number:
 
 ```kotlin
@@ -221,18 +208,18 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 }
 ```
 
-Now we build our pipeline by starting a stream of numbers from 2, taking a prime number from the current channel, 
+Now we build our pipeline by starting a stream of numbers from 2, taking a prime number from the current channel,
 and launching new pipeline stage for each prime number found:
- 
-```Plain Text
-numbersFrom(2) -> filter(2) -> filter(3) -> filter(5) -> filter(7) ... 
+
 ```
- 
-The following example prints the first ten prime numbers, 
+numbersFrom(2) -> filter(2) -> filter(3) -> filter(5) -> filter(7) ... 
+``` 
+
+The following example prints the first ten prime numbers,
 running the whole pipeline in the context of the main thread. Since all the coroutines are launched in
-the scope of the main [runBlocking] coroutine 
-we don't have to keep an explicit list of all the coroutines we have started. 
-We use [cancelChildren][kotlin.coroutines.CoroutineContext.cancelChildren] 
+the scope of the main [runBlocking] coroutine
+we don't have to keep an explicit list of all the coroutines we have started.
+We use [cancelChildren][kotlin.coroutines.CoroutineContext.cancelChildren]
 extension function to cancel all the children coroutines after we have printed
 the first ten prime numbers.
 
@@ -263,11 +250,8 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
     for (x in numbers) if (x % prime != 0) send(x)
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-05.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-05.kt).
 
 The output of this code is:
 
@@ -286,23 +270,23 @@ The output of this code is:
 
 <!--- TEST -->
 
-Note that you can build the same pipeline using 
-[`iterator`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/iterator.html) 
-coroutine builder from the standard library. 
-Replace `produce` with `iterator`, `send` with `yield`, `receive` with `next`, 
+Note that you can build the same pipeline using
+[`iterator`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/iterator.html)
+coroutine builder from the standard library.
+Replace `produce` with `iterator`, `send` with `yield`, `receive` with `next`,
 `ReceiveChannel` with `Iterator`, and get rid of the coroutine scope. You will not need `runBlocking` either.
-However, the benefit of a pipeline that uses channels as shown above is that it can actually use 
+However, the benefit of a pipeline that uses channels as shown above is that it can actually use
 multiple CPU cores if you run it in [Dispatchers.Default] context.
 
 Anyway, this is an extremely impractical way to find prime numbers. In practice, pipelines do involve some
 other suspending invocations (like asynchronous calls to remote services) and these pipelines cannot be
 built using `sequence`/`iterator`, because they do not allow arbitrary suspension, unlike
 `produce`, which is fully asynchronous.
- 
+
 ## Fan-out
 
 Multiple coroutines may receive from the same channel, distributing work between themselves.
-Let us start with a producer coroutine that is periodically producing integers 
+Let us start with a producer coroutine that is periodically producing integers
 (ten numbers per second):
 
 ```kotlin
@@ -357,16 +341,13 @@ fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = laun
     }    
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-06.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-06.kt).
 
 The output will be similar to the the following one, albeit the processor ids that receive
 each specific integer may be different:
 
-```text
+```
 Processor #2 received 1
 Processor #4 received 2
 Processor #0 received 3
@@ -384,15 +365,15 @@ Processor #3 received 10
 Note that cancelling a producer coroutine closes its channel, thus eventually terminating iteration
 over the channel that processor coroutines are doing.
 
-Also, pay attention to how we explicitly iterate over channel with `for` loop to perform fan-out in `launchProcessor` code. 
-Unlike `consumeEach`, this `for` loop pattern is perfectly safe to use from multiple coroutines. If one of the processor 
-coroutines fails, then others would still be processing the channel, while a processor that is written via `consumeEach` 
-always consumes (cancels) the underlying channel on its normal or abnormal completion.     
+Also, pay attention to how we explicitly iterate over channel with `for` loop to perform fan-out in `launchProcessor` code.
+Unlike `consumeEach`, this `for` loop pattern is perfectly safe to use from multiple coroutines. If one of the processor
+coroutines fails, then others would still be processing the channel, while a processor that is written via `consumeEach`
+always consumes (cancels) the underlying channel on its normal or abnormal completion.
 
 ## Fan-in
 
 Multiple coroutines may send to the same channel.
-For example, let us have a channel of strings, and a suspending function that 
+For example, let us have a channel of strings, and a suspending function that
 repeatedly sends a specified string to this channel with a specified delay:
 
 ```kotlin
@@ -404,7 +385,7 @@ suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
 }
 ```
 
-Now, let us see what happens if we launch a couple of coroutines sending strings 
+Now, let us see what happens if we launch a couple of coroutines sending strings
 (in this example we launch them in the context of the main thread as main coroutine's children):
 
 <!--- CLEAR -->
@@ -432,11 +413,8 @@ suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
     }
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-07.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-07.kt).
 
 The output is:
 
@@ -453,15 +431,16 @@ BAR!
 
 ## Buffered channels
 
-The channels shown so far had no buffer. Unbuffered channels transfer elements when sender and receiver 
-meet each other (aka rendezvous). If send is invoked first, then it is suspended until receive is invoked, 
+The channels shown so far had no buffer. Unbuffered channels transfer elements when sender and receiver
+meet each other (aka rendezvous). If send is invoked first, then it is suspended until receive is invoked,
 if receive is invoked first, it is suspended until send is invoked.
 
 Both [Channel()] factory function and [produce] builder take an optional `capacity` parameter to
-specify _buffer size_. Buffer allows senders to send multiple elements before suspending, 
+specify _buffer size_. Buffer allows senders to send multiple elements before suspending,
 similar to the `BlockingQueue` with a specified capacity, which blocks when buffer is full.
 
 Take a look at the behavior of the following code:
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -482,11 +461,8 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-08.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-08.kt).
 
 It prints "sending" _five_ times using a buffered channel with capacity of _four_:
 
@@ -504,10 +480,11 @@ The first four elements are added to the buffer and the sender suspends when try
 
 ## Channels are fair
 
-Send and receive operations to channels are _fair_ with respect to the order of their invocation from 
-multiple coroutines. They are served in first-in first-out order, e.g. the first coroutine to invoke `receive` 
-gets the element. In the following example two coroutines "ping" and "pong" are 
-receiving the "ball" object from the shared "table" channel. 
+Send and receive operations to channels are _fair_ with respect to the order of their invocation from
+multiple coroutines. They are served in first-in first-out order, e.g. the first coroutine to invoke `receive`
+gets the element. In the following example two coroutines "ping" and "pong" are
+receiving the "ball" object from the shared "table" channel.
+
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -535,11 +512,8 @@ suspend fun player(name: String, table: Channel<Ball>) {
 }
 //sampleEnd
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-09.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-09.kt).
 
 The "ping" coroutine is started first, so it is the first one to receive the ball. Even though "ping"
 coroutine immediately starts receiving the ball again after sending it back to the table, the ball gets
@@ -560,11 +534,11 @@ that is being used. See [this issue](https://github.com/Kotlin/kotlinx.coroutine
 ## Ticker channels
 
 Ticker channel is a special rendezvous channel that produces `Unit` every time given delay passes since last consumption from this channel.
-Though it may seem to be useless standalone, it is a useful building block to create complex time-based [produce] 
+Though it may seem to be useless standalone, it is a useful building block to create complex time-based [produce]
 pipelines and operators that do windowing and other time-dependent processing.
 Ticker channel can be used in [select] to perform "on tick" action.
 
-To create such channel use a factory method [ticker]. 
+To create such channel use a factory method [ticker].
 To indicate that no further elements are needed use [ReceiveChannel.cancel] method on it.
 
 Now let's see how it works in practice:
@@ -598,9 +572,7 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-10.kt).
->
-{type="note"}
+> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-channel-10.kt).
 
 It prints following lines:
 
@@ -615,22 +587,20 @@ Next element is ready in 50ms after consumer pause in 150ms: kotlin.Unit
 
 <!--- TEST -->
 
-Note that [ticker] is aware of possible consumer pauses and, by default, adjusts next produced element 
+Note that [ticker] is aware of possible consumer pauses and, by default, adjusts next produced element
 delay if a pause occurs, trying to maintain a fixed rate of produced elements.
- 
+
 Optionally, a `mode` parameter equal to [TickerMode.FIXED_DELAY] can be specified to maintain a fixed
 delay between elements.
 
+
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
-
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [runBlocking]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html
 [kotlin.coroutines.CoroutineContext.cancelChildren]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/kotlin.coroutines.-coroutine-context/cancel-children.html
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
-
 <!--- INDEX kotlinx.coroutines.channels -->
-
 [Channel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-channel/index.html
 [SendChannel.send]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/send.html
 [ReceiveChannel.receive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html
@@ -641,9 +611,6 @@ delay between elements.
 [ticker]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/ticker.html
 [ReceiveChannel.cancel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/cancel.html
 [TickerMode.FIXED_DELAY]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-ticker-mode/-f-i-x-e-d_-d-e-l-a-y.html
-
 <!--- INDEX kotlinx.coroutines.selects -->
-
 [select]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.selects/select.html
-
 <!--- END -->
