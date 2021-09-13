@@ -5,9 +5,11 @@
 Select expression makes it possible to await multiple suspending functions simultaneously and _select_
 the first one that becomes available.
 
-> Select expressions are an experimental feature of `kotlinx.coroutines`. Their API is expected to
-evolve in the upcoming updates of the `kotlinx.coroutines` library with potentially
-breaking changes.
+> Select expressions are an experimental feature of `kotlinx.coroutines`. Their API is expected to 
+> evolve in the upcoming updates of the `kotlinx.coroutines` library with potentially
+> breaking changes.
+>
+{type="note"}
 
 ## Selecting from channels
 
@@ -95,10 +97,13 @@ fun main() = runBlocking<Unit> {
 //sampleEnd        
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-select-01.kt).
+> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-select-01.kt).
+>
+{type="note"}
 
-The result of this code is:
+The result of this code is: 
 
 ```text
 fizz -> 'Fizz'
@@ -116,7 +121,7 @@ buzz -> 'Buzz!'
 
 The [onReceive][ReceiveChannel.onReceive] clause in `select` fails when the channel is closed causing the corresponding
 `select` to throw an exception. We can use [onReceiveOrNull][onReceiveOrNull] clause to perform a
-specific action when the channel is closed. The following example also shows that `select` is an expression that returns
+specific action when the channel is closed. The following example also shows that `select` is an expression that returns 
 the result of its selected clause:
 
 ```kotlin
@@ -137,11 +142,11 @@ suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): St
     }
 ```
 
-Note that [onReceiveOrNull][onReceiveOrNull] is an extension function defined only
+Note that [onReceiveOrNull][onReceiveOrNull] is an extension function defined only 
 for channels with non-nullable elements so that there is no accidental confusion between a closed channel
-and a null value.
+and a null value. 
 
-Let's use it with channel `a` that produces "Hello" string four times and
+Let's use it with channel `a` that produces "Hello" string four times and 
 channel `b` that produces "World" four times:
 
 <!--- CLEAR -->
@@ -182,8 +187,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd      
 }    
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-select-02.kt).
+> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-select-02.kt).
+>
+{type="note"}
 
 The result of this code is quite interesting, so we'll analyze it in more detail:
 
@@ -200,22 +208,22 @@ Channel 'a' is closed
 
 <!--- TEST -->
 
-There are couple of observations to make out of it.
+There are couple of observations to make out of it. 
 
-First of all, `select` is _biased_ to the first clause. When several clauses are selectable at the same time,
+First of all, `select` is _biased_ to the first clause. When several clauses are selectable at the same time, 
 the first one among them gets selected. Here, both channels are constantly producing strings, so `a` channel,
 being the first clause in select, wins. However, because we are using unbuffered channel, the `a` gets suspended from
 time to time on its [send][SendChannel.send] invocation and gives a chance for `b` to send, too.
 
-The second observation, is that [onReceiveOrNull][onReceiveOrNull] gets immediately selected when the
+The second observation, is that [onReceiveOrNull][onReceiveOrNull] gets immediately selected when the 
 channel is already closed.
 
 ## Selecting to send
 
-Select expression has [onSend][SendChannel.onSend] clause that can be used for a great good in combination
+Select expression has [onSend][SendChannel.onSend] clause that can be used for a great good in combination 
 with a biased nature of selection.
 
-Let us write an example of producer of integers that sends its values to a `side` channel when
+Let us write an example of producer of integers that sends its values to a `side` channel when 
 the consumers on its primary channel cannot keep up with it:
 
 ```kotlin
@@ -264,11 +272,14 @@ fun main() = runBlocking<Unit> {
 //sampleEnd      
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-select-03.kt).
-
+> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-select-03.kt).
+>
+{type="note"}
+  
 So let us see what happens:
-
+ 
 ```text
 Consuming 1
 Side channel has 2
@@ -287,8 +298,8 @@ Done consuming
 
 ## Selecting deferred values
 
-Deferred values can be selected using [onAwait][Deferred.onAwait] clause.
-Let us start with an async function that returns a deferred string value after
+Deferred values can be selected using [onAwait][Deferred.onAwait] clause. 
+Let us start with an async function that returns a deferred string value after 
 a random delay:
 
 ```kotlin
@@ -308,7 +319,7 @@ fun CoroutineScope.asyncStringsList(): List<Deferred<String>> {
 ```
 
 Now the main function awaits for the first of them to complete and counts the number of deferred values
-that are still active. Note that we've used here the fact that `select` expression is a Kotlin DSL,
+that are still active. Note that we've used here the fact that `select` expression is a Kotlin DSL, 
 so we can provide clauses for it using an arbitrary code. In this case we iterate over a list
 of deferred values to provide `onAwait` clause for each deferred value.
 
@@ -345,8 +356,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-select-04.kt).
+> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-select-04.kt).
+>
+{type="note"}
 
 The output is:
 
@@ -360,7 +374,7 @@ Deferred 4 produced answer 'Waited for 128 ms'
 ## Switch over a channel of deferred values
 
 Let us write a channel producer function that consumes a channel of deferred string values, waits for each received
-deferred value, but only until the next deferred value comes over or the channel is closed. This example puts together
+deferred value, but only until the next deferred value comes over or the channel is closed. This example puts together 
 [onReceiveOrNull][onReceiveOrNull] and [onAwait][Deferred.onAwait] clauses in the same `select`:
 
 ```kotlin
@@ -387,7 +401,6 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
 ```
 
 To test it, we'll use a simple async function that resolves to a specified string after a specified time:
-
 
 ```kotlin
 fun CoroutineScope.asyncString(str: String, time: Long) = async {
@@ -452,8 +465,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-select-05.kt).
+> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-select-05.kt).
+>
+{type="note"}
 
 The result of this code:
 
@@ -468,13 +484,19 @@ Channel was closed
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [Deferred.onAwait]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/on-await.html
+
 <!--- INDEX kotlinx.coroutines.channels -->
+
 [ReceiveChannel.receive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html
 [ReceiveChannel.onReceive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/on-receive.html
 [onReceiveOrNull]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/on-receive-or-null.html
 [SendChannel.send]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/send.html
 [SendChannel.onSend]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/on-send.html
+
 <!--- INDEX kotlinx.coroutines.selects -->
+
 [select]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.selects/select.html
+
 <!--- END -->
