@@ -29,9 +29,12 @@ fun main() = runBlocking {
     println("main: Now I can quit.")
 //sampleEnd
 }
-``` 
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-01.kt)获取完整代码。
+>
+{type="note"}
 
 程序执行后的输出如下：
 
@@ -81,8 +84,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-02.kt)获取完整代码。
+>
+{type="note"}
 
 运行示例代码，并且我们可以看到它连续打印出了“I'm sleeping”，甚至在调用取消后，
 作业仍然执行了五次循环迭代并运行到了它结束为止。
@@ -129,8 +135,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-03.kt)获取完整代码。
+>
+{type="note"}
 
 你可以看到，现在循环被取消了。[isActive] 是一个可以被使用在
 [CoroutineScope] 中的扩展属性。
@@ -148,7 +157,6 @@ main: Now I can quit.
 我们通常使用如下的方法处理在被取消时抛出 [CancellationException] 的可被取消<!--
 -->的挂起函数。比如说，`try {……} finally {……}` 表达式以及 Kotlin 的 `use` 函数一般在协程被取消的时候<!--
 -->执行它们的终结动作：
-
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -171,9 +179,12 @@ fun main() = runBlocking {
     println("main: Now I can quit.")
 //sampleEnd
 }
-``` 
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-04.kt)获取完整代码。
+>
+{type="note"}
 
 [join][Job.join] 和 [cancelAndJoin] 等待了所有的终结动作执行完毕，
 所以运行示例得到了下面的输出：
@@ -223,9 +234,12 @@ fun main() = runBlocking {
     println("main: Now I can quit.")
 //sampleEnd
 }
-``` 
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-05.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST
 job: I'm sleeping 0 ...
@@ -259,8 +273,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-06.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-06.kt)获取完整代码。
+>
+{type="note"}
 
 运行后得到如下输出：
 
@@ -299,8 +316,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-07.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-07.kt)获取完整代码。
+>
+{type="note"}
 
 运行这段代码时不再抛出异常：
 
@@ -321,9 +341,9 @@ Result is null
 
 The timeout event in [withTimeout] is asynchronous with respect to the code running in its block and may happen at any time,
 even right before the return from inside of the timeout block. Keep this in mind if you open or acquire some
-resource inside the block that needs closing or release outside of the block.
+resource inside the block that needs closing or release outside of the block. 
 
-For example, here we imitate a closeable resource with the `Resource` class, that simply keeps track of how many times
+For example, here we imitate a closeable resource with the `Resource` class, that simply keeps track of how many times 
 it was created by incrementing the `acquired` counter and decrementing this counter from its `close` function.
 Let us run a lot of coroutines with the small timeout try acquire this resource from inside
 of the `withTimeout` block after a bit of delay and release it from outside.
@@ -355,21 +375,26 @@ fun main() {
     println(acquired) // Print the number of resources still acquired
 }
 //sampleEnd
-``` 
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-08.kt).
+> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-08.kt).
+>
+{type="note"}
 
 <!--- CLEAR -->
 
-If you run the above code you'll see that it does not always print zero, though it may depend on the timings
-of your machine you may need to tweak timeouts in this example to actually see non-zero values.
+If you run the above code you'll see that it does not always print zero, though it may depend on the timings 
+of your machine you may need to tweak timeouts in this example to actually see non-zero values. 
 
 > Note, that incrementing and decrementing `acquired` counter here from 100K coroutines is completely safe,
 > since it always happens from the same main thread. More on that will be explained in the next chapter
 > on coroutine context.
+> 
+{type="note"}
 
-To workaround this problem you can store a reference to the resource in the variable as opposed to returning it
-from the `withTimeout` block.
+To workaround this problem you can store a reference to the resource in the variable as opposed to returning it 
+from the `withTimeout` block. 
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -403,9 +428,12 @@ fun main() {
     println(acquired) // Print the number of resources still acquired
 //sampleEnd
 }
-``` 
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> You can get the full code [here](../kotlinx-coroutines-core/jvm/test/guide/example-cancel-09.kt).
+> You can get the full code [here](../../kotlinx-coroutines-core/jvm/test/guide/example-cancel-09.kt).
+>
+{type="note"}
 
 This example always prints zero. Resources do not leak.
 
@@ -415,6 +443,7 @@ This example always prints zero. Resources do not leak.
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
 [cancelAndJoin]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/cancel-and-join.html
@@ -428,4 +457,5 @@ This example always prints zero. Resources do not leak.
 [NonCancellable]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable.html
 [withTimeout]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout.html
 [withTimeoutOrNull]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout-or-null.html
+
 <!--- END -->

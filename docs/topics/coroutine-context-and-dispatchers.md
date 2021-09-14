@@ -3,7 +3,7 @@
 [//]: # (title: 协程上下文与调度器)
 
 协程总是运行在一些以
-[CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/)
+[CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 
 类型为代表的上下文中，它们被定义在了 Kotlin 的标准库里。
 
 协程上下文是各种不同元素的集合。其中主元素是协程中的 [Job]，
@@ -16,7 +16,7 @@
 -->一个特定的线程执行，或将它分派到一个线程池，亦或是让它不受限地运行。
 
 所有的协程构建器诸如 [launch] 和 [async] 接收一个可选的
-[CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/)
+[CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/) 
 参数，它可以被用来显式的为一个新协程或其它上下文元素指定一个调度器。
 
 尝试下面的示例：
@@ -41,8 +41,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-01.kt)获取完整代码。
+>
+{type="note"}
 
 它执行后得到了如下输出（也许顺序会有所不同）：
 
@@ -65,14 +68,14 @@ main runBlocking      : I'm working in thread main
 当协程在 [GlobalScope] 中启动时，使用的是由 [Dispatchers.Default] 代表的默认调度器。
 默认调度器使用共享的后台线程池。
 所以 `launch(Dispatchers.Default) { …… }` 与 `GlobalScope.launch { …… }` 使用相同的调度器。
-
+  
 [newSingleThreadContext] 为协程的运行启动了一个线程。
 一个专用的线程是一种非常昂贵的资源。
 在真实的应用程序中两者都必须被释放，当不再需要的时候，使用 [close][ExecutorCoroutineDispatcher.close]
 函数，或存储在一个顶层变量中使它在整个应用程序中被重用。
 
 ## 非受限调度器 vs 受限调度器
-
+ 
 [Dispatchers.Unconfined] 协程调度器在调用它的线程启动了一个协程，但它仅仅只是运行到<!--
 -->第一个挂起点。挂起后，它恢复线程中的协程，而这完全由<!--
 -->被调用的挂起函数来决定。非受限的调度器非常适用于执行不<!--
@@ -101,11 +104,14 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-02.kt)获取完整代码。
+>
+{type="note"}
 
 执行后的输出：
-
+ 
 ```text
 Unconfined      : I'm working in thread main
 main runBlocking: I'm working in thread main
@@ -114,15 +120,17 @@ main runBlocking: After delay in thread main
 ```
 
 <!--- TEST LINES_START -->
-
+ 
 所以，该协程的上下文继承自 `runBlocking {...}` 协程并在
 `main` 线程中运行，当 [delay] 函数调用的时候，非受限的那个协程在<!--
 -->默认的执行者线程中恢复执行。
 
 > 非受限的调度器是一种高级机制，可以在某些极端情况下提供帮助<!--
--->而不需要调度协程以便稍后执行或产生不希望的副作用，
-因为某些操作必须立即在协程中执行。
-非受限调度器不应该在通常的代码中使用。
+> -->而不需要调度协程以便稍后执行或产生不希望的副作用，
+> 因为某些操作必须立即在协程中执行。
+> 非受限调度器不应该在通常的代码中使用。
+>
+{type="note"}
 
 ## 调试协程与线程
 
@@ -135,11 +143,13 @@ main runBlocking: After delay in thread main
 Kotlin 插件的协程调试器简化了 IntelliJ IDEA 中的协程调试.
 
 > 调试适用于 1.3.8 或更高版本的 `kotlinx-coroutines-core`。
+>
+{type="note"}
 
 **调试**工具窗口包含 **Coroutines** 标签。在这个标签中，你可以同时找到运行中与已挂起的协程的相关信息。
 这些协程以它们所运行的调度器进行分组。
 
-![Debugging coroutines](images/coroutine-idea-debugging-1.png)
+![Debugging coroutines](coroutine-idea-debugging-1.png)
 
 使用协程调试器，你可以：
 * 检查每个协程的状态。
@@ -180,8 +190,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-03.kt)获取完整代码。
+>
+{type="note"}
 
 这里有三个协程，包括 `runBlocking` 内的主协程 (#1) ，
 以及计算延期的值的另外两个协程 `a` (#2) 和 `b` (#3)。
@@ -201,7 +214,9 @@ fun main() = runBlocking<Unit> {
 -->在调试模式开启时，将连续分配给所有创建的协程。
 
 > 当 JVM 以 `-ea` 参数配置运行时，调试模式也会开启。
-你可以在 [DEBUG_PROPERTY_NAME] 属性的文档中阅读有关调试工具的更多信息。
+> 你可以在 [DEBUG_PROPERTY_NAME] 属性的文档中阅读有关调试工具的更多信息。
+>
+{type="note"}
 
 ## 在不同线程间跳转
 
@@ -228,8 +243,11 @@ fun main() {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-04.kt)获取完整代码。
+>
+{type="note"}
 
 它演示了一些新技术。其中一个使用 [runBlocking] 来显式指定了一个上下文，并且<!--
 -->另一个使用 [withContext] 函数来改变协程的上下文，而仍然驻留在相同的<!--
@@ -260,8 +278,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-05.kt)获取完整代码。
+> 
+{type="note"}
 
 在[调试模式](#调试协程与线程)下，它将输出如下这些信息：
 
@@ -284,7 +305,6 @@ My job is "coroutine#1":BlockingCoroutine{Active}@6d311334
 
 然而，当使用 [GlobalScope] 来启动一个协程时，则新协程的作业没有父作业。
 因此它与这个启动的作用域无关且独立运作。
-
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -314,8 +334,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-06.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-06.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -353,8 +376,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-07.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-07.kt)获取完整代码。
+\>
+{type="note"}
 
 结果如下所示：
 
@@ -401,11 +427,14 @@ fun main() = runBlocking(CoroutineName("main")) {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-08.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-08.kt)获取完整代码。
+>
+{type="note"}
 
 程序执行使用了 `-Dkotlinx.coroutines.debug` JVM 参数，输出如下所示：
-
+ 
 ```text
 [main @main#1] Started main coroutine
 [main @v1coroutine#2] Computing v1
@@ -432,8 +461,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-09.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-09.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码使用了 `-Dkotlinx.coroutines.debug` JVM 参数，输出如下所示：
 
@@ -524,8 +556,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-10.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-10.kt)获取完整代码。
+>
+{type="note"}
 
 这个示例的输出如下所示：
 
@@ -542,9 +577,11 @@ Destroying activity!
 `Activity.destroy()` 中单次调用了 `job.cancel()`。
 
 > 注意，Android 在所有具有生命周期的实体中都对协程作用域提供了一等的支持。
-请查看[相关文档](https://developer.android.com/topic/libraries/architecture/coroutines#lifecyclescope)。
+> 请参见[相关文档](https://developer.android.com/topic/libraries/architecture/coroutines#lifecyclescope)。
+>
+{type="note"}
 
-## 线程局部数据
+### 线程局部数据
 
 有时，能够将一些线程局部数据传递到协程与协程之间是很方便的。
 然而，由于它们不受任何特定线程的约束，如果手动完成，可能会导致出现样板代码。
@@ -574,8 +611,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```  
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-context-11.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-11.kt)获取完整代码。
+>
+{type="note"}
 
 在这个例子中我们使用 [Dispatchers.Default] 在后台线程池中启动了一个新的协程，所以<!--
 -->它工作在线程池中的不同线程中，但它仍然具有线程局部变量的值，
@@ -612,6 +652,7 @@ Post-main, current thread: Thread[main @coroutine#1,5,main], thread local value:
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
 [CoroutineDispatcher]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-dispatcher/index.html
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
@@ -636,4 +677,5 @@ Post-main, current thread: Thread[main @coroutine#1,5,main], thread local value:
 [asContextElement]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/java.lang.-thread-local/as-context-element.html
 [ensurePresent]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/java.lang.-thread-local/ensure-present.html
 [ThreadContextElement]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-thread-context-element/index.html
+
 <!--- END -->

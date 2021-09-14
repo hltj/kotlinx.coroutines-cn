@@ -1,6 +1,6 @@
 <!--- TEST_NAME ExceptionsGuideTest -->
 
-[//]: # (title: 异常处理)
+[//]: # (title: 协程异常处理)
 
 本节内容涵盖了异常处理与在异常上取消。
 我们已经知道被取消的协程会在挂起点抛出 [CancellationException]
@@ -42,7 +42,9 @@ fun main() = runBlocking {
 }
 ```
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-01.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下（[调试](https://github.com/hltj/kotlinx.coroutines-cn/blob/master/docs/coroutine-context-and-dispatchers.md#调试协程与线程)）：
 
@@ -69,7 +71,7 @@ Caught ArithmeticException
 在 JVM 中可以重定义一个全局的异常处理者来将所有的协程通过
 [`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) 注册到 [CoroutineExceptionHandler]。
 全局异常处理者就如同
-[`Thread.defaultUncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler))
+[`Thread.defaultUncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 
 一样，在没有更多的指定的异常处理者被注册的时候被使用。
 在 Android 中，`uncaughtExceptionPreHandler` 被设置在全局协程异常处理者中。
 
@@ -81,7 +83,9 @@ Caught ArithmeticException
 因此它的 `CoroutineExceptionHandler` 也无效。
 
 > 在监督作用域内运行的协程不会将异常传播到其父协程，并且<!--
--->会从此规则中排除。本文档的另一个小节——[监督](#监督)提供了更多细节。
+> -->会从此规则中排除。本文档的另一个小节——[监督](#监督)提供了更多细节。
+>
+{type="note"}  
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -101,8 +105,11 @@ fun main() = runBlocking {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-02.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -143,8 +150,11 @@ fun main() = runBlocking {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-03.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -161,10 +171,12 @@ Parent is not cancelled
 -->[结构化的并发（structured concurrency）](https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/composing-suspending-functions.md#structured-concurrency-with-async) 提供稳定的协程层级结构。
 [CoroutineExceptionHandler] 的实现并不是用于子协程。
 
-> 在本例中，[CoroutineExceptionHandler] 总是被设置在由 [GlobalScope]
-启动的协程中。将异常处理者设置在
-[runBlocking] 主作用域内启动的协程中是没有意义的，尽管子协程已经设置了异常处理者，
-但是主协程也总是会被取消的。
+> 在这些示例中，[CoroutineExceptionHandler] 总是被设置在由 [GlobalScope]
+> 启动的协程中。将异常处理者设置在
+> [runBlocking] 主作用域内启动的协程中是没有意义的，尽管子协程已经设置了异常处理者，
+> 但是主协程也总是会被取消的。
+>
+{type="note"}
 
 当父协程的所有子协程都结束后，原始的异常才会被父协程处理，
 见下面这个例子。
@@ -196,11 +208,14 @@ fun main() = runBlocking {
         }
     }
     job.join()
-//sampleEnd    
+//sampleEnd 
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-04.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -210,6 +225,7 @@ Children are cancelled, but exception is not handled until all children terminat
 The first child finished its non cancellable block
 CoroutineExceptionHandler got java.lang.ArithmeticException
 ```
+
 <!--- TEST-->
 
 ## 异常聚合
@@ -247,10 +263,15 @@ fun main() = runBlocking {
     job.join()  
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-05.kt)获取完整代码。
+>
+{type="note"}
 
 > 注意：上面的代码将只在 JDK7 以上支持 `suppressed` 异常的环境中才能正确工作。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -261,7 +282,9 @@ CoroutineExceptionHandler got java.io.IOException with suppressed [java.lang.Ari
 <!--- TEST-->
 
 > 注意，这个机制当前只能在 Java 1.7 以上的版本中使用。
-在 JS 和原生环境下暂时会受到限制，但将来会取消。
+> 在 JS 和原生环境下暂时会受到限制，但将来会取消。
+>
+{type="note"}
 
 取消异常是透明的，默认情况下是未包装的：
 
@@ -293,8 +316,11 @@ fun main() = runBlocking {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-06.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-06.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -302,6 +328,7 @@ fun main() = runBlocking {
 Rethrowing CancellationException with original cause
 CoroutineExceptionHandler got java.io.IOException
 ```
+
 <!--- TEST-->
 
 ## 监督
@@ -354,7 +381,9 @@ fun main() = runBlocking {
 }
 ```
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-supervision-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-supervision-01.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -364,8 +393,8 @@ The first child is cancelled: true, but the second one is still active
 Cancelling the supervisor
 The second child is cancelled because the supervisor was cancelled
 ```
-<!--- TEST-->
 
+<!--- TEST-->
 
 ### 监督作用域
 
@@ -399,7 +428,9 @@ fun main() = runBlocking {
 }
 ```
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-supervision-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-supervision-02.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -409,9 +440,10 @@ Throwing an exception from the scope
 The child is cancelled
 Caught an assertion error
 ```
+
 <!--- TEST-->
 
-### 监督协程中的异常
+#### 监督协程中的异常
 
 常规的作业和监督作业之间的另一个重要区别是异常处理。
 监督协程中的每一个子作业应该通过异常处理机制处理自身的异常。
@@ -439,7 +471,9 @@ fun main() = runBlocking {
 }
 ```
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-supervision-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-supervision-03.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -449,10 +483,12 @@ The child throws an exception
 CoroutineExceptionHandler got java.lang.AssertionError
 The scope is completed
 ```
+
 <!--- TEST-->
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [CancellationException]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [async]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html
@@ -467,8 +503,11 @@ The scope is completed
 [Job()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job.html
 [_coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
 [_supervisorScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/supervisor-scope.html
+
 <!--- INDEX kotlinx.coroutines.channels -->
+
 [actor]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/actor.html
 [produce]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/produce.html
 [ReceiveChannel.receive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html
+
 <!--- END -->

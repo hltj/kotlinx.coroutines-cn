@@ -66,8 +66,11 @@ fun main() = runBlocking {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-sync-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-sync-01.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST LINES_START
 Completed 100000 actions in
@@ -116,8 +119,11 @@ fun main() = runBlocking {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-sync-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-sync-02.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST LINES_START
 Completed 100000 actions in
@@ -170,8 +176,11 @@ fun main() = runBlocking {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-sync-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-sync-03.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST ARBITRARY_TIME
 Completed 100000 actions in xxx ms
@@ -227,8 +236,11 @@ fun main() = runBlocking {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-sync-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-sync-04.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST ARBITRARY_TIME
 Completed 100000 actions in xxx ms
@@ -281,8 +293,11 @@ fun main() = runBlocking {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-sync-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-sync-05.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST ARBITRARY_TIME
 Completed 100000 actions in xxx ms
@@ -340,8 +355,11 @@ fun main() = runBlocking {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-sync-06.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-sync-06.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST ARBITRARY_TIME
 Completed 100000 actions in xxx ms
@@ -448,8 +466,11 @@ fun main() = runBlocking<Unit> {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-sync-07.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-sync-07.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST ARBITRARY_TIME
 Completed 100000 actions in xxx ms
@@ -465,20 +486,28 @@ actor 在高负载下比锁更有效，因为在这种情况下它总是有工�
 -->需要切换到不同的上下文。
 
 > 注意，[actor] 协程构建器是一个双重的 [produce] 协程构建器。一个 actor 与它<!--
--->接收消息的通道相关联，而一个 producer 与它<!--
--->发送元素的通道相关联。
+> -->接收消息的通道相关联，而一个 producer 与它<!--
+> -->发送元素的通道相关联。
+>
+{type="note"}
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
 [withContext]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html
 [CompletableDeferred]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-completable-deferred/index.html
+
 <!--- INDEX kotlinx.coroutines.sync -->
+
 [Mutex]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/index.html
 [Mutex.lock]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/lock.html
 [Mutex.unlock]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/unlock.html
 [withLock]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/with-lock.html
+
 <!--- INDEX kotlinx.coroutines.channels -->
+
 [actor]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/actor.html
 [produce]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/produce.html
+
 <!--- END -->

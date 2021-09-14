@@ -22,10 +22,9 @@ suspend fun doSomethingUsefulTwo(): Int {
 }
 ```
 
-
-如果需要按 _顺序_ 调用它们，我们接下来会做什么——首先调用 `doSomethingUsefulOne` _接下来_
-调用 `doSomethingUsefulTwo`，并且计算它们结果的和吗？
-实际上，如果我们要根据第一个函数的结果来决定是否我们需要<!--
+如果需要按 _顺序_ 调用它们，我们接下来会做什么——首先调用 `doSomethingUsefulOne` _接下来_ 
+调用 `doSomethingUsefulTwo`，并且计算它们结果的和吗？ 
+实际上，如果我们要根据第一个函数的结果来决定是否我们需要<!-- 
 -->调用第二个函数或者决定如何调用它时，我们就会这样做。
 
 我们使用普通的顺序来进行调用，因为这些代码是运行在协程中的，只要像常规的<!--
@@ -59,8 +58,11 @@ suspend fun doSomethingUsefulTwo(): Int {
     return 29
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-compose-01.kt)获取完整代码。
+>
+{type="note"}
 
 它的打印输出如下：
 
@@ -75,13 +77,12 @@ Completed in 2017 ms
 
 如果 `doSomethingUsefulOne` 与 `doSomethingUsefulTwo` 之间没有依赖，并且<!--
 -->我们想更快的得到结果，让它们进行 _并发_ 吗？这就是 [async] 可以帮助我们的地方。
-
+ 
 在概念上，[async] 就类似于 [launch]。它启动了一个单独的协程，这是一个轻量级的线程<!--
 -->并与其它所有的协程一起并发的工作。不同之处在于 `launch` 返回一个 [Job] 并且<!--
 -->不附带任何结果值，而 `async` 返回一个 [Deferred] —— 一个轻量级的非阻塞 future，
 这代表了一个将会在稍后提供结果的 promise。你可以使用 `.await()` 在一个延期的值上得到它的最终结果，
 但是 `Deferred` 也是一个 `Job`，所以如果需要的话，你可以取消它。
-
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -108,8 +109,11 @@ suspend fun doSomethingUsefulTwo(): Int {
     return 29
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-compose-02.kt)获取完整代码。
+>
+{type="note"}
 
 它的打印输出如下：
 
@@ -158,8 +162,11 @@ suspend fun doSomethingUsefulTwo(): Int {
     return 29
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-compose-03.kt)获取完整代码。
+>
+{type="note"}
 
 它的打印输出如下：
 
@@ -203,7 +210,7 @@ fun somethingUsefulTwoAsync() = GlobalScope.async {
 注意，这些 `xxxAsync` 函数**不是** _挂起_ 函数。它们可以在任何地方使用。
 然而，它们总是在调用它们的代码中意味着<!--
 -->异步（这里的意思是 _并发_ ）执行。
-
+ 
 下面的例子展示了它们在协程的外面是如何使用的：
 
 <!--- CLEAR -->
@@ -247,8 +254,11 @@ suspend fun doSomethingUsefulTwo(): Int {
     return 29
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-compose-04.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST ARBITRARY_TIME
 The answer is 42
@@ -256,8 +266,10 @@ Completed in 1085 ms
 -->
 
 > 这种带有异步函数的编程风格仅供参考，因为这在其它编程语言中<!--
--->是一种受欢迎的风格。在 Kotlin 的协程中使用这种风格是**强烈不推荐**的，
-原因如下所述。
+> -->是一种受欢迎的风格。在 Kotlin 的协程中使用这种风格是**强烈不推荐**的，
+> 原因如下所述。
+>
+{type="note"}
 
 考虑一下如果 `val one = somethingUsefulOneAsync()` 这一行和 `one.await()` 表达式这里在代码中有逻辑错误，
 并且程序抛出了异常以及程序在操作的过程中中止，将会发生什么。
@@ -315,8 +327,11 @@ suspend fun doSomethingUsefulTwo(): Int {
     return 29
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-compose-05.kt)获取完整代码。
+>
+{type="note"}
 
 从上面的 `main` 函数的输出可以看出，我们仍然可以同时执行这两个操作：
 
@@ -358,8 +373,11 @@ suspend fun failedConcurrentSum(): Int = coroutineScope {
     one.await() + two.await()
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-compose-06.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-compose-06.kt)获取完整代码。
+>
+{type="note"}
 
 请注意，如果其中一个子协程（即 `two`）失败，第一个 `async` 以及等待中的父协程都会被取消<!--
 -->：
@@ -373,6 +391,7 @@ Computation failed with ArithmeticException
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [async]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
@@ -383,4 +402,5 @@ Computation failed with ArithmeticException
 [GlobalScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [_coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
+
 <!--- END -->

@@ -6,8 +6,10 @@ select 表达式可以同时等待多个挂起函数，并 _选择_
 第一个可用的。
 
 > Select 表达式在 `kotlinx.coroutines` 中是一个实验性的特性。这些 API 在
-`kotlinx.coroutines` 库即将到来的更新中可能会<!--
--->发生改变。
+> `kotlinx.coroutines` 库即将到来的更新中可能会<!--
+> -->发生改变。
+>
+{type="note"}
 
 ## 在通道中 select
 
@@ -95,8 +97,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd        
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-select-01.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的执行结果如下：
 
@@ -182,8 +187,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd      
 }    
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-select-02.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的结果非常有趣，所以我们会在更多细节中分析它：
 
@@ -264,11 +272,14 @@ fun main() = runBlocking<Unit> {
 //sampleEnd      
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-03.kt)获取完整代码。
-
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-select-03.kt)获取完整代码。
+>
+{type="note"}
+  
 让我们看看会发生什么：
-
+ 
 ```text
 Consuming 1
 Side channel has 2
@@ -345,8 +356,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-select-04.kt)获取完整代码。
+>
+{type="note"}
 
 该输出如下：
 
@@ -387,7 +401,6 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
 ```
 
 为了测试它，我们将用一个简单的异步函数，它在特定的延迟后返回特定的字符串：
-
 
 ```kotlin
 fun CoroutineScope.asyncString(str: String, time: Long) = async {
@@ -452,8 +465,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-select-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-select-05.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的执行结果：
 
@@ -468,13 +484,19 @@ Channel was closed
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [Deferred.onAwait]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/on-await.html
+
 <!--- INDEX kotlinx.coroutines.channels -->
+
 [ReceiveChannel.receive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html
 [ReceiveChannel.onReceive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/on-receive.html
 [onReceiveOrNull]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/on-receive-or-null.html
 [SendChannel.send]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/send.html
 [SendChannel.onSend]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/on-send.html
+
 <!--- INDEX kotlinx.coroutines.selects -->
+
 [select]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.selects/select.html
+
 <!--- END -->

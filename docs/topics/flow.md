@@ -18,8 +18,11 @@ fun main() {
     simple().forEach { value -> println(value) } 
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-01.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码输出如下：
 
@@ -47,9 +50,12 @@ fun simple(): Sequence<Int> = sequence { // 序列构建器
 fun main() {
     simple().forEach { value -> println(value) } 
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-02.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码输出相同的数字，但在打印每个数字之前等待 100 毫秒。
 
@@ -79,8 +85,11 @@ fun main() = runBlocking<Unit> {
 }
 //sampleEnd
 ```  
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-03.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码将会在等待一秒之后打印数字。
 
@@ -119,9 +128,12 @@ fun main() = runBlocking<Unit> {
     simple().collect { value -> println(value) } 
 }
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-04.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码在不阻塞主线程的情况下每等待 100 毫秒打印一个数字。在主线程中运行一个<!--
 -->单独的协程每 100 毫秒打印一次 “I'm not blocked” 已经经过了验证。
@@ -145,8 +157,10 @@ I'm not blocked 3
 * 流使用 [emit][FlowCollector.emit] 函数 _发射_ 值。
 * 流使用 [collect][collect] 函数 _收集_ 值。
 
-> 我们可以在 `simple` 的 `flow { ... }` 函数体内使用 `Thread.sleep` 代替 [delay]
-以观察主线程在本案例中被阻塞了。
+> 我们可以在 `foo` 的 `flow { ... }` 函数体内使用 `Thread.sleep` 代替 [delay]
+> 以观察主线程在本案例中被阻塞了。
+>
+{type="note"}
 
 ## 流是冷的
 
@@ -176,8 +190,11 @@ fun main() = runBlocking<Unit> {
 }
 //sampleEnd
 ```  
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-05.kt)获取完整代码。
+>
+{type="note"}
 
 打印如下：
 
@@ -196,7 +213,7 @@ Flow started
 ```
 
 <!--- TEST -->
-
+ 
 这是返回一个流的 `simple` 函数没有标记 `suspend` 修饰符的主要原因。
 通过它自己，`simple()` 调用会尽快返回且不会进行任何等待。该流在每次收集的时候启动，
 这就是为什么当我们再次调用 `collect` 时我们会看到“Flow started”。
@@ -228,9 +245,12 @@ fun main() = runBlocking<Unit> {
     println("Done")
 }
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-06.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-06.kt)获取完整代码。
+>
+{type="note"}
 
 注意，在 `simple` 函数中流仅发射两个数字，产生以下输出：
 
@@ -266,9 +286,12 @@ fun main() = runBlocking<Unit> {
     (1..3).asFlow().collect { value -> println(value) }
 //sampleEnd 
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-07.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-07.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST
 1
@@ -307,9 +330,12 @@ fun main() = runBlocking<Unit> {
         .collect { response -> println(response) }
 }
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-08.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-08.kt)获取完整代码。
+>
+{type="note"}
 
 它产生以下三行，每一行每秒出现一次：
 
@@ -349,9 +375,12 @@ fun main() = runBlocking<Unit> {
         .collect { response -> println(response) }
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-09.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-09.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -394,9 +423,12 @@ fun main() = runBlocking<Unit> {
         .collect { value -> println(value) }
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-10.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-10.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出清楚地表明，`numbers()` 函数中对 `flow {...}` 函数体的执行在<!--
 -->发射出第二个数字后停止：
@@ -432,9 +464,12 @@ fun main() = runBlocking<Unit> {
     println(sum)
 //sampleEnd     
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-11.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-11.kt)获取完整代码。
+>
+{type="note"}
 
 打印单个数字：
 
@@ -473,9 +508,12 @@ fun main() = runBlocking<Unit> {
         }    
 //sampleEnd                  
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-12.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-12.kt)获取完整代码。
+>
+{type="note"}
 
 执行：
 
@@ -505,7 +543,7 @@ withContext(context) {
         println(value) // 运行在指定上下文中
     }
 }
-``` 
+```
 
 <!--- CLEAR -->
 
@@ -533,9 +571,12 @@ fun main() = runBlocking<Unit> {
     simple().collect { value -> log("Collected $value") } 
 }            
 //sampleEnd
-```                
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-13.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-13.kt)获取完整代码。
+>
+{type="note"}
 
 运行这段代码：
 
@@ -580,9 +621,12 @@ fun main() = runBlocking<Unit> {
     simple().collect { value -> println(value) } 
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-14.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-14.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码产生如下的异常：
 
@@ -597,7 +641,7 @@ Exception in thread "main" java.lang.IllegalStateException: Flow invariant is vi
 <!--- TEST EXCEPTION -->
 
 ### flowOn 操作符
-
+   
 例外的是 [flowOn] 函数，该函数用于更改流发射的上下文。
 以下示例展示了更改流上下文的正确方法，该示例还通过<!--
 -->打印相应线程的名字以展示它们的工作方式：
@@ -623,10 +667,13 @@ fun main() = runBlocking<Unit> {
     } 
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-15.kt)获取完整代码。
-
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-15.kt)获取完整代码。
+>
+{type="note"}
+  
 注意，当收集发生在主线程中，`flow { ... }` 是如何在后台线程中工作的：
 
 <!--- TEST FLEXIBLE_THREAD
@@ -673,9 +720,12 @@ fun main() = runBlocking<Unit> {
     println("Collected in $time ms")
 }
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-16.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-16.kt)获取完整代码。
+>
+{type="note"}
 
 它会产生这样的结果，整个收集过程大约需要 1200 毫秒（3 个数字，每个花费 400 毫秒）：
 
@@ -716,9 +766,12 @@ fun main() = runBlocking<Unit> {
     println("Collected in $time ms")
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-17.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-17.kt)获取完整代码。
+>
+{type="note"}
 
 它产生了相同的数字，只是更快了，由于我们高效地创建了处理流水线，
 仅仅需要等待第一个数字产生的 100 毫秒以及处理每个数字各需<!--
@@ -734,7 +787,9 @@ Collected in 1071 ms
 <!--- TEST ARBITRARY_TIME -->
 
 > 注意，当必须更改 [CoroutineDispatcher] 时，[flowOn] 操作符使用了相同的缓冲机制，
-但是我们在这里显式地请求缓冲而不改变执行上下文。
+> 但是我们在这里显式地请求缓冲而不改变执行上下文。
+>
+{type="note"}
 
 ### 合并
 
@@ -767,9 +822,12 @@ fun main() = runBlocking<Unit> {
     println("Collected in $time ms")
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-18.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-18.kt)获取完整代码。
+>
+{type="note"}
 
 我们看到，虽然第一个数字仍在处理中，但第二个和第三个数字已经产生，因此<!--
 -->第二个是 _conflated_ ，只有最新的（第三个）被交付给收集器：
@@ -780,7 +838,7 @@ fun main() = runBlocking<Unit> {
 Collected in 758 ms
 ```             
 
-<!--- TEST ARBITRARY_TIME -->   
+<!--- TEST ARBITRARY_TIME -->
 
 ### 处理最新值
 
@@ -814,10 +872,13 @@ fun main() = runBlocking<Unit> {
     println("Collected in $time ms")
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-19.kt)获取完整代码。
-
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-19.kt)获取完整代码。
+>
+{type="note"}
+ 
 由于 [collectLatest] 的函数体需要花费 300 毫秒，但是新值每 100 秒发射一次，我们看到该代码块<!-- 
 -->对每个值运行，但是只收集最后一个值：
 
@@ -852,9 +913,12 @@ fun main() = runBlocking<Unit> {
         .collect { println(it) } // 收集并打印
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-20.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-20.kt)获取完整代码。
+>
+{type="note"}
 
 示例打印如下：
 
@@ -863,7 +927,7 @@ fun main() = runBlocking<Unit> {
 2 -> two
 3 -> three
 ```
-
+ 
 <!--- TEST -->
 
 ### Combine
@@ -878,7 +942,9 @@ fun main() = runBlocking<Unit> {
 尽管每 400 毫秒打印一次结果：
 
 > 我们在本示例中使用 [onEach] 过渡操作符来延时每次元素发射并使<!--
--->该流更具说明性以及更简洁。
+> -->该流更具说明性以及更简洁。
+>
+{type="note"}
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -895,9 +961,12 @@ fun main() = runBlocking<Unit> {
         } 
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-21.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-21.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST ARBITRARY_TIME
 1 -> one at 437 ms from start
@@ -922,9 +991,12 @@ fun main() = runBlocking<Unit> {
         } 
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-22.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-22.kt)获取完整代码。
+>
+{type="note"}
 
 我们得到了完全不同的输出，其中，`nums` 或 `strs` 流中的每次发射都会打印一行：
 
@@ -958,7 +1030,7 @@ fun requestFlow(i: Int): Flow<String> = flow {
 
 ```kotlin
 (1..3).asFlow().map { requestFlow(it) }
-``` 
+```
 
 <!--- CLEAR -->
 
@@ -969,7 +1041,9 @@ fun requestFlow(i: Int): Flow<String> = flow {
 
 ### flatMapConcat
 
-连接模式由 [flatMapConcat] 与 [flattenConcat] 操作符实现。它们是相应序列操作符最相近的类似物。它们在等待内部流完成之后开始收集下一个值，如下面的示例所示：
+连接模式由 [flatMapConcat] 与 [flattenConcat] 操作符实现。它们是<!--
+-->相应序列操作符最相近的类似物。它们在等待内部流完成之后<!--
+-->开始收集下一个值，如下面的示例所示：
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -991,9 +1065,12 @@ fun main() = runBlocking<Unit> {
         } 
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-23.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-23.kt)获取完整代码。
+>
+{type="note"}
 
 在输出中可以清楚地看到 [flatMapConcat] 的顺序性质：
 
@@ -1036,9 +1113,12 @@ fun main() = runBlocking<Unit> {
         } 
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-24.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-24.kt)获取完整代码。
+>
+{type="note"}
 
 [flatMapMerge] 的并发性质很明显：
 
@@ -1054,10 +1134,12 @@ fun main() = runBlocking<Unit> {
 <!--- TEST ARBITRARY_TIME -->
 
 > 注意，[flatMapMerge] 会顺序调用代码块（本示例中的 `{ requestFlow(it) }`），但是<!--
--->并发收集结果流，相当于执行顺序是首先执行
-`map { requestFlow(it) }` 然后在其返回结果上调用 [flattenMerge]。
+> -->并发收集结果流，相当于执行顺序是首先执行
+> `map { requestFlow(it) }` 然后在其返回结果上调用 [flattenMerge]。
+>
+{type="note"}
 
-### flatMapLatest
+### flatMapLatest   
 
 与 [collectLatest] 操作符类似（在<!--
 -->["处理最新值"](#处理最新值) 小节中已经讨论过），也有相对应的“最新”<!--
@@ -1084,9 +1166,12 @@ fun main() = runBlocking<Unit> {
         } 
 //sampleEnd
 }
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-25.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-25.kt)获取完整代码。
+>
+{type="note"}
 
 该示例的输出很好的展示了 [flatMapLatest] 的工作方式：
 
@@ -1098,10 +1183,12 @@ fun main() = runBlocking<Unit> {
 ```                                               
 
 <!--- TEST ARBITRARY_TIME -->
-
+  
 > 注意，[flatMapLatest] 在一个新值到来时取消了块中的所有代码 (本示例中的 `{ requestFlow(it) }`）。
-这在该特定示例中不会有什么区别，由于调用 `requestFlow` 自身的速度是很快的，不会发生挂起，
-所以不会被取消。然而，如果我们要在块中调用诸如 `delay` 之类的挂起函数，这将会被表现出来。
+> 这在该特定示例中不会有什么区别，由于调用 `requestFlow` 自身的速度是很快的，不会发生挂起，
+> 所以不会被取消。然而，如果我们要在块中调用诸如 `delay` 之类的挂起函数，这将会被表现出来。
+>
+{type="note"}
 
 ## 流异常
 
@@ -1135,9 +1222,12 @@ fun main() = runBlocking<Unit> {
     } 
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-26.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-26.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码成功的在末端操作符 [collect] 中捕获了异常，并且，
 如我们所见，在这之后不再发出任何值：
@@ -1183,9 +1273,12 @@ fun main() = runBlocking<Unit> {
     } 
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-27.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-27.kt)获取完整代码。
+>
+{type="note"}
 
 仍然会捕获该异常并停止收集：
 
@@ -1239,10 +1332,13 @@ fun main() = runBlocking<Unit> {
         .collect { value -> println(value) }
 //sampleEnd
 }            
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-28.kt)获取完整代码。
-
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-28.kt)获取完整代码。
+>
+{type="note"} 
+ 
 即使我们不再在代码的外层使用 `try/catch`，示例的输出也是相同的。
 
 <!--- TEST  
@@ -1279,10 +1375,13 @@ fun main() = runBlocking<Unit> {
         }
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-29.kt)获取完整代码。
-
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-29.kt)获取完整代码。
+>
+{type="note"}
+ 
 尽管有 `catch` 操作符，但不会打印“Caught ...”消息：
 
 ```text  
@@ -1323,10 +1422,13 @@ fun main() = runBlocking<Unit> {
         .collect()
 //sampleEnd
 }            
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-30.kt)获取完整代码。
-
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-30.kt)获取完整代码。
+>
+{type="note"} 
+ 
 现在我们可以看到已经打印了“Caught ...”消息，并且我们可以在没有显式使用
 `try/catch` 块的情况下捕获所有异常：
 
@@ -1364,9 +1466,12 @@ fun main() = runBlocking<Unit> {
     }
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-31.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-31.kt)获取完整代码。
+>
+{type="note"} 
 
 这段代码打印出 `simple` 流产生的三个数字，后面跟一个“Done”字符串：
 
@@ -1400,7 +1505,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd
 }            
 ```
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-32.kt)获取完整代码。
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
+
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-32.kt)获取完整代码。
+>
+{type="note"} 
 
 <!--- TEST 
 1
@@ -1431,7 +1540,11 @@ fun main() = runBlocking<Unit> {
 }            
 //sampleEnd
 ```
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-33.kt)获取完整代码。
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
+
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-33.kt)获取完整代码。
+>
+{type="note"}
 
 如你所期望的，它打印了：
 
@@ -1469,8 +1582,11 @@ fun main() = runBlocking<Unit> {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-34.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-34.kt)获取完整代码。
+>
+{type="note"}
 
 我们可以看到完成时 cause 不为空，因为流由于下游异常而中止：
 
@@ -1496,7 +1612,7 @@ Exception in thread "main" java.lang.IllegalStateException: Collected 2
 -->处理即将到来的事件，并继续进行进一步的处理。[onEach] 操作符可以担任该角色。
 然而，`onEach` 是一个过渡操作符。我们也需要一个末端操作符来收集流。
 否则仅调用 `onEach` 是无效的。
-
+ 
 如果我们在 `onEach` 之后使用 [collect] 末端操作符，那么后面的代码会一直等待直至流被收集：
 
 ```kotlin
@@ -1514,10 +1630,13 @@ fun main() = runBlocking<Unit> {
     println("Done")
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-35.kt)获取完整代码。
-
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-35.kt)获取完整代码。
+>
+{type="note"} 
+  
 你可以看到它的输出：
 
 ```text 
@@ -1528,7 +1647,7 @@ Done
 ```    
 
 <!--- TEST -->
-
+ 
 [launchIn] 末端操作符可以在这里派上用场。使用 `launchIn` 替换 `collect` 我们可以<!--
 -->在单独的协程中启动流的收集，这样就可以立即继续<!--
 -->进一步执行代码：
@@ -1548,10 +1667,13 @@ fun main() = runBlocking<Unit> {
     println("Done")
 }            
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-36.kt)获取完整代码。
-
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-36.kt)获取完整代码。
+>
+{type="note"} 
+  
 它打印了：
 
 ```text          
@@ -1577,7 +1699,7 @@ Event: 3
 注意，[launchIn] 也会返回一个 [Job]，可以在不取消整个作用域的情况下仅[取消][Job.cancel]相应的流收集<!--
 -->或对其进行 [join][Job.join]。
 
-## 流取消检测
+### 流取消检测
 
 为方便起见，[流][_flow]构建器对每个发射值执行附加的 [ensureActive] 检测以进行取消。
 这意味着从 `flow { ... }` 发出的繁忙循环是可以取消的：
@@ -1601,9 +1723,12 @@ fun main() = runBlocking<Unit> {
     } 
 }
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-37.kt)获取完整的代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-37.kt)获取完整的代码。
+>
+{type="note"}
 
 仅得到不超过 3 的数字，在尝试发出 4 之后抛出 [CancellationException]；
 
@@ -1636,9 +1761,12 @@ fun main() = runBlocking<Unit> {
     } 
 }
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-38.kt)获取完整的代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-38.kt)获取完整的代码。
+>
+{type="note"}
 
 收集从 1 到 5 的所有数字，并且仅在从 `runBlocking` 返回之前检测到取消：
 
@@ -1653,7 +1781,7 @@ Exception in thread "main" kotlinx.coroutines.JobCancellationException: Blocking
 
 <!--- TEST EXCEPTION -->
 
-### 让繁忙的流可取消
+#### 让繁忙的流可取消
 
 在协程处于繁忙循环的情况下，必须明确检测是否取消。
 可以添加 `.onEach { currentCoroutineContext().ensureActive() }`，
@@ -1671,9 +1799,12 @@ fun main() = runBlocking<Unit> {
     } 
 }
 //sampleEnd
-```  
+```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-flow-39.kt)获取完整的代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-flow-39.kt)获取完整的代码。
+>
+{type="note"}
 
 使用 `cancellable` 操作符，仅收集从 1 到 3 的数字：
 
@@ -1697,11 +1828,11 @@ Flow 的设计也许看起来会非常熟悉。
 虽然有所不同，但从概念上讲，Flow *依然是*响应式流，并且可以将它转换为响应式（规范及符合 TCK）的发布者（Publisher），反之亦然。
 这些开箱即用的转换器可以在 `kotlinx.coroutines` 提供的相关响应式模块（`kotlinx-coroutines-reactive` 用于 Reactive Streams，`kotlinx-coroutines-reactor` 用于 Project Reactor，以及 `kotlinx-coroutines-rx2`/`kotlinx-coroutines-rx3` 用于 RxJava2/RxJava3）中找到。
 集成模块包含 `Flow` 与其他实现之间的转换，与 Reactor 的 `Context` 集成以及与一系列响应式实体配合使用的挂起友好的使用方式。
-
+ 
 <!-- stdlib references -->
 
-[collections]: https://kotlinlang.org/docs/reference/collections-overview.html
-[List]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html
+[collections]: https://kotlinlang.org/docs/reference/collections-overview.html 
+[List]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html 
 [forEach]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/for-each.html
 [Sequence]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/index.html
 [Sequence.zip]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/zip.html
@@ -1711,6 +1842,7 @@ Flow 的设计也许看起来会非常熟悉。
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [delay]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html
 [withTimeoutOrNull]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-timeout-or-null.html
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
@@ -1724,7 +1856,9 @@ Flow 的设计也许看起来会非常熟悉。
 [Job.join]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html
 [ensureActive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/ensure-active.html
 [CancellationException]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-cancellation-exception/index.html
+
 <!--- INDEX kotlinx.coroutines.flow -->
+
 [Flow]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html
 [_flow]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow.html
 [FlowCollector.emit]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow-collector/emit.html
@@ -1758,4 +1892,5 @@ Flow 的设计也许看起来会非常熟悉。
 [launchIn]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/launch-in.html
 [IntRange.asFlow]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/kotlin.ranges.-int-range/as-flow.html
 [cancellable]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/cancellable.html
+
 <!--- END -->

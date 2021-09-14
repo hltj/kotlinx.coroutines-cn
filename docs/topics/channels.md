@@ -11,7 +11,6 @@
 -->它代替了阻塞的 `put` 操作并提供了挂起的 [send][SendChannel.send]，还替代了<!--
 -->阻塞的 `take` 操作并提供了挂起的 [receive][ReceiveChannel.receive]。
 
-
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
@@ -29,8 +28,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-01.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -50,7 +52,7 @@ Done!
 和队列不同，一个通道可以通过被关闭来表明没有更多的元素将会进入通道。
 在接收者中可以定期的使用 `for` 循环来从通道中<!--
 -->接收元素。
-
+ 
 从概念上来说，一个 [close][SendChannel.close] 操作就像向通道发送了一个特殊的关闭指令。
 这个迭代停止就说明关闭指令已经被接收了。所以这里保证<!--
 -->所有先前发送出去的元素都在通道关闭前被接收到。
@@ -72,8 +74,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-02.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST 
 1
@@ -110,8 +115,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-03.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST 
 1
@@ -171,8 +179,11 @@ fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = p
     for (x in numbers) send(x * x)
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-04.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST 
 1
@@ -184,8 +195,10 @@ Done!
 -->
 
 > 所有创建了协程的函数被定义在了 [CoroutineScope] 的扩展上，
-所以我们可以依靠[结构化并发](https://kotlinlang.org/docs/reference/coroutines/composing-suspending-functions.html#structured-concurrency-with-async)来确保<!--
--->没有常驻在我们的应用程序中的全局协程。
+> 所以我们可以依靠[结构化并发](composing-suspending-functions.md#structured-concurrency-with-async)来确保<!--
+> -->没有常驻在我们的应用程序中的全局协程。
+>
+{type="note"}
 
 ## 使用管道的素数
 
@@ -210,11 +223,11 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 
 现在我们开启了一个从 2 开始的数字流管道，从当前的通道中取一个素数，
 并为每一个我们发现的素数启动一个流水线阶段：
-
-```
+ 
+```Plain Text
 numbersFrom(2) -> filter(2) -> filter(3) -> filter(5) -> filter(7) ……
-``` 
-
+```
+ 
 下面的例子打印了前十个素数，
 在主线程的上下文中运行整个管道。直到所有的协程在<!--
 -->该主协程 [runBlocking] 的作用域中被启动完成。
@@ -250,8 +263,11 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
     for (x in numbers) if (x % prime != 0) send(x)
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-05.kt)获取完整代码。
+>
+{type="note"}
 
 这段代码的输出如下：
 
@@ -271,7 +287,7 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 <!--- TEST -->
 
 注意，你可以在标准库中使用
-[`iterator`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/iterator.html)
+[`iterator`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/iterator.html) 
 协程构建器来构建一个相似的管道。
 使用 `iterator` 替换 `produce`、`yield` 替换 `send`、`next` 替换 `receive`、
 `Iterator` 替换 `ReceiveChannel` 来摆脱协程作用域，你将不再需要 `runBlocking`。
@@ -282,7 +298,7 @@ fun CoroutineScope.filter(numbers: ReceiveChannel<Int>, prime: Int) = produce<In
 -->挂起中的调用（就像异步调用远程服务）并且这些管道不能<!--
 -->内置使用 `sequence`/`iterator`，因为它们不被允许随意的挂起，不像
 `produce` 是完全异步的。
-
+ 
 ## 扇出
 
 多个协程也许会接收相同的管道，在它们之间进行分布式工作。
@@ -341,13 +357,16 @@ fun CoroutineScope.launchProcessor(id: Int, channel: ReceiveChannel<Int>) = laun
     }    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-06.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-06.kt)获取完整代码。
+>
+{type="note"}
 
 该输出将类似于如下所示，尽管接收<!--
 -->每个特定整数的处理器 id 可能会不同：
 
-```
+```text
 Processor #2 received 1
 Processor #4 received 2
 Processor #0 received 3
@@ -413,8 +432,11 @@ suspend fun sendString(channel: SendChannel<String>, s: String, time: Long) {
     }
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-07.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-07.kt)获取完整代码。
+>
+{type="note"}
 
 输出如下：
 
@@ -441,7 +463,6 @@ BAR!
 
 看看如下代码的表现：
 
-
 ```kotlin
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
@@ -461,8 +482,11 @@ fun main() = runBlocking<Unit> {
 //sampleEnd    
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-08.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-08.kt)获取完整代码。
+>
+{type="note"}
 
 使用缓冲通道并给 capacity 参数传入 _四_ 它将打印“sending” _五_ 次：
 
@@ -484,7 +508,6 @@ Sending 4
 -->多个协程。它们遵守先进先出原则，可以看到第一个协程调用 `receive`
 并得到了元素。在下面的例子中两个协程“乒”和“乓”都<!--
 -->从共享的“桌子”通道接收到这个“球”元素。
-
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -512,8 +535,11 @@ suspend fun player(name: String, table: Channel<Ball>) {
 }
 //sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-09.kt)得到完整代码
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-09.kt)得到完整代码
+>
+{type="note"}
 
 “乒”协程首先被启动，所以它首先接收到了球。甚至虽然“乒”
 协程在将球发送会桌子以后立即开始接收，但是球还是被“乓”
@@ -572,7 +598,9 @@ fun main() = runBlocking<Unit> {
 }
 ```
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-channel-10.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-10.kt)获取完整代码。
+>
+{type="note"}
 
 它的打印如下：
 
@@ -589,18 +617,20 @@ Next element is ready in 50ms after consumer pause in 150ms: kotlin.Unit
 
 请注意，[ticker] 知道可能的消费者暂停，并且默认情况下会调整下一个生成的元素<!--
 -->如果发生暂停则延迟，试图保持固定的生成元素率。
-
+ 
 给可选的 `mode` 参数传入 [TickerMode.FIXED_DELAY] 可以保持固定<!--
 -->元素之间的延迟。
 
-
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [runBlocking]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/run-blocking.html
 [kotlin.coroutines.CoroutineContext.cancelChildren]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/kotlin.coroutines.-coroutine-context/cancel-children.html
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
+
 <!--- INDEX kotlinx.coroutines.channels -->
+
 [Channel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-channel/index.html
 [SendChannel.send]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/send.html
 [ReceiveChannel.receive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html
@@ -611,6 +641,9 @@ Next element is ready in 50ms after consumer pause in 150ms: kotlin.Unit
 [ticker]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/ticker.html
 [ReceiveChannel.cancel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/cancel.html
 [TickerMode.FIXED_DELAY]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-ticker-mode/-f-i-x-e-d_-d-e-l-a-y.html
+
 <!--- INDEX kotlinx.coroutines.selects -->
+
 [select]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.selects/select.html
+
 <!--- END -->

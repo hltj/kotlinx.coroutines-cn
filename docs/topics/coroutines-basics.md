@@ -20,8 +20,11 @@ fun main() {
     Thread.sleep(2000L) // 阻塞主线程 2 秒钟来保证 JVM 存活
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-01.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-01.kt)获取完整代码。
+>
+{type="note"}
 
 代码运行的结果：
 
@@ -43,7 +46,7 @@ World!
 
 如果你首先将 `GlobalScope.launch` 替换为 `thread`，编译器会报以下错误：
 
-```
+```Plain Text
 Error: Kotlin: Suspend functions are only allowed to be called from a coroutine or another suspend function
 ```
 
@@ -70,8 +73,11 @@ fun main() {
     } 
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-02.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-02.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST
 Hello,
@@ -96,8 +102,11 @@ fun main() = runBlocking<Unit> { // 开始执行主协程
     delay(2000L)      // 延迟 2 秒来保证 JVM 存活
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-03.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-03.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST
 Hello,
@@ -143,8 +152,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-04.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-04.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST
 Hello,
@@ -184,8 +196,11 @@ fun main() = runBlocking { // this: CoroutineScope
     println("Hello,")
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-05.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-05.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST
 Hello,
@@ -226,8 +241,11 @@ fun main() = runBlocking { // this: CoroutineScope
     println("Coroutine scope is over") // 这一行在内嵌 launch 执行完毕后才输出
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-06.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-06.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST
 Task from coroutine scope
@@ -261,21 +279,23 @@ suspend fun doWorld() {
     println("World!")
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-07.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-07.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST
 Hello,
 World!
 -->
 
-
 但是如果提取出的函数包含一个在当前作用域中调用的协程构建器的话，该怎么办？
 在这种情况下，所提取函数上只有 `suspend` 修饰符是不够的。为 `CoroutineScope` 写一个 `doWorld` 扩展<!--
 -->方法是其中一种解决方案，但这可能并非总是适用，因为它并没有使 API 更加清晰。
 惯用的解决方案是要么显式将 `CoroutineScope` 作为包含该函数的类的一个字段，
 要么当外部类实现了 `CoroutineScope` 时隐式取得。
-作为最后的手段，可以使用 [CoroutineScope(coroutineContext)][CoroutineScope()]，不过这种方法结构上不安全，
+作为最后的手段，可以使用 [CoroutineScope(coroutineContext)][CoroutineScope()]，不过这种方法结构上不安全， 
 因为你不能再控制该方法执行的作用域。只有私有 API 才能使用这个构建器。
 
 ## 协程很轻量
@@ -295,7 +315,9 @@ fun main() = runBlocking {
 }
 ```
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-08.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-08.kt)获取完整代码。
+>
+{type="note"}
 
 <!--- TEST lines.size == 1 && lines[0] == ".".repeat(100_000) -->
 
@@ -323,8 +345,11 @@ fun main() = runBlocking {
 //sampleEnd
 }
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
-> 可以在[这里](../kotlinx-coroutines-core/jvm/test/guide/example-basic-09.kt)获取完整代码。
+> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-09.kt)获取完整代码。
+>
+{type="note"}
 
 你可以运行这个程序并看到它输出了以下三行后终止：
 
@@ -340,6 +365,7 @@ I'm sleeping 2 ...
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [GlobalScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html
@@ -349,6 +375,5 @@ I'm sleeping 2 ...
 [Job.join]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/join.html
 [_coroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/coroutine-scope.html
 [CoroutineScope()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope.html
+
 <!--- END -->
-
-
