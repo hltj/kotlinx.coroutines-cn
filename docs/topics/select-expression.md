@@ -120,31 +120,32 @@ buzz -> 'Buzz!'
 ## 通道关闭时 select
 
 select 中的 [onReceive][ReceiveChannel.onReceive] 子句在已经关闭的通道执行会发生失败，并导致相应的
-`select` 抛出异常。我们可以使用 [onReceiveOrNull][onReceiveOrNull] 子句在关闭通道时执行<!--
+`select` 抛出异常。我们可以使用 [onReceiveCatching][ReceiveChannel.onReceiveCatching] 子句在关闭通道时执行<!--
 -->特定操作。以下示例还显示了 `select` 是一个返回<!--
 -->其查询方法结果的表达式：
 
 ```kotlin
 suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): String =
     select<String> {
-        a.onReceiveOrNull { value -> 
-            if (value == null) 
-                "Channel 'a' is closed" 
-            else 
+        a.onReceiveCatching { it ->
+            val value = it.getOrNull()
+            if (value != null) {
                 "a -> '$value'"
+            } else {
+                "Channel 'a' is closed"
+            }
         }
-        b.onReceiveOrNull { value -> 
-            if (value == null) 
-                "Channel 'b' is closed"
-            else    
+        b.onReceiveCatching { it ->
+            val value = it.getOrNull()
+            if (value != null) {
                 "b -> '$value'"
+            } else {
+                "Channel 'b' is closed"
+            }
         }
     }
 ```
 
-注意，[onReceiveOrNull][onReceiveOrNull] 是一个仅在用于不可空元素的通道上<!--
--->定义的扩展函数，以使关闭的通道与空值之间<!--
--->不会出现意外的混乱。
 
 现在有一个生成四次“Hello”字符串的 `a` 通道，
 和一个生成四次“World”字符串的 `b` 通道，我们在这两个通道上使用它：
@@ -158,17 +159,21 @@ import kotlinx.coroutines.selects.*
 
 suspend fun selectAorB(a: ReceiveChannel<String>, b: ReceiveChannel<String>): String =
     select<String> {
-        a.onReceiveOrNull { value -> 
-            if (value == null) 
-                "Channel 'a' is closed" 
-            else 
+        a.onReceiveCatching { it ->
+            val value = it.getOrNull()
+            if (value != null) {
                 "a -> '$value'"
+            } else {
+                "Channel 'a' is closed"
+            }
         }
-        b.onReceiveOrNull { value -> 
-            if (value == null) 
-                "Channel 'b' is closed"
-            else    
+        b.onReceiveCatching { it ->
+            val value = it.getOrNull()
+            if (value != null) {
                 "b -> '$value'"
+            } else {
+                "Channel 'b' is closed"
+            }
         }
     }
     
@@ -216,7 +221,7 @@ Channel 'a' is closed
 [send][SendChannel.send] 时会不时地被挂起，进而 `b` 也有机会发送。
 
 第二个观察结果是，当通道已经关闭时，
-会立即选择 [onReceiveOrNull][onReceiveOrNull]。
+会立即选择 [onReceiveCatching][ReceiveChannel.onReceiveCatching]。
 
 ## Select 以发送
 
@@ -375,19 +380,19 @@ Deferred 4 produced answer 'Waited for 128 ms'
 
 我们现在来编写一个通道生产者函数，它消费一个产生延迟字符串的通道，并等待每个接收的<!--
 -->延迟值，但它只在下一个延迟值到达或者通道关闭之前处于运行状态。此示例将
-[onReceiveOrNull][onReceiveOrNull] 和 [onAwait][Deferred.onAwait] 子句放在同一个 `select` 中：
+[onReceiveCatching][ReceiveChannel.onReceiveCatching] 和 [onAwait][Deferred.onAwait] 子句放在同一个 `select` 中：
 
 ```kotlin
 fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) = produce<String> {
     var current = input.receive() // 从第一个接收到的延迟值开始
     while (isActive) { // 循环直到被取消或关闭
         val next = select<Deferred<String>?> { // 从这个 select 中返回下一个延迟值或 null
-            input.onReceiveOrNull { update ->
-                update // 替换下一个要等待的值
+            input.onReceiveCatching { update ->
+                update.getOrNull()
             }
-            current.onAwait { value ->  
+            current.onAwait { value ->
                 send(value) // 发送当前延迟生成的值
-                input.receiveOrNull() // 然后使用从输入通道得到的下一个延迟值
+                input.receiveCatching().getOrNull() // 然后使用从输入通道得到的下一个延迟值
             }
         }
         if (next == null) {
@@ -423,12 +428,12 @@ fun CoroutineScope.switchMapDeferreds(input: ReceiveChannel<Deferred<String>>) =
     var current = input.receive() // 从第一个接收到的延迟值开始
     while (isActive) { // 循环直到被取消或关闭
         val next = select<Deferred<String>?> { // 从这个 select 中返回下一个延迟值或 null
-            input.onReceiveOrNull { update ->
-                update // 替换下一个要等待的值
+            input.onReceiveCatching { update ->
+                update.getOrNull()
             }
-            current.onAwait { value ->  
+            current.onAwait { value ->
                 send(value) // 发送当前延迟生成的值
-                input.receiveOrNull() // 然后使用从输入通道得到的下一个延迟值
+                input.receiveCatching().getOrNull() // 然后使用从输入通道得到的下一个延迟值
             }
         }
         if (next == null) {
@@ -491,7 +496,7 @@ Channel was closed
 
 [ReceiveChannel.receive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html
 [ReceiveChannel.onReceive]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/on-receive.html
-[onReceiveOrNull]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/on-receive-or-null.html
+[ReceiveChannel.onReceiveCatching]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/on-receive-catching.html
 [SendChannel.send]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/send.html
 [SendChannel.onSend]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/on-send.html
 

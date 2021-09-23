@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 package kotlinx.coroutines
@@ -150,4 +150,4 @@ internal val CoroutineContext.delay: Delay get() = get(ContinuationInterceptor) 
  */
 @ExperimentalTime
 internal fun Duration.toDelayMillis(): Long =
-    if (this > Duration.ZERO) toLongMilliseconds().coerceAtLeast(1) else 0
+    if (this > Duration.ZERO) inWholeMilliseconds.coerceAtLeast(1) else 0

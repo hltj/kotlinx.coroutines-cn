@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 @file:Suppress("unused")
@@ -8,7 +8,6 @@ package kotlinx.coroutines
 
 import kotlinx.coroutines.internal.*
 import kotlinx.coroutines.scheduling.*
-import java.util.*
 import kotlin.coroutines.*
 
 /**
@@ -108,9 +107,10 @@ public actual object Dispatchers {
      *
      * ### Implementation note
      *
-     * This dispatcher shares threads with a [Default][Dispatchers.Default] dispatcher, so using
-     * `withContext(Dispatchers.IO) { ... }` does not lead to an actual switching to another thread &mdash;
-     * typically execution continues in the same thread.
+     * This dispatcher shares threads with the [Default][Dispatchers.Default] dispatcher, so using
+     * `withContext(Dispatchers.IO) { ... }` when already running on the [Default][Dispatchers.Default]
+     * dispatcher does not lead to an actual switching to another thread &mdash; typically execution
+     * continues in the same thread.
      * As a result of thread sharing, more than 64 (default parallelism) threads can be created (but not used)
      * during operations over IO dispatcher.
      */

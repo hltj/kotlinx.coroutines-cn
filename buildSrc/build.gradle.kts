@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 import java.util.*
@@ -12,15 +12,13 @@ val cacheRedirectorEnabled = System.getenv("CACHE_REDIRECTOR")?.toBoolean() == t
 val buildSnapshotTrain = properties["build_snapshot_train"]?.toString()?.toBoolean() == true
 
 repositories {
+    mavenCentral()
     if (cacheRedirectorEnabled) {
         maven("https://cache-redirector.jetbrains.com/plugins.gradle.org/m2")
-        maven("https://cache-redirector.jetbrains.com/dl.bintray.com/kotlin/kotlin-eap")
-        maven("https://cache-redirector.jetbrains.com/dl.bintray.com/kotlin/kotlin-dev")
     } else {
         maven("https://plugins.gradle.org/m2")
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
-        maven("https://dl.bintray.com/kotlin/kotlin-dev")
     }
+    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
 
     if (buildSnapshotTrain) {
         mavenLocal()
@@ -47,4 +45,5 @@ fun version(target: String): String {
 dependencies {
     implementation(kotlin("gradle-plugin", version("kotlin")))
     implementation("org.jetbrains.dokka:dokka-gradle-plugin:${version("dokka")}")
+    implementation("org.jetbrains.dokka:dokka-core:${version("dokka")}")
 }

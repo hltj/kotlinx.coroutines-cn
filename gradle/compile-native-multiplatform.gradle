@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 project.ext.nativeMainSets = []
@@ -24,6 +24,11 @@ kotlin {
         addTarget(presets.watchosArm32)
         addTarget(presets.watchosArm64)
         addTarget(presets.watchosX86)
+        addTarget(presets.watchosX64)
+        addTarget(presets.iosSimulatorArm64)
+        addTarget(presets.watchosSimulatorArm64)
+        addTarget(presets.tvosSimulatorArm64)
+        addTarget(presets.macosArm64)
     }
 
     sourceSets {

@@ -1,9 +1,10 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 pluginManagement {
     val build_snapshot_train: String? by settings
     repositories {
+        maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/dokka/dev/")
         val cacheRedirectorEnabled = System.getenv("CACHE_REDIRECTOR")?.toBoolean() == true
         if (cacheRedirectorEnabled) {
             println("Redirecting repositories for buildSrc buildscript")

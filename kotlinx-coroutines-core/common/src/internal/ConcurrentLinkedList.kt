@@ -1,11 +1,12 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 package kotlinx.coroutines.internal
 
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
+import kotlin.jvm.*
 import kotlin.native.concurrent.SharedImmutable
 
 /**
@@ -227,8 +228,8 @@ private inline fun AtomicInt.addConditionally(delta: Int, condition: (cur: Int) 
     }
 }
 
-@Suppress("EXPERIMENTAL_FEATURE_WARNING") // We are using inline class only internally, so it is Ok
-internal inline class SegmentOrClosed<S : Segment<S>>(private val value: Any?) {
+@JvmInline
+internal value class SegmentOrClosed<S : Segment<S>>(private val value: Any?) {
     val isClosed: Boolean get() = value === CLOSED
     @Suppress("UNCHECKED_CAST")
     val segment: S get() = if (value === CLOSED) error("Does not contain segment") else value as S

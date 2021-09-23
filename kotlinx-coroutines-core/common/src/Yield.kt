@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 package kotlinx.coroutines
@@ -9,7 +9,8 @@ import kotlin.coroutines.*
 import kotlin.coroutines.intrinsics.*
 
 /**
- * Yields the thread (or thread pool) of the current coroutine dispatcher to other coroutines to run if possible.
+ * Yields the thread (or thread pool) of the current coroutine dispatcher
+ * to other coroutines on the same dispatcher to run if possible.
  * 
  * This suspending function is cancellable.
  * If the [Job] of the current coroutine is cancelled or completed when this suspending function is invoked or while
@@ -29,7 +30,7 @@ import kotlin.coroutines.intrinsics.*
  */
 public suspend fun yield(): Unit = suspendCoroutineUninterceptedOrReturn sc@ { uCont ->
     val context = uCont.context
-    context.checkCompletion()
+    context.ensureActive()
     val cont = uCont.intercepted() as? DispatchedContinuation<Unit> ?: return@sc Unit
     if (cont.dispatcher.isDispatchNeeded(context)) {
         // this is a regular dispatcher -- do simple dispatchYield
@@ -48,9 +49,4 @@ public suspend fun yield(): Unit = suspendCoroutineUninterceptedOrReturn sc@ { u
         // Otherwise, it was some other dispatcher that successfully dispatched the coroutine
     }
     COROUTINE_SUSPENDED
-}
-
-internal fun CoroutineContext.checkCompletion() {
-    val job = get(Job)
-    if (job != null && !job.isActive) throw job.getCancellationException()
 }

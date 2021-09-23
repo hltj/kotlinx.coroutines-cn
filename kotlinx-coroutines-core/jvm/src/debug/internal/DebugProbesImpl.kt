@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 package kotlinx.coroutines.debug.internal
@@ -282,7 +282,7 @@ internal object DebugProbesImpl {
                     it.fileName == "ContinuationImpl.kt"
         }
 
-        val (continuationStartFrame, frameSkipped) = findContinuationStartIndex(
+        val (continuationStartFrame, delta) = findContinuationStartIndex(
             indexOfResumeWith,
             actualTrace,
             coroutineTrace
@@ -290,7 +290,6 @@ internal object DebugProbesImpl {
 
         if (continuationStartFrame == -1) return coroutineTrace
 
-        val delta = if (frameSkipped) 1 else 0
         val expectedSize = indexOfResumeWith + coroutineTrace.size - continuationStartFrame - 1 - delta
         val result = ArrayList<StackTraceElement>(expectedSize)
         for (index in 0 until indexOfResumeWith - delta) {
@@ -312,16 +311,22 @@ internal object DebugProbesImpl {
      * If method above `resumeWith` has no line number (thus it is `stateMachine.invokeSuspend`),
      * it's skipped and attempt to match next one is made because state machine could have been missing in the original coroutine stacktrace.
      *
-     * Returns index of such frame (or -1) and flag indicating whether frame with state machine was skipped
+     * Returns index of such frame (or -1) and number of skipped frames (up to 2, for state machine and for access$).
      */
     private fun findContinuationStartIndex(
         indexOfResumeWith: Int,
         actualTrace: Array<StackTraceElement>,
         coroutineTrace: List<StackTraceElement>
-    ): Pair<Int, Boolean> {
-        val result = findIndexOfFrame(indexOfResumeWith - 1, actualTrace, coroutineTrace)
-        if (result == -1) return findIndexOfFrame(indexOfResumeWith - 2, actualTrace, coroutineTrace) to true
-        return result to false
+    ): Pair<Int, Int> {
+        /*
+         * Since Kotlin 1.5.0 we have these access$ methods that we have to skip.
+         * So we have to test next frame for invokeSuspend, for $access and for actual suspending call.
+         */
+        repeat(3) {
+            val result = findIndexOfFrame(indexOfResumeWith - 1 - it, actualTrace, coroutineTrace)
+            if (result != -1) return result to it
+        }
+        return -1 to 0
     }
 
     private fun findIndexOfFrame(
@@ -477,33 +482,40 @@ internal object DebugProbesImpl {
 
         /*
          * Trim intervals of internal methods from the stacktrace (bounds are excluded from trimming)
-         * E.g. for sequence [e, i1, i2, i3, e, i4, e, i5, i6, e7]
+         * E.g. for sequence [e, i1, i2, i3, e, i4, e, i5, i6, i7]
          * output will be [e, i1, i3, e, i4, e, i5, i7]
+         *
+         * If an interval of internal methods ends in a synthetic method, the outermost non-synthetic method in that
+         * interval will also be included.
          */
         val result = ArrayList<StackTraceElement>(size - probeIndex + 1)
         result += createArtificialFrame(ARTIFICIAL_FRAME_MESSAGE)
-        var includeInternalFrame = true
-        for (i in (probeIndex + 1) until size - 1) {
-            val element = stackTrace[i]
-            if (!element.isInternalMethod) {
-                includeInternalFrame = true
-                result += element
-                continue
-            }
-
-            if (includeInternalFrame) {
-                result += element
-                includeInternalFrame = false
-            } else if (stackTrace[i + 1].isInternalMethod) {
-                continue
+        var i = probeIndex + 1
+        while (i < size) {
+            if (stackTrace[i].isInternalMethod) {
+                result += stackTrace[i] // we include the boundary of the span in any case
+                // first index past the end of the span of internal methods that starts from `i`
+                var j = i + 1
+                while (j < size && stackTrace[j].isInternalMethod) {
+                    ++j
+                }
+                // index of the last non-synthetic internal methods in this span, or `i` if there are no such methods
+                var k = j - 1
+                while (k > i && stackTrace[k].fileName == null) {
+                    k -= 1
+                }
+                if (k > i && k < j - 1) {
+                    /* there are synthetic internal methods at the end of this span, but there is a non-synthetic method
+                    after `i`, so we include it. */
+                    result += stackTrace[k]
+                }
+                result += stackTrace[j - 1] // we include the other boundary of this span in any case, too
+                i = j
             } else {
-                result += element
-                includeInternalFrame = true
+                result += stackTrace[i]
+                ++i
             }
-
         }
-
-        result += stackTrace[size - 1]
         return result
     }
 

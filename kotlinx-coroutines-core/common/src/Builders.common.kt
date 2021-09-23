@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 @file:JvmMultifileClass
@@ -96,7 +96,7 @@ public fun <T> CoroutineScope.async(
 private open class DeferredCoroutine<T>(
     parentContext: CoroutineContext,
     active: Boolean
-) : AbstractCoroutine<T>(parentContext, active), Deferred<T>, SelectClause1<T> {
+) : AbstractCoroutine<T>(parentContext, true, active = active), Deferred<T>, SelectClause1<T> {
     override fun getCompleted(): T = getCompletedInternal() as T
     override suspend fun await(): T = awaitInternal() as T
     override val onAwait: SelectClause1<T> get() = this
@@ -150,7 +150,7 @@ public suspend fun <T> withContext(
         val oldContext = uCont.context
         val newContext = oldContext + context
         // always check for cancellation of new context
-        newContext.checkCompletion()
+        newContext.ensureActive()
         // FAST PATH #1 -- new context is the same as the old one
         if (newContext === oldContext) {
             val coroutine = ScopeCoroutine(newContext, uCont)
@@ -167,7 +167,6 @@ public suspend fun <T> withContext(
         }
         // SLOW PATH -- use new dispatcher
         val coroutine = DispatchedCoroutine(newContext, uCont)
-        coroutine.initParentJob()
         block.startCoroutineCancellable(coroutine, coroutine)
         coroutine.getResult()
     }
@@ -188,7 +187,7 @@ public suspend inline operator fun <T> CoroutineDispatcher.invoke(
 private open class StandaloneCoroutine(
     parentContext: CoroutineContext,
     active: Boolean
-) : AbstractCoroutine<Unit>(parentContext, active) {
+) : AbstractCoroutine<Unit>(parentContext, initParentJob = true, active = active) {
     override fun handleJobException(exception: Throwable): Boolean {
         handleCoroutineException(context, exception)
         return true
@@ -207,25 +206,17 @@ private class LazyStandaloneCoroutine(
 }
 
 // Used by withContext when context changes, but dispatcher stays the same
-private class UndispatchedCoroutine<in T>(
+internal expect class UndispatchedCoroutine<in T>(
     context: CoroutineContext,
     uCont: Continuation<T>
-) : ScopeCoroutine<T>(context, uCont) {
-    override fun afterResume(state: Any?) {
-        // resume undispatched -- update context by stay on the same dispatcher
-        val result = recoverResult(state, uCont)
-        withCoroutineContext(uCont.context, null) {
-            uCont.resumeWith(result)
-        }
-    }
-}
+) : ScopeCoroutine<T>
 
 private const val UNDECIDED = 0
 private const val SUSPENDED = 1
 private const val RESUMED = 2
 
 // Used by withContext when context dispatcher changes
-private class DispatchedCoroutine<in T>(
+internal class DispatchedCoroutine<in T>(
     context: CoroutineContext,
     uCont: Continuation<T>
 ) : ScopeCoroutine<T>(context, uCont) {

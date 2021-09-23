@@ -110,7 +110,7 @@ fun setup(hello: TextView, fab: FloatingActionButton) {
 部分中添加 `kotlinx-coroutines-android` 模块的依赖：
 
 ```groovy
-implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2"
+implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
 ```
 
 可以在 Github 上 clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 这个项目到你的<!--
@@ -268,7 +268,7 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
     }
     // 设置一个监听器来为这个 actor 添加事件
     onMouseClicked = EventHandler { event ->
-        eventActor.offer(event)
+        eventActor.trySend(event)
     }
 }
 ```  
@@ -276,13 +276,13 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
 > 可以在[这里](kotlinx-coroutines-javafx/test/guide/example-ui-actor-02.kt)获取完整代码。
   
 构成协程与常规事件处理程序的集成基础的关键思想是
-[SendChannel] 上的 [offer][SendChannel.offer] 函数不会等待。它会立即将一个元素发送到 actor，
-如果可能的话，或者丢弃一个元素。一个 `offer` 事实上返回了一个我们在这里忽略的 `Boolean` 结果。
+[SendChannel] 上的 [trySend][SendChannel.trySend] 函数不会等待。它会立即将一个元素发送到 actor，
+如果可能的话，或者丢弃一个元素。一个 `trySend` 事实上返回了一个我们在这里忽略的 `ChanneResult` 实例。
 
 在这个版本的代码中尝试反复点击圆形按钮。当倒计时动画进行中时，
 点击动作会被忽略。这会发生的原因是 actor 正忙于执行而不会从通道中接收元素。
 默认的，一个 actor 的邮箱由 `RendezvousChannel` 支持，只有当 `receive` 在运行中的时候
-`offer` 操作才会成功。
+`trySend` 操作才会成功。
 
 > 在 Android 中，这里有一个 `View` 在 OnClickListener 中发送事件，所以我们发送一个 `View` 到 actor 来作为信号。
   相关的 `View` 类的扩展如下所示：
@@ -295,7 +295,7 @@ fun View.onClick(action: suspend (View) -> Unit) {
     }
     // 设置一个监听器来启用 actor
     setOnClickListener { 
-        eventActor.offer(it)
+        eventActor.trySend(it)
     }
 }
 ```
@@ -310,7 +310,7 @@ fun View.onClick(action: suspend (View) -> Unit) {
 -->控制此 actor 用于其邮箱的通道的实现。所有关于可用选项的描述于
 [`Channel()`][Channel] 工厂函数的文档中给出。
 
-我们修改代码使用归并的通道通过 [Channel.CONFLATED] 修改容量值。这<!--
+我们修改代码使用归并的通道通过 [Channel.CONFLATED][Channel.Factory.CONFLATED] 修改容量值。这<!--
 -->只需要在创建 actor 的这一行作出修改：
 
 ```kotlin
@@ -319,9 +319,9 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
     val eventActor = GlobalScope.actor<MouseEvent>(Dispatchers.Main, capacity = Channel.CONFLATED) { // <--- 修改这里
         for (event in channel) action(event) // 将事件传递给 action
     }
-    // 设置一个监听器来为这个 actor 添加事件
+    // 设置一个监听器来为这个 actor 发送事件
     onMouseClicked = EventHandler { event ->
-        eventActor.offer(event)
+        eventActor.trySend(event)
     }
 }
 ```  
@@ -359,7 +359,7 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
         for (event in channel) action(event) // 将事件传递给 action
     }
     onMouseClicked = EventHandler { event ->
-        eventActor.offer(event)
+        eventActor.trySend(event)
     }
 }
 -->
@@ -607,26 +607,32 @@ After delay
   
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
+
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [delay]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/delay.html
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
-[Job.cancel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/cancel.html
+[Job.cancel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/cancel.html
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [MainScope()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-main-scope.html
 [withContext]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
 [CoroutineStart]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-start/index.html
 [async]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html
-[CoroutineStart.UNDISPATCHED]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-start/-u-n-d-i-s-p-a-t-c-h-e-d.html
+[CoroutineStart.UNDISPATCHED]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-start/-u-n-d-i-s-p-a-t-c-h-e-d/index.html
+
 <!--- INDEX kotlinx.coroutines.channels -->
+
 [actor]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/actor.html
-[SendChannel.offer]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/offer.html
+[SendChannel.trySend]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/try-send.html
 [SendChannel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-send-channel/index.html
 [Channel]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-channel/index.html
-[Channel.CONFLATED]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-channel/-c-o-n-f-l-a-t-e-d.html
+[Channel.Factory.CONFLATED]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-channel/-factory/-c-o-n-f-l-a-t-e-d.html
+
 <!--- MODULE kotlinx-coroutines-javafx -->
 <!--- INDEX kotlinx.coroutines.javafx -->
-[kotlinx.coroutines.Dispatchers.JavaFx]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-javafx/kotlinx.coroutines.javafx/kotlinx.coroutines.-dispatchers/-java-fx.html
+
+[kotlinx.coroutines.Dispatchers.JavaFx]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-javafx/kotlinx.coroutines.javafx/-java-fx.html
+
 <!--- MODULE kotlinx-coroutines-android -->
 <!--- INDEX kotlinx.coroutines.android -->
 <!--- END -->

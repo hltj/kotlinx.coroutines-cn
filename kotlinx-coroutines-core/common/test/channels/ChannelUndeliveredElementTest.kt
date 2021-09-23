@@ -1,3 +1,7 @@
+/*
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ */
+
 package kotlinx.coroutines.channels
 
 import kotlinx.atomicfu.*
@@ -6,17 +10,19 @@ import kotlin.test.*
 
 class ChannelUndeliveredElementTest : TestBase() {
     @Test
-    fun testSendSuccessfully() = runAllKindsTest { kind ->
-        val channel = kind.create<Resource> { it.cancel() }
-        val res = Resource("OK")
-        launch {
-            channel.send(res)
+    fun testSendSuccessfully() = runTest {
+        runAllKindsTest { kind ->
+            val channel = kind.create<Resource> { it.cancel() }
+            val res = Resource("OK")
+            launch {
+                channel.send(res)
+            }
+            val ok = channel.receive()
+            assertEquals("OK", ok.value)
+            assertFalse(res.isCancelled) // was not cancelled
+            channel.close()
+            assertFalse(res.isCancelled) // still was not cancelled
         }
-        val ok = channel.receive()
-        assertEquals("OK", ok.value)
-        assertFalse(res.isCancelled) // was not cancelled
-        channel.close()
-        assertFalse(res.isCancelled) // still was not cancelled
     }
 
     @Test
@@ -51,6 +57,20 @@ class ChannelUndeliveredElementTest : TestBase() {
     }
 
     @Test
+    fun testUnlimitedChannelCancelled() = runTest {
+        val channel = Channel<Resource>(Channel.UNLIMITED) { it.cancel() }
+        val resA = Resource("A")
+        val resB = Resource("B")
+        channel.send(resA) // goes to buffer
+        channel.send(resB) // goes to buffer
+        assertFalse(resA.isCancelled) // it is in buffer, not cancelled
+        assertFalse(resB.isCancelled) //  it is in buffer, not cancelled
+        channel.cancel() // now cancel the channel
+        assertTrue(resA.isCancelled) // now cancelled in buffer
+        assertTrue(resB.isCancelled) // now cancelled in buffer
+    }
+
+    @Test
     fun testConflatedResourceCancelled() = runTest {
         val channel = Channel<Resource>(Channel.CONFLATED) { it.cancel() }
         val resA = Resource("A")
@@ -68,21 +88,23 @@ class ChannelUndeliveredElementTest : TestBase() {
     }
 
     @Test
-    fun testSendToClosedChannel() = runAllKindsTest { kind ->
-        val channel = kind.create<Resource> { it.cancel() }
-        channel.close() // immediately close channel
-        val res = Resource("OK")
-        assertFailsWith<ClosedSendChannelException> {
-            channel.send(res) // send fails to closed channel, resource was not delivered
+    fun testSendToClosedChannel() = runTest {
+        runAllKindsTest { kind ->
+            val channel = kind.create<Resource> { it.cancel() }
+            channel.close() // immediately close channel
+            val res = Resource("OK")
+            assertFailsWith<ClosedSendChannelException> {
+                channel.send(res) // send fails to closed channel, resource was not delivered
+            }
+            assertTrue(res.isCancelled)
         }
-        assertTrue(res.isCancelled)
     }
 
-    private fun runAllKindsTest(test: suspend CoroutineScope.(TestChannelKind) -> Unit) {
+    private suspend fun runAllKindsTest(test: suspend CoroutineScope.(TestChannelKind) -> Unit) {
         for (kind in TestChannelKind.values()) {
             if (kind.viaBroadcast) continue // does not support onUndeliveredElement
             try {
-                runTest {
+                withContext(Job()) {
                     test(kind)
                 }
             } catch(e: Throwable) {
@@ -100,5 +122,20 @@ class ChannelUndeliveredElementTest : TestBase() {
         fun cancel() {
             check(!_cancelled.getAndSet(true)) { "Already cancelled" }
         }
+    }
+
+    @Test
+    fun testHandlerIsNotInvoked() = runTest { // #2826
+        val channel = Channel<Unit> {
+            expectUnreached()
+        }
+
+        expect(1)
+        launch {
+            expect(2)
+            channel.receive()
+        }
+        channel.send(Unit)
+        finish(3)
     }
 }

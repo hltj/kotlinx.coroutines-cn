@@ -65,9 +65,8 @@ main runBlocking      : I'm working in thread main
 [Dispatchers.Unconfined] 是一个特殊的调度器且似乎也运行在 `main` 线程中，但实际上，
 它是一种不同的机制，这会在后文中讲到。
 
-当协程在 [GlobalScope] 中启动时，使用的是由 [Dispatchers.Default] 代表的默认调度器。
-默认调度器使用共享的后台线程池。
-所以 `launch(Dispatchers.Default) { …… }` 与 `GlobalScope.launch { …… }` 使用相同的调度器。
+The default dispatcher is used when no other dispatcher is explicitly specified in the scope.
+It is represented by [Dispatchers.Default] and uses a shared background pool of threads.
   
 [newSingleThreadContext] 为协程的运行启动了一个线程。
 一个专用的线程是一种非常昂贵的资源。
@@ -303,8 +302,14 @@ My job is "coroutine#1":BlockingCoroutine{Active}@6d311334
 -->父协程作业的 _子_ 作业。当一个父协程被取消的时候，所有它的子协程<!--
 -->也会被递归的取消。
 
-然而，当使用 [GlobalScope] 来启动一个协程时，则新协程的作业没有父作业。
-因此它与这个启动的作用域无关且独立运作。
+However, this parent-child relation can be explicitly overriden in one of two ways:
+
+1. When a different scope is explicitly specified when launching a coroutine (for example, `GlobalScope.launch`), 
+   then it does not inherit a `Job` from the parent scope.
+2. When a different `Job` object is passed as the context for the new coroutine (as show in the example below),
+   then it overrides the `Job` of the parent scope.
+   
+In both cases, the launched coroutine is not tied to the scope it was launched from and operates independently.
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -313,9 +318,9 @@ fun main() = runBlocking<Unit> {
 //sampleStart
     // 启动一个协程来处理某种传入请求（request）
     val request = launch {
-        // 孵化了两个子作业, 其中一个通过 GlobalScope 启动
-        GlobalScope.launch {
-            println("job1: I run in GlobalScope and execute independently!")
+        // 生成了两个子作业
+        launch(Job()) { 
+            println("job1: I run in my own Job and execute independently!")
             delay(1000)
             println("job1: I am not affected by cancellation of the request")
         }
@@ -343,7 +348,7 @@ fun main() = runBlocking<Unit> {
 这段代码的输出如下：
 
 ```text
-job1: I run in GlobalScope and execute independently!
+job1: I run in my own Job and execute independently!
 job2: I am a child of the request coroutine
 job1: I am not affected by cancellation of the request
 main: Who has survived request cancellation?
@@ -659,7 +664,6 @@ Post-main, current thread: Thread[main @coroutine#1,5,main], thread local value:
 [async]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/async.html
 [CoroutineScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html
 [Dispatchers.Unconfined]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-unconfined.html
-[GlobalScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html
 [Dispatchers.Default]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
 [newSingleThreadContext]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/new-single-thread-context.html
 [ExecutorCoroutineDispatcher.close]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-executor-coroutine-dispatcher/close.html
@@ -674,8 +678,8 @@ Post-main, current thread: Thread[main @coroutine#1,5,main], thread local value:
 [CoroutineScope()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope.html
 [MainScope()]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-main-scope.html
 [Dispatchers.Main]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-main.html
-[asContextElement]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/java.lang.-thread-local/as-context-element.html
-[ensurePresent]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/java.lang.-thread-local/ensure-present.html
+[asContextElement]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/as-context-element.html
+[ensurePresent]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/ensure-present.html
 [ThreadContextElement]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-thread-context-element/index.html
 
 <!--- END -->

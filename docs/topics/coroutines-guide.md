@@ -17,7 +17,6 @@ future 与 promise 更安全、更不易出错的抽象。
 ## 目录
 
 * [协程基础](basics.md)
-* [Tutorial: Create a basic coroutine](coroutines-basic-jvm.md)
 * [Hands-on: Intro to coroutines and channels](https://play.kotlinlang.org/hands-on/Introduction%20to%20Coroutines%20and%20Channels)
 * [取消与超时](cancellation-and-timeouts.md)
 * [组合挂起函数](composing-suspending-functions.md)
@@ -32,6 +31,8 @@ future 与 promise 更安全、更不易出错的抽象。
 
 ## 其他参考资料
 
-* [使用协程进行 UI 编程指南](../../ui/coroutines-guide-ui.md)
-* [协程设计文档（KEEP）](https://github.com/Kotlin-zh/KEEP/blob/master/proposals/coroutines.md)
+* [使用协程进行 UI 编程指南](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/coroutines-guide-ui.md)
+* [协程设计文档（KEEP）](https://github.com/Kotlin/KEEP/blob/master/proposals/coroutines.md)
 * [完整的 kotlinx.coroutines API 参考文档](https://kotlin.github.io/kotlinx.coroutines)
+* [Best practices for coroutines in Android](https://developer.android.com/kotlin/coroutines/coroutines-best-practices)
+* [Additional Android resources for Kotlin coroutines and flow](https://developer.android.com/kotlin/coroutines/additional-resources)

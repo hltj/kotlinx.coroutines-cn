@@ -18,9 +18,7 @@ To release new `<version>` of `kotlinx-coroutines`:
      * [`kotlinx-coroutines-test/README.md`](kotlinx-coroutines-test/README.md)
      * [`coroutines-guide-ui.md`](ui/coroutines-guide-ui.md)
    * Properties   
-     * [`gradle.properties`](gradle.properties)
-     * [`ui/kotlinx-coroutines-android/example-app/gradle.properties`](ui/kotlinx-coroutines-android/example-app/gradle.properties)    
-     * [`ui/kotlinx-coroutines-android/animation-app/gradle.properties`](ui/kotlinx-coroutines-android/animation-app/gradle.properties)    
+     * [`gradle.properties`](gradle.properties)  
    * Make sure to **exclude** `CHANGES.md` from replacements.
    
    As an alternative approach you can use `./bump-version.sh old_version new_version`
@@ -36,7 +34,7 @@ To release new `<version>` of `kotlinx-coroutines`:
 7. Commit updated files to a new version branch:<br>
    `git commit -a -m "Version <version>"`
    
-8. Push new version into the branch:<br>
+8. Push the new version into the branch:<br>
    `git push -u origin version-<version>`
    
 9. Create Pull-Request on GitHub from `version-<version>` branch into `master`:
@@ -61,10 +59,9 @@ To release new `<version>` of `kotlinx-coroutines`:
    (make sure you have [Docker](https://www.docker.com/) installed first): <br>
    `site/deploy.sh <version> push`
    
-4. In [Bintray](https://bintray.com/kotlin/kotlinx/kotlinx.coroutines) admin interface:
-   * Publish artifacts of the new version.
-   * Wait until newly published version becomes the most recent.
-   * Sync to Maven Central.
+4. In [Nexus](https://oss.sonatype.org/#stagingRepositories) admin interface:
+   * Close the repository and wait for it to verify.
+   * Release the repository.
    
 5. Announce new release in [Slack](https://kotlinlang.slack.com)   
 

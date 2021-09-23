@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 @file:JvmMultifileClass
@@ -141,6 +141,31 @@ public suspend fun <T> Flow<T>.firstOrNull(predicate: suspend (T) -> Boolean): T
         } else {
             true
         }
+    }
+    return result
+}
+
+/**
+ * The terminal operator that returns the last element emitted by the flow.
+ *
+ * Throws [NoSuchElementException] if the flow was empty.
+ */
+public suspend fun <T> Flow<T>.last(): T {
+    var result: Any? = NULL
+    collect {
+        result = it
+    }
+    if (result === NULL) throw NoSuchElementException("Expected at least one element")
+    return result as T
+}
+
+/**
+ * The terminal operator that returns the last element emitted by the flow or `null` if the flow was empty.
+ */
+public suspend fun <T> Flow<T>.lastOrNull(): T? {
+    var result: T? = null
+    collect {
+        result = it
     }
     return result
 }

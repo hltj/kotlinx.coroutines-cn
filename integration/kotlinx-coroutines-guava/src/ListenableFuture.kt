@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 package kotlinx.coroutines.guava
@@ -136,11 +136,13 @@ public fun <T> ListenableFuture<T>.asDeferred(): Deferred<T> {
         override fun onSuccess(result: T?) {
             // Here we work with flexible types, so we unchecked cast to trick the type system
             @Suppress("UNCHECKED_CAST")
-            deferred.complete(result as T)
+            runCatching { deferred.complete(result as T) }
+                .onFailure { handleCoroutineException(EmptyCoroutineContext, it) }
         }
 
         override fun onFailure(t: Throwable) {
-            deferred.completeExceptionally(t)
+            runCatching { deferred.completeExceptionally(t) }
+                .onFailure { handleCoroutineException(EmptyCoroutineContext, it) }
         }
     }, MoreExecutors.directExecutor())
 
@@ -299,10 +301,11 @@ private class ToContinuation<T>(
  */
 private class ListenableFutureCoroutine<T>(
     context: CoroutineContext
-) : AbstractCoroutine<T>(context) {
+) : AbstractCoroutine<T>(context, initParentJob = true, active = true) {
 
     // JobListenableFuture propagates external cancellation to `this` coroutine. See JobListenableFuture.
-    @JvmField val future = JobListenableFuture<T>(this)
+    @JvmField
+    val future = JobListenableFuture<T>(this)
 
     override fun onCompleted(value: T) {
         future.complete(value)
@@ -348,6 +351,17 @@ private class JobListenableFuture<T>(private val jobToCancel: Job): ListenableFu
     private val auxFuture = SettableFuture.create<Any>()
 
     /**
+     * `true` if [auxFuture.get][ListenableFuture.get] throws [ExecutionException].
+     *
+     * Note: this is eventually consistent with the state of [auxFuture].
+     *
+     * Unfortunately, there's no API to figure out if [ListenableFuture] throws [ExecutionException]
+     * apart from calling [ListenableFuture.get] on it. To avoid unnecessary [ExecutionException] allocation
+     * we use this field as an optimization.
+     */
+    private var auxFutureIsFailed: Boolean = false
+
+    /**
      * When the attached coroutine [isCompleted][Job.isCompleted] successfully
      * its outcome should be passed to this method.
      *
@@ -366,7 +380,8 @@ private class JobListenableFuture<T>(private val jobToCancel: Job): ListenableFu
     // CancellationException is wrapped into `Cancelled` to preserve original cause and message.
     // All the other exceptions are delegated to SettableFuture.setException.
     fun completeExceptionallyOrCancel(t: Throwable): Boolean =
-        if (t is CancellationException) auxFuture.set(Cancelled(t)) else auxFuture.setException(t)
+        if (t is CancellationException) auxFuture.set(Cancelled(t))
+        else auxFuture.setException(t).also { if (it) auxFutureIsFailed = true }
 
     /**
      * Returns cancellation _in the sense of [Future]_. This is _not_ equivalent to
@@ -385,7 +400,16 @@ private class JobListenableFuture<T>(private val jobToCancel: Job): ListenableFu
         // this Future hasn't itself been successfully cancelled, the Future will return
         // isCancelled() == false. This is the only discovered way to reconcile the two different
         // cancellation contracts.
-        return auxFuture.isCancelled || (isDone && Uninterruptibles.getUninterruptibly(auxFuture) is Cancelled)
+        return auxFuture.isCancelled || isDone && !auxFutureIsFailed && try {
+            Uninterruptibles.getUninterruptibly(auxFuture) is Cancelled
+        } catch (e: CancellationException) {
+            // `auxFuture` got cancelled right after `auxFuture.isCancelled` returned false.
+            true
+        } catch (e: ExecutionException) {
+            // `auxFutureIsFailed` hasn't been updated yet.
+            auxFutureIsFailed = true
+            false
+        }
     }
 
     /**
@@ -455,7 +479,7 @@ private class JobListenableFuture<T>(private val jobToCancel: Job): ListenableFu
             try {
                 when (val result = Uninterruptibles.getUninterruptibly(auxFuture)) {
                     is Cancelled -> append("CANCELLED, cause=[${result.exception}]")
-                    else -> append("SUCCESS, result=[$result")
+                    else -> append("SUCCESS, result=[$result]")
                 }
             } catch (e: CancellationException) {
                 // `this` future was cancelled by `Future.cancel`. In this case there's no cause or message.
@@ -469,6 +493,7 @@ private class JobListenableFuture<T>(private val jobToCancel: Job): ListenableFu
         } else {
             append("PENDING, delegate=[$auxFuture]")
         }
+        append(']')
     }
 }
 

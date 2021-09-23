@@ -189,19 +189,27 @@ Completed in 1017 ms
 
 ## async 风格的函数
 
-我们可以定义异步风格的函数来 _异步_ 的调用 `doSomethingUsefulOne` 和 `doSomethingUsefulTwo`
-并使用 [async] 协程建造器并带有一个显式的 [GlobalScope] 引用。
-我们给这样的函数的名称中加上<!--
--->“……Async”后缀来突出表明：事实上，它们只做异步计算并且需要<!--
--->使用延期的值来获得结果。
+We can define async-style functions that invoke `doSomethingUsefulOne` and `doSomethingUsefulTwo`
+_asynchronously_ using the [async] coroutine builder using a [GlobalScope] reference to 
+opt-out of the structured concurrency.
+We name such functions with the 
+"...Async" suffix to highlight the fact that they only start asynchronous computation and one needs
+to use the resulting deferred value to get the result.
+
+> [GlobalScope] is a delicate API that can backfire in non-trivial ways, one of which will be explained
+> below, so you must explicitly opt-in into using `GlobalScope` with `@OptIn(DelicateCoroutinesApi::class)`. 
+>
+{type="note"}
 
 ```kotlin
 // somethingUsefulOneAsync 函数的返回值类型是 Deferred<Int>
+@OptIn(DelicateCoroutinesApi::class)
 fun somethingUsefulOneAsync() = GlobalScope.async {
     doSomethingUsefulOne()
 }
 
 // somethingUsefulTwoAsync 函数的返回值类型是 Deferred<Int>
+@OptIn(DelicateCoroutinesApi::class)
 fun somethingUsefulTwoAsync() = GlobalScope.async {
     doSomethingUsefulTwo()
 }
@@ -236,10 +244,12 @@ fun main() {
 }
 //sampleEnd
 
+@OptIn(DelicateCoroutinesApi::class)
 fun somethingUsefulOneAsync() = GlobalScope.async {
     doSomethingUsefulOne()
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 fun somethingUsefulTwoAsync() = GlobalScope.async {
     doSomethingUsefulTwo()
 }
@@ -396,7 +406,7 @@ Computation failed with ArithmeticException
 [launch]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/launch.html
 [Job]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html
 [Deferred]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/index.html
-[CoroutineStart.LAZY]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-start/-l-a-z-y.html
+[CoroutineStart.LAZY]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-start/-l-a-z-y/index.html
 [Deferred.await]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-deferred/await.html
 [Job.start]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/start.html
 [GlobalScope]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/index.html

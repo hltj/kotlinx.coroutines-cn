@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 package kotlinx.coroutines.channels
@@ -139,7 +139,7 @@ internal fun <E> CoroutineScope.produce(
 
 internal open class ProducerCoroutine<E>(
     parentContext: CoroutineContext, channel: Channel<E>
-) : ChannelCoroutine<E>(parentContext, channel, active = true), ProducerScope<E> {
+) : ChannelCoroutine<E>(parentContext, channel, true, active = true), ProducerScope<E> {
     override val isActive: Boolean
         get() = super.isActive
 

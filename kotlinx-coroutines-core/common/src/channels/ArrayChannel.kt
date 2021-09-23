@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
+ * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
  */
 
 package kotlinx.coroutines.channels
@@ -49,7 +49,6 @@ internal open class ArrayChannel<E>(
     protected final override val isBufferAlwaysFull: Boolean get() = false
     protected final override val isBufferFull: Boolean get() = size.value == capacity && onBufferOverflow == BufferOverflow.SUSPEND
 
-    override val isFull: Boolean get() = lock.withLock { isFullImpl }
     override val isEmpty: Boolean get() = lock.withLock { isEmptyImpl }
     override val isClosedForReceive: Boolean get() = lock.withLock { super.isClosedForReceive }
 
@@ -298,7 +297,7 @@ internal open class ArrayChannel<E>(
         }
         // then clean all queued senders
         super.onCancelIdempotent(wasClosed)
-        undeliveredElementException?.let { throw it } // throw cancel exception at the end if there was one
+        undeliveredElementException?.let { throw it } // throw UndeliveredElementException at the end if there was one
     }
 
     // ------ debug ------
