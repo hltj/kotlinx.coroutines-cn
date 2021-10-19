@@ -1,4 +1,4 @@
-[//]: # (title: Debug Kotlin Flow using IntelliJ IDEA – tutorial)
+[//]: # (title: 使用 IntelliJ IDEA 调试 Kotlin Flow——教程)
 
 This tutorial demonstrates how to create Kotlin Flow and debug it using IntelliJ IDEA.
 

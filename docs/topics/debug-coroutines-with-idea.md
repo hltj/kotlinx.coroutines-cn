@@ -1,4 +1,4 @@
-[//]: # (title: Debug coroutines using IntelliJ IDEA – tutorial)
+[//]: # (title: 使用 IntelliJ IDEA 调试协程——教程)
 
 This tutorial demonstrates how to create Kotlin coroutines and debug them using IntelliJ IDEA.
 
