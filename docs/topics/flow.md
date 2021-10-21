@@ -264,7 +264,7 @@ Done
 
 <!--- TEST -->
 
-See [Flow cancellation checks](#flow-cancellation-checks) section for more details.
+See [Flow cancellation checks](#流取消检测) section for more details.
 
 ## 流构建器
 
