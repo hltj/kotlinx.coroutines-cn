@@ -2,7 +2,7 @@
 
 This tutorial demonstrates how to create Kotlin Flow and debug it using IntelliJ IDEA.
 
-The tutorial assumes you have prior knowledge of the [coroutines](coroutines-guide.md) and [Kotlin Flow](flow.md#flows) concepts.
+The tutorial assumes you have prior knowledge of the [coroutines](coroutines-guide.md) and [Kotlin Flow](flow.md#流) concepts.
 
 > Debugging works for `kotlinx-coroutines-core` version 1.3.8 or later.
 >
