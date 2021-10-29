@@ -399,7 +399,7 @@ fun setup(hello: Text, fab: Circle) {
 ```
  
 > 可以在[这里](kotlinx-coroutines-javafx/test/guide/example-ui-blocking-01.kt)获得完整的 JavaFx 代码。
-  可以只拷贝 `fib` 函数和 `setup` 函数的函数体到你的 Android 工程中。
+  可以只拷贝 `fib` 函数和 `setup` 函数的函数体到你的 Android 项目中。
 
 尝试在这个例子中点击圆形按钮。在大约 30 到 40 次点击后我们的简单计算将会变得<!--
 -->非常缓慢并且会立即看到 UI 主线程是如何冻结的，因为动画会在 UI 冻结期间<!--
