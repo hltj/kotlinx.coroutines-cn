@@ -247,12 +247,15 @@ Done
 
 ## 协程很轻量
 
-运行以下代码：
+Coroutines are less resource-intensive than JVM threads. Code that exhausts the
+JVM's available memory when using threads can be expressed using coroutines
+without hitting resource limits. For example, the following code launches
+100000 distinct coroutines that each wait 5 seconds and then print a period
+('.') while consuming very little memory:
 
 ```kotlin
 import kotlinx.coroutines.*
 
-//sampleStart
 fun main() = runBlocking {
     repeat(100_000) { // 启动大量的协程
         launch {
@@ -261,8 +264,9 @@ fun main() = runBlocking {
         }
     }
 }
-//sampleEnd
 ```
+<!-- While coroutines do have a smaller memory footprint than threads, this
+example will exhaust the playground's heap memory; don't make it runnable. -->
 
 > 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-basic-06.kt)获取完整代码。
 >
@@ -270,10 +274,9 @@ fun main() = runBlocking {
 
 <!--- TEST lines.size == 1 && lines[0] == ".".repeat(100_000) -->
 
-它启动了 10 万个协程，并且在 5 秒钟后，每个协程都输出一个点。
-
-现在，尝试使用线程来实现 (remove `runBlocking`, replace `launch` with `thread`, and replace `delay` with `Thread.sleep`)。
-会发生什么？（很可能你的代码会产生某种内存不足的错误）
+If you write the same program using threads (remove `runBlocking`, replace
+`launch` with `thread`, and replace `delay` with `Thread.sleep`), it will
+likely consume too much memory and throw an out-of-memory error.
 
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->

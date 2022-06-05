@@ -573,6 +573,7 @@ pong Ball(hits=4)
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
+//sampleStart
 fun main() = runBlocking<Unit> {
     val tickerChannel = ticker(delayMillis = 100, initialDelayMillis = 0) //创建计时器通道
     var nextElement = withTimeoutOrNull(1) { tickerChannel.receive() }
@@ -596,7 +597,9 @@ fun main() = runBlocking<Unit> {
 
     tickerChannel.cancel() // 表明不再需要更多的元素
 }
+//sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
 > 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-channel-10.kt)获取完整代码。
 >

@@ -13,3 +13,4 @@ out
 target
 local.properties
 .DS_Store
+/kotlin-js-store

@@ -77,9 +77,6 @@ public class CoroutinesBlockHoundIntegration : BlockHoundIntegration {
         for (method in listOf("clear", "peek", "removeFirstOrNull", "addLast")) {
             allowBlockingCallsInside("kotlinx.coroutines.internal.ThreadSafeHeap", method)
         }
-        // [addLastIf] is only used in [EventLoop.common]. Users of [removeFirstIf]:
-        allowBlockingCallsInside("kotlinx.coroutines.test.TestCoroutineDispatcher", "doActionsUntil")
-        allowBlockingCallsInside("kotlinx.coroutines.test.TestCoroutineContext", "triggerActions")
     }
 
     private fun BlockHound.Builder.allowBlockingCallsInFlow() {
@@ -120,7 +117,7 @@ public class CoroutinesBlockHoundIntegration : BlockHoundIntegration {
     private fun BlockHound.Builder.allowBlockingCallsInArrayChannel() {
         for (method in listOf(
             "pollInternal", "isEmpty", "isFull", "isClosedForReceive", "offerInternal", "offerSelectInternal",
-            "enqueueSend", "pollInternal", "pollSelectInternal", "enqueueReceiveInternal", "onCancelIdempotent"))
+            "enqueueSend", "pollSelectInternal", "enqueueReceiveInternal", "onCancelIdempotent"))
         {
             allowBlockingCallsInside("kotlinx.coroutines.channels.ArrayChannel", method)
         }

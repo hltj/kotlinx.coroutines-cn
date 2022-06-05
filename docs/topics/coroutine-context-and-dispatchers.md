@@ -148,7 +148,7 @@ Kotlin 插件的协程调试器简化了 IntelliJ IDEA 中的协程调试.
 **调试**工具窗口包含 **Coroutines** 标签。在这个标签中，你可以同时找到运行中与已挂起的协程的相关信息。
 这些协程以它们所运行的调度器进行分组。
 
-![Debugging coroutines](coroutine-idea-debugging-1.png)
+![Debugging coroutines](coroutine-idea-debugging-1.png){width=700}
 
 使用协程调试器，你可以：
 * 检查每个协程的状态。
@@ -306,7 +306,7 @@ However, this parent-child relation can be explicitly overriden in one of two wa
 
 1. When a different scope is explicitly specified when launching a coroutine (for example, `GlobalScope.launch`), 
    then it does not inherit a `Job` from the parent scope.
-2. When a different `Job` object is passed as the context for the new coroutine (as show in the example below),
+2. When a different `Job` object is passed as the context for the new coroutine (as shown in the example below),
    then it overrides the `Job` of the parent scope.
    
 In both cases, the launched coroutine is not tied to the scope it was launched from and operates independently.
@@ -334,8 +334,8 @@ fun main() = runBlocking<Unit> {
     }
     delay(500)
     request.cancel() // 取消请求（request）的执行
-    delay(1000) // 延迟一秒钟来看看发生了什么
     println("main: Who has survived request cancellation?")
+    delay(1000) // 主线程延迟一秒钟来看看发生了什么
 //sampleEnd
 }
 ```
@@ -350,8 +350,8 @@ fun main() = runBlocking<Unit> {
 ```text
 job1: I run in my own Job and execute independently!
 job2: I am a child of the request coroutine
-job1: I am not affected by cancellation of the request
 main: Who has survived request cancellation?
+job1: I am not affected by cancellation of the request
 ```
 
 <!--- TEST -->

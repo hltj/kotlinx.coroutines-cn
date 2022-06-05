@@ -28,6 +28,7 @@
 ```kotlin
 import kotlinx.coroutines.*
 
+//sampleStart
 @OptIn(DelicateCoroutinesApi::class)
 fun main() = runBlocking {
     val job = GlobalScope.launch { // launch 根协程
@@ -47,7 +48,9 @@ fun main() = runBlocking {
         println("Caught ArithmeticException")
     }
 }
+//sampleEnd
 ```
+{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
 > 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-exceptions-01.kt)获取完整代码。
 >
@@ -75,12 +78,6 @@ Caught ArithmeticException
 -->并带有相应的异常。通常，该处理者用于<!--
 -->记录异常，显示某种错误消息，终止和（或）重新启动应用程序。
 
-在 JVM 中可以重定义一个全局的异常处理者来将所有的协程通过
-[`ServiceLoader`](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html) 注册到 [CoroutineExceptionHandler]。
-全局异常处理者就如同
-[`Thread.defaultUncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 
-一样，在没有更多的指定的异常处理者被注册的时候被使用。
-在 Android 中，`uncaughtExceptionPreHandler` 被设置在全局协程异常处理者中。
 
 `CoroutineExceptionHandler` 仅在**未捕获**的异常上调用 &mdash; 没有以其他任何方式处理的异常。
 特别是，所有*子*协程（在另一个 [Job] 上下文中创建的协程）委托<!--

@@ -11,7 +11,7 @@ This package provides utilities for efficiently testing coroutines.
 | [runTest] | Runs the test code, automatically skipping delays and handling uncaught exceptions. |
 | [TestCoroutineScheduler] | The shared source of virtual time, used for controlling execution order and skipping delays. |
 | [TestScope] | A [CoroutineScope] that integrates with [runTest], providing access to [TestCoroutineScheduler]. |
-| [TestDispatcher] | A [CoroutineDispatcher] that whose delays are controlled by a [TestCoroutineScheduler]. |
+| [TestDispatcher] | A [CoroutineDispatcher] whose delays are controlled by a [TestCoroutineScheduler]. |
 | [Dispatchers.setMain] | Mocks the main dispatcher using the provided one. If mocked with a [TestDispatcher], its [TestCoroutineScheduler] is used everywhere by default. |
 
 Provided [TestDispatcher] implementations:
@@ -26,7 +26,7 @@ Provided [TestDispatcher] implementations:
 Add `kotlinx-coroutines-test` to your project test dependencies:
 ```
 dependencies {
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0-RC'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.2'
 }
 ```
 
@@ -362,7 +362,7 @@ This API is experimental and it is may change before migrating out of experiment
 Changes during experimental may have deprecation applied when possible, but it is not
 advised to use the API in stable code before it leaves experimental due to possible breaking changes.
 
-If you have any suggestions for improvements to this experimental API please share them them on the
+If you have any suggestions for improvements to this experimental API please share them on the
 [issue tracker](https://github.com/Kotlin/kotlinx.coroutines/issues).
 
 <!--- MODULE kotlinx-coroutines-core -->
