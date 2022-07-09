@@ -33,6 +33,6 @@ future 与 promise 更安全、更不易出错的抽象。
 
 * [使用协程进行 UI 编程指南](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/coroutines-guide-ui.md)
 * [协程设计文档（KEEP）](https://github.com/Kotlin/KEEP/blob/master/proposals/coroutines.md)
-* [完整的 kotlinx.coroutines API 参考文档](https://kotlin.github.io/kotlinx.coroutines)
+* [完整的 kotlinx.coroutines API 参考文档](https://kotlinlang.org/api/kotlinx.coroutines/)
 * [Best practices for coroutines in Android](https://developer.android.com/kotlin/coroutines/coroutines-best-practices)
 * [Additional Android resources for Kotlin coroutines and flow](https://developer.android.com/kotlin/coroutines/additional-resources)
