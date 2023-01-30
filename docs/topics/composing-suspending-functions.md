@@ -23,7 +23,7 @@ suspend fun doSomethingUsefulTwo(): Int {
 ```
 
 如果需要按 _顺序_ 调用它们，我们接下来会做什么——首先调用 `doSomethingUsefulOne` _接下来_ 
-调用 `doSomethingUsefulTwo`，并且计算它们结果的和吗？ 
+调用 `doSomethingUsefulTwo`，并且计算它们结果的和呢？ 
 实际上，如果我们要根据第一个函数的结果来决定是否我们需要<!-- 
 -->调用第二个函数或者决定如何调用它时，我们就会这样做。
 
