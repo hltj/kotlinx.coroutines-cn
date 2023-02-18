@@ -151,7 +151,7 @@ I'm not blocked 3
 
 注意使用 [Flow] 的代码与先前示例的下述区别：
 
-* 名为 [flow] 的 [Flow][_flow] 类型构建器函数。
+* [Flow] 类型的构建器函数名为 [flow][_flow]。
 * `flow { ... }` 构建块中的代码可以挂起。
 * 函数 `simple` 不再标有 `suspend` 修饰符。
 * 流使用 [emit][FlowCollector.emit] 函数 _发射_ 值。
@@ -215,8 +215,8 @@ Flow started
 <!--- TEST -->
  
 这是返回一个流的 `simple` 函数没有标记 `suspend` 修饰符的主要原因。
-通过它自己，`simple()` 调用会尽快返回且不会进行任何等待。该流在每次收集的时候启动，
-这就是为什么当我们再次调用 `collect` 时我们会看到“Flow started”。
+The `simple()` call itself returns quickly and does not wait for anything. The flow starts afresh every time it is
+collected and that is why we see "Flow started" every time we call `collect` again.
 
 ## 流取消基础
 
@@ -269,12 +269,12 @@ See [Flow cancellation checks](#流取消检测) section for more details.
 ## 流构建器
 
 先前示例中的 `flow { ... }` 构建器是最基础的一个。还有其他构建器<!--
--->使流的声明更简单：
+-->让流可以这样声明：
 
 * [flowOf] 构建器定义了一个发射固定值集的流。
 * 使用 `.asFlow()`  扩展函数，可以将各种集合与序列转换为流。
 
-因此，从流中打印从 1 到 3 的数字的示例可以写成：
+For example, the snippet that prints the numbers 1 to 3 from a flow can be rewritten as follows:
 
 ```kotlin
 import kotlinx.coroutines.*
@@ -301,13 +301,14 @@ fun main() = runBlocking<Unit> {
 
 ## 过渡流操作符
 
-可以使用操作符转换流，就像使用集合与序列一样。
+可以使用操作符转换流，就像转换集合与<!--
+-->序列一样。
 过渡操作符应用于上游流，并返回下游流。
 这些操作符也是冷操作符，就像流一样。这类操作符<!--
 -->本身不是挂起函数。它运行的速度很快，返回新的转换流的定义。
 
 基础的操作符拥有相似的名字，比如 [map] 与 [filter]。
-流与序列的主要区别在于这些操作符中的代码<!--
+这些操作符与序列版的主要区别在于这些操作符中的代码<!--
 -->可以调用挂起函数。
 
 举例来说，一个请求中的流可以<!--
@@ -337,7 +338,7 @@ fun main() = runBlocking<Unit> {
 >
 {type="note"}
 
-它产生以下三行，每一行每秒出现一次：
+它产生以下三行，每行都比前一行晚一秒出现：
 
 ```text                                                                    
 response 1
@@ -593,7 +594,7 @@ fun main() = runBlocking<Unit> {
 这是快速运行或异步代码的理想默认形式，它不关心执行的上下文并且不会<!--
 -->阻塞调用者。
 
-### withContext 发出错误
+### A common pitfall when using withContext
 
 然而，长时间运行的消耗 CPU 的代码也许需要在 [Dispatchers.Default] 上下文中执行，并且更新 UI
 的代码也许需要在 [Dispatchers.Main] 中执行。通常，[withContext] 用于在
@@ -1012,7 +1013,7 @@ fun main() = runBlocking<Unit> {
 
 ## 展平流
 
-流表示异步接收的值序列，所以很容易遇到这样的情况：
+流表示异步接收的值序列，因此很容易遇到这样的情况：
 每个值都会触发对另一个值序列的请求。比如说，我们可以拥有下面这样一个返回间隔 500
 毫秒的两个字符串流的函数：
 
@@ -1026,7 +1027,7 @@ fun requestFlow(i: Int): Flow<String> = flow {
 
 <!--- CLEAR -->
 
-现在，如果我们有一个包含三个整数的流，并为每个整数调用 `requestFlow`，如下所示：
+现在，如果我们有一个包含三个整数的流，并对每个整数调用 `requestFlow`，如下所示：
 
 ```kotlin
 (1..3).asFlow().map { requestFlow(it) }
@@ -1034,14 +1035,14 @@ fun requestFlow(i: Int): Flow<String> = flow {
 
 <!--- CLEAR -->
 
-然后我们得到了一个包含流的流（`Flow<Flow<String>>`），需要将其进行*展平*为单个流以进行<!--
+然后我们会得到一个包含流的流（`Flow<Flow<String>>`），需要将其进行*展平*为单个流以进行<!--
 -->下一步处理。集合与序列都拥有 [flatten][Sequence.flatten] 与 [flatMap][Sequence.flatMap]
 操作符来做这件事。然而，由于流具有异步的性质，因此需要不同的展平*模式*，
 为此，存在一系列的流展平操作符。
 
 ### flatMapConcat
 
-连接模式由 [flatMapConcat] 与 [flattenConcat] 操作符实现。它们是<!--
+将流的流串联由 [flatMapConcat] 与 [flattenConcat] 操作符提供。它们是<!--
 -->相应序列操作符最相近的类似物。它们在等待内部流完成之后<!--
 -->开始收集下一个值，如下面的示例所示：
 
@@ -1087,7 +1088,7 @@ fun main() = runBlocking<Unit> {
 
 ### flatMapMerge
 
-另一种展平模式是并发收集所有传入的流，并将它们的值合并到<!--
+另一种展平操作是并发收集所有传入的流，并将它们的值合并到<!--
 -->一个单独的流，以便尽快的发射值。
 它由 [flatMapMerge] 与 [flattenMerge] 操作符实现。他们都接收可选的<!--
 -->用于限制并发收集的流的个数的 `concurrency` 参数<!--
@@ -1142,7 +1143,7 @@ fun main() = runBlocking<Unit> {
 ### flatMapLatest   
 
 与 [collectLatest] 操作符类似（在<!--
--->["处理最新值"](#处理最新值) 小节中已经讨论过），也有相对应的“最新”<!--
+-->["处理最新值"](#处理最新值) 小节中已经描述过），也有相对应的“最新”<!--
 -->展平模式，在发出新流后立即取消先前流的收集。
 这由 [flatMapLatest] 操作符来实现。
 
@@ -1184,9 +1185,11 @@ fun main() = runBlocking<Unit> {
 
 <!--- TEST ARBITRARY_TIME -->
   
-> 注意，[flatMapLatest] 在一个新值到来时取消了块中的所有代码 (本示例中的 `{ requestFlow(it) }`）。
+> 注意，[flatMapLatest] 在收到一个新值时取消了块中的所有代码 (本示例中的 `{ requestFlow(it) }`）<!--
+> -->。
 > 这在该特定示例中不会有什么区别，由于调用 `requestFlow` 自身的速度是很快的，不会发生挂起，
-> 所以不会被取消。然而，如果我们要在块中调用诸如 `delay` 之类的挂起函数，这将会被表现出来。
+> 所以不会被取消。然而，a differnce in output would be visible if we were to use suspending functions
+> like `delay` in `requestFlow`.
 >
 {type="note"}
 
