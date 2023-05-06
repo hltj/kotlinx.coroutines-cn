@@ -13,23 +13,23 @@ select 表达式可以同时等待多个挂起函数，并 _选择_
 
 ## 在通道中 select
 
-我们现在有两个字符串生产者：`fizz` 和 `buzz` 。其中 `fizz` 每 300 毫秒生成一个“Fizz”字符串：
+我们现在有两个字符串生产者：`fizz` 与 `buzz` 。其中 `fizz` 每 500 毫秒生成一个“Fizz”字符串：
 
 ```kotlin
 fun CoroutineScope.fizz() = produce<String> {
-    while (true) { // 每 300 毫秒发送一个 "Fizz"
-        delay(300)
+    while (true) { // 每 500 毫秒发送一个 "Fizz"
+        delay(500)
         send("Fizz")
     }
 }
 ```
 
-接着 `buzz` 每 500 毫秒生成一个 “Buzz!” 字符串：
+接着 `buzz` 每 1000 毫秒生成一个 “Buzz!” 字符串：
 
 ```kotlin
 fun CoroutineScope.buzz() = produce<String> {
-    while (true) { // 每 500 毫秒发送一个"Buzz!"
-        delay(500)
+    while (true) { // 每 1000 毫秒发送一个"Buzz!"
+        delay(1000)
         send("Buzz!")
     }
 }
@@ -62,15 +62,15 @@ import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 
 fun CoroutineScope.fizz() = produce<String> {
-    while (true) { // 每 300 毫秒发送一个 "Fizz"
-        delay(300)
+    while (true) { // 每 500 毫秒发送一个 "Fizz"
+        delay(500)
         send("Fizz")
     }
 }
 
 fun CoroutineScope.buzz() = produce<String> {
-    while (true) { // 每 500 毫秒发送一个 "Buzz!"
-        delay(500)
+    while (true) { // 每 1000 毫秒发送一个 "Buzz!"
+        delay(1000)
         send("Buzz!")
     }
 }
@@ -112,7 +112,7 @@ fizz -> 'Fizz'
 fizz -> 'Fizz'
 buzz -> 'Buzz!'
 fizz -> 'Fizz'
-buzz -> 'Buzz!'
+fizz -> 'Fizz'
 ```
 
 <!--- TEST -->

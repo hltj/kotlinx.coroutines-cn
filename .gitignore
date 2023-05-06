@@ -13,4 +13,5 @@ out
 target
 local.properties
 .DS_Store
+benchmarks.jar
 /kotlin-js-store

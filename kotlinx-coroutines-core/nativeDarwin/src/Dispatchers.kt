@@ -5,7 +5,6 @@
 package kotlinx.coroutines
 
 import kotlinx.cinterop.*
-import kotlinx.coroutines.internal.*
 import platform.CoreFoundation.*
 import platform.darwin.*
 import kotlin.coroutines.*
@@ -14,15 +13,14 @@ import kotlin.native.internal.NativePtr
 
 internal fun isMainThread(): Boolean = CFRunLoopGetCurrent() == CFRunLoopGetMain()
 
-internal actual fun createMainDispatcher(default: CoroutineDispatcher): MainCoroutineDispatcher =
-    if (multithreadingSupported) DarwinMainDispatcher(false) else OldMainDispatcher(Dispatchers.Default)
+internal actual fun createMainDispatcher(default: CoroutineDispatcher): MainCoroutineDispatcher = DarwinMainDispatcher(false)
 
 internal actual fun createDefaultDispatcher(): CoroutineDispatcher = DarwinGlobalQueueDispatcher
 
 private object DarwinGlobalQueueDispatcher : CoroutineDispatcher() {
     override fun dispatch(context: CoroutineContext, block: Runnable) {
         autoreleasepool {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.convert(), 0)) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.convert(), 0u)) {
                 block.run()
             }
         }

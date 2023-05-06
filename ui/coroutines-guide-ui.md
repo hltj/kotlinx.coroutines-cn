@@ -110,7 +110,7 @@ fun setup(hello: TextView, fab: FloatingActionButton) {
 部分中添加 `kotlinx-coroutines-android` 模块的依赖：
 
 ```groovy
-implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
+implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0"
 ```
 
 可以在 Github 上 clone [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 这个项目到你的<!--
@@ -333,13 +333,15 @@ fun Node.onClick(action: suspend (MouseEvent) -> Unit) {
 在倒数进行中时，重复点击将被 _合并_ ，只有最近的事件才会被<!--
 -->处理。
 
-对于必须对高频传入的事件做出反应的 UI 应用程序，这也是一种期望的行为，
-事件流通过基于最近收到的更新更新其 UI。协程通过使用
-`ConflatedChannel` 来避免通过引入事件缓冲而造成的延迟。
+This is also a desired behaviour for UI applications that have to react to incoming high-frequency
+event streams by updating their UI based on the most recently received update. A coroutine that is using
+a conflated channel (`capacity = Channel.CONFLATED`, or a buffered channel with
+`onBufferOverflow = DROP_OLDEST` or `onBufferOverflow = DROP_LATEST`) avoids delays 
+that are usually introduced by buffering of events.
 
-可以在上面的代码行中试验 `capacity` 参数，看看它如何影响代码的行为。
-设置 `capacity = Channel.UNLIMITED` 参数创建协程以及 `LinkedListChannel` 邮箱来缓冲所有的<!--
--->事件。在这个案例中，动画会在单击圆形按钮时运行多次。
+You can experiment with `capacity` parameter in the above line to see how it affects the behaviour of the code.
+Setting `capacity = Channel.UNLIMITED` creates a coroutine with an unbounded mailbox that buffers all 
+events. In this case, the animation runs as many times as the circle is clicked.
 
 ## 阻塞操作
 

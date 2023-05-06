@@ -40,21 +40,19 @@ import kotlin.time.*
  *   paused by default, like [StandardTestDispatcher].
  * * No access to the list of unhandled exceptions.
  */
-@ExperimentalCoroutinesApi
 public sealed interface TestScope : CoroutineScope {
     /**
      * The delay-skipping scheduler used by the test dispatchers running the code in this scope.
      */
-    @ExperimentalCoroutinesApi
     public val testScheduler: TestCoroutineScheduler
 
     /**
      * A scope for background work.
      *
      * This scope is automatically cancelled when the test finishes.
-     * Additionally, while the coroutines in this scope are run as usual when
-     * using [advanceTimeBy] and [runCurrent], [advanceUntilIdle] will stop advancing the virtual time
-     * once only the coroutines in this scope are left unprocessed.
+     * The coroutines in this scope are run as usual when using [advanceTimeBy] and [runCurrent].
+     * [advanceUntilIdle], on the other hand, will stop advancing the virtual time once only the coroutines in this
+     * scope are left unprocessed.
      *
      * Failures in coroutines in this scope do not terminate the test.
      * Instead, they are reported at the end of the test.
@@ -82,7 +80,6 @@ public sealed interface TestScope : CoroutineScope {
      * }
      * ```
      */
-    @ExperimentalCoroutinesApi
     public val backgroundScope: CoroutineScope
 }
 
@@ -124,12 +121,22 @@ public fun TestScope.runCurrent(): Unit = testScheduler.runCurrent()
 public fun TestScope.advanceTimeBy(delayTimeMillis: Long): Unit = testScheduler.advanceTimeBy(delayTimeMillis)
 
 /**
+ * Moves the virtual clock of this dispatcher forward by [the specified amount][delayTime], running the
+ * scheduled tasks in the meantime.
+ *
+ * @throws IllegalStateException if passed a negative [delay][delayTime].
+ * @see TestCoroutineScheduler.advanceTimeBy
+ */
+@ExperimentalCoroutinesApi
+public fun TestScope.advanceTimeBy(delayTime: Duration): Unit = testScheduler.advanceTimeBy(delayTime)
+
+/**
  * The [test scheduler][TestScope.testScheduler] as a [TimeSource].
  * @see TestCoroutineScheduler.timeSource
  */
 @ExperimentalCoroutinesApi
 @ExperimentalTime
-public val TestScope.testTimeSource: TimeSource get() = testScheduler.timeSource
+public val TestScope.testTimeSource: TimeSource.WithComparableMarks get() = testScheduler.timeSource
 
 /**
  * Creates a [TestScope].
@@ -156,7 +163,6 @@ public val TestScope.testTimeSource: TimeSource get() = testScheduler.timeSource
  * @throws IllegalArgumentException if [context] has an [CoroutineExceptionHandler] that is not an
  * [UncaughtExceptionCaptor].
  */
-@ExperimentalCoroutinesApi
 @Suppress("FunctionName")
 public fun TestScope(context: CoroutineContext = EmptyCoroutineContext): TestScope {
     val ctxWithDispatcher = context.withDelaySkipping()
@@ -220,6 +226,16 @@ internal class TestScopeImpl(context: CoroutineContext) :
                 throw IllegalStateException("Only a single call to `runTest` can be performed during one test.")
             entered = true
             check(!finished)
+            /** the order is important: [reportException] is only guaranteed not to throw if [entered] is `true` but
+             * [finished] is `false`.
+             * However, we also want [uncaughtExceptions] to be queried after the callback is registered,
+             * because the exception collector will be able to report the exceptions that arrived before this test but
+             * after the previous one, and learning about such exceptions as soon is possible is nice. */
+            @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+            run { ensurePlatformExceptionHandlerLoaded(ExceptionCollector) }
+            if (catchNonTestRelatedExceptions) {
+                ExceptionCollector.addOnExceptionCallback(lock, this::reportException)
+            }
             uncaughtExceptions
         }
         if (exceptions.isNotEmpty()) {
@@ -230,10 +246,21 @@ internal class TestScopeImpl(context: CoroutineContext) :
         }
     }
 
+    /** Called at the end of the test. May only be called once. Returns the list of caught unhandled exceptions. */
+    fun leave(): List<Throwable> = synchronized(lock) {
+        check(entered && !finished)
+        /** After [finished] becomes `true`, it is no longer valid to have [reportException] as the callback. */
+        ExceptionCollector.removeOnExceptionCallback(lock)
+        finished = true
+        uncaughtExceptions
+    }
+
     /** Called at the end of the test. May only be called once. */
-    fun leave(): List<Throwable> {
+    fun legacyLeave(): List<Throwable> {
         val exceptions = synchronized(lock) {
             check(entered && !finished)
+            /** After [finished] becomes `true`, it is no longer valid to have [reportException] as the callback. */
+            ExceptionCollector.removeOnExceptionCallback(lock)
             finished = true
             uncaughtExceptions
         }
@@ -287,7 +314,7 @@ internal fun TestScope.asSpecificImplementation(): TestScopeImpl = when (this) {
 }
 
 internal class UncaughtExceptionsBeforeTest : IllegalStateException(
-    "There were uncaught exceptions in coroutines launched from TestScope before the test started. Please avoid this," +
+    "There were uncaught exceptions before the test started. Please avoid this," +
         " as such exceptions are also reported in a platform-dependent manner so that they are not lost."
 )
 
@@ -296,3 +323,12 @@ internal class UncaughtExceptionsBeforeTest : IllegalStateException(
  */
 @ExperimentalCoroutinesApi
 internal class UncompletedCoroutinesError(message: String) : AssertionError(message)
+
+/**
+ * A flag that controls whether [TestScope] should attempt to catch arbitrary exceptions flying through the system.
+ * If it is enabled, then any exception that is not caught by the user code will be reported as a test failure.
+ * By default, it is enabled, but some tests may want to disable it to test the behavior of the system when they have
+ * their own exception handling procedures.
+ */
+@PublishedApi
+internal var catchNonTestRelatedExceptions: Boolean = true

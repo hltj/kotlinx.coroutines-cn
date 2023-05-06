@@ -97,10 +97,10 @@ public actual open class TestBase(private var disableOutCheck: Boolean)  {
 
     private fun printError(message: String, cause: Throwable) {
         setError(cause)
-        println("$message: $cause")
-        cause.printStackTrace(System.out)
-        println("--- Detected at ---")
-        Throwable().printStackTrace(System.out)
+        System.err.println("$message: $cause")
+        cause.printStackTrace(System.err)
+        System.err.println("--- Detected at ---")
+        Throwable().printStackTrace(System.err)
     }
 
     /**
@@ -254,3 +254,10 @@ public actual open class TestBase(private var disableOutCheck: Boolean)  {
 
     protected suspend fun currentDispatcher() = coroutineContext[ContinuationInterceptor]!!
 }
+
+/*
+ * We ignore tests that test **real** non-virtualized tests with time on Windows, because
+ * our CI Windows is virtualized itself (oh, the irony) and its clock resolution is dozens of ms,
+ * which makes such tests flaky.
+ */
+public actual val isJavaAndWindows: Boolean = System.getProperty("os.name")!!.contains("Windows")

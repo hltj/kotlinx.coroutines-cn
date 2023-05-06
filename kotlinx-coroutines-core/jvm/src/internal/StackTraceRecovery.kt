@@ -7,6 +7,8 @@
 package kotlinx.coroutines.internal
 
 import kotlinx.coroutines.*
+import _COROUTINE.ARTIFICIAL_FRAME_PACKAGE_NAME
+import _COROUTINE.ArtificialStackFrames
 import java.util.*
 import kotlin.coroutines.*
 import kotlin.coroutines.intrinsics.*
@@ -17,6 +19,8 @@ import kotlin.coroutines.intrinsics.*
  */
 private const val baseContinuationImplClass = "kotlin.coroutines.jvm.internal.BaseContinuationImpl"
 private const val stackTraceRecoveryClass = "kotlinx.coroutines.internal.StackTraceRecoveryKt"
+
+private val ARTIFICIAL_FRAME = ArtificialStackFrames().coroutineBoundary()
 
 private val baseContinuationImplClassName = runCatching {
     Class.forName(baseContinuationImplClass).canonicalName
@@ -29,20 +33,20 @@ private val stackTraceRecoveryClassName = runCatching {
 internal actual fun <E : Throwable> recoverStackTrace(exception: E): E {
     if (!RECOVER_STACK_TRACES) return exception
     // No unwrapping on continuation-less path: exception is not reported multiple times via slow paths
-    val copy = tryCopyAndVerify(exception) ?: return exception
+    val copy = tryCopyException(exception) ?: return exception
     return copy.sanitizeStackTrace()
 }
 
 private fun <E : Throwable> E.sanitizeStackTrace(): E {
     val stackTrace = stackTrace
     val size = stackTrace.size
-    val lastIntrinsic = stackTrace.frameIndex(stackTraceRecoveryClassName)
+    val lastIntrinsic = stackTrace.indexOfLast { stackTraceRecoveryClassName == it.className }
     val startIndex = lastIntrinsic + 1
-    val endIndex = stackTrace.frameIndex(baseContinuationImplClassName)
+    val endIndex = stackTrace.firstFrameIndex(baseContinuationImplClassName)
     val adjustment = if (endIndex == -1) 0 else size - endIndex
     val trace = Array(size - lastIntrinsic - adjustment) {
         if (it == 0) {
-            artificialFrame("Coroutine boundary")
+            ARTIFICIAL_FRAME
         } else {
             stackTrace[startIndex + it - 1]
         }
@@ -66,7 +70,7 @@ private fun <E : Throwable> recoverFromStackFrame(exception: E, continuation: Co
     val (cause, recoveredStacktrace) = exception.causeAndStacktrace()
 
     // Try to create an exception of the same type and get stacktrace from continuation
-    val newException = tryCopyAndVerify(cause) ?: return exception
+    val newException = tryCopyException(cause) ?: return exception
     // Update stacktrace
     val stacktrace = createStackTrace(continuation)
     if (stacktrace.isEmpty()) return exception
@@ -76,14 +80,6 @@ private fun <E : Throwable> recoverFromStackFrame(exception: E, continuation: Co
     }
     // Take recovered stacktrace, merge it with existing one if necessary and return
     return createFinalException(cause, newException, stacktrace)
-}
-
-private fun <E : Throwable> tryCopyAndVerify(exception: E): E? {
-    val newException = tryCopyException(exception) ?: return null
-    // Verify that the new exception has the same message as the original one (bail out if not, see #1631)
-    // CopyableThrowable has control over its message and thus can modify it the way it wants
-    if (exception !is CopyableThrowable<*> && newException.message != exception.message) return null
-    return newException
 }
 
 /*
@@ -97,15 +93,15 @@ private fun <E : Throwable> tryCopyAndVerify(exception: E): E? {
  * IllegalStateException
  *   at foo
  *   at kotlin.coroutines.resumeWith
- *   (Coroutine boundary)
+ *   at _COROUTINE._BOUNDARY._(CoroutineDebugging.kt)
  *   at bar
  *   ...real stackTrace...
  * caused by "IllegalStateException" (original one)
  */
 private fun <E : Throwable> createFinalException(cause: E, result: E, resultStackTrace: ArrayDeque<StackTraceElement>): E {
-    resultStackTrace.addFirst(artificialFrame("Coroutine boundary"))
+    resultStackTrace.addFirst(ARTIFICIAL_FRAME)
     val causeTrace = cause.stackTrace
-    val size = causeTrace.frameIndex(baseContinuationImplClassName)
+    val size = causeTrace.firstFrameIndex(baseContinuationImplClassName)
     if (size == -1) {
         result.stackTrace = resultStackTrace.toTypedArray()
         return result
@@ -153,7 +149,6 @@ private fun mergeRecoveredTraces(recoveredStacktrace: Array<StackTraceElement>, 
     }
 }
 
-@Suppress("NOTHING_TO_INLINE")
 internal actual suspend inline fun recoverAndThrow(exception: Throwable): Nothing {
     if (!RECOVER_STACK_TRACES) throw exception
     suspendCoroutineUninterceptedOrReturn<Nothing> {
@@ -193,13 +188,8 @@ private fun createStackTrace(continuation: CoroutineStackFrame): ArrayDeque<Stac
     return stack
 }
 
-/**
- * @suppress
- */
-@InternalCoroutinesApi
-public fun artificialFrame(message: String): StackTraceElement = java.lang.StackTraceElement("\b\b\b($message", "\b", "\b", -1)
-internal fun StackTraceElement.isArtificial() = className.startsWith("\b\b\b")
-private fun Array<StackTraceElement>.frameIndex(methodName: String) = indexOfFirst { methodName == it.className }
+internal fun StackTraceElement.isArtificial() = className.startsWith(ARTIFICIAL_FRAME_PACKAGE_NAME)
+private fun Array<StackTraceElement>.firstFrameIndex(methodName: String) = indexOfFirst { methodName == it.className }
 
 private fun StackTraceElement.elementWiseEquals(e: StackTraceElement): Boolean {
     /*

@@ -11,7 +11,7 @@ import org.jetbrains.kotlinx.lincheck.annotations.Operation
 import org.jetbrains.kotlinx.lincheck.strategy.managed.modelchecking.*
 
 abstract class SemaphoreLincheckTestBase(permits: Int) : AbstractLincheckTest() {
-    private val semaphore = Semaphore(permits)
+    private val semaphore = SemaphoreImpl(permits = permits, acquiredPermits = 0)
 
     @Operation
     fun tryAcquire() = semaphore.tryAcquire()
@@ -24,8 +24,6 @@ abstract class SemaphoreLincheckTestBase(permits: Int) : AbstractLincheckTest() 
 
     override fun <O : Options<O, *>> O.customize(isStressTest: Boolean): O =
         actorsBefore(0)
-
-    override fun extractState() = semaphore.availablePermits
 
     override fun ModelCheckingOptions.customize(isStressTest: Boolean) =
         checkObstructionFreedom()
