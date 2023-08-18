@@ -195,8 +195,7 @@ Counter = 100000
 
 _限制线程_ 是解决共享可变状态问题的一种方案：对特定共享<!--
 -->状态的所有访问权都限制在单个线程中。它通常应用于 UI 程序中：所有 UI 状态都局限于<!--
--->单个事件分发线程或应用主线程中。这在协程中很容易实现，通过使用一个<!--
--->单线程上下文：
+-->单个事件分发线程或应用主线程中。这在协程中很容易实现，通过使用一个单线程上下文。
 
 <!--- CLEAR -->
 
@@ -370,133 +369,11 @@ Counter = 100000
 -->对于某些必须定期修改共享状态的场景，它是一个不错的选择，但是没有自然线程可以<!--
 -->限制此状态。
 
-## Actors
-
-一个 [actor](https://en.wikipedia.org/wiki/Actor_model) 是由协程、
-被限制并封装到该协程中的状态<!--
--->以及一个与其它协程通信的 _通道_ 组合而成的一个实体。一个简单的 actor 可以简单的写成一个函数，
-但是一个拥有复杂状态的 actor 更适合由类来表示。
-
-有一个 [actor] 协程构建器，它可以方便地将 actor 的邮箱通道组合到其<!--
--->作用域中（用来接收消息）、组合发送 channel 与结果集对象，这样<!--
--->对 actor 的单个引用就可以作为其句柄持有。
-
-使用 actor 的第一步是定义一个 actor 要处理的消息类。
-Kotlin 的[密封类](https://kotlinlang.org/docs/reference/sealed-classes.html)很适合这种场景。
-我们使用 `IncCounter` 消息（用来递增计数器）和 `GetCounter` 消息（用来获取值）来定义 `CounterMsg` 密封类。
-后者需要发送回复。[CompletableDeferred] 通信<!--
--->原语表示未来可知（可传达）的单个值，
-这里被用于此目的。
-
-```kotlin
-// 计数器 Actor 的各种类型
-sealed class CounterMsg
-object IncCounter : CounterMsg() // 递增计数器的单向消息
-class GetCounter(val response: CompletableDeferred<Int>) : CounterMsg() // 携带回复的请求
-```
-
-接下来我们定义一个函数，使用 [actor] 协程构建器来启动一个 actor：
-
-```kotlin
-// 这个函数启动一个新的计数器 actor
-fun CoroutineScope.counterActor() = actor<CounterMsg> {
-    var counter = 0 // actor 状态
-    for (msg in channel) { // 即将到来消息的迭代器
-        when (msg) {
-            is IncCounter -> counter++
-            is GetCounter -> msg.response.complete(counter)
-        }
-    }
-}
-```
-
-main 函数代码很简单：
-
-<!--- CLEAR -->
-
-```kotlin
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
-import kotlin.system.*
-
-suspend fun massiveRun(action: suspend () -> Unit) {
-    val n = 100  // 启动的协程数量
-    val k = 1000 // 每个协程重复执行同个动作的次数
-    val time = measureTimeMillis {
-        coroutineScope { // 协程的作用域
-            repeat(n) {
-                launch {
-                    repeat(k) { action() }
-                }
-            }
-        }
-    }
-    println("Completed ${n * k} actions in $time ms")    
-}
-
-// 计数器 Actor 的各种类型
-sealed class CounterMsg
-object IncCounter : CounterMsg() // 递增计数器的单向消息
-class GetCounter(val response: CompletableDeferred<Int>) : CounterMsg() // 携带回复的请求
-
-// 这个函数启动一个新的计数器 actor
-fun CoroutineScope.counterActor() = actor<CounterMsg> {
-    var counter = 0 // actor 状态
-    for (msg in channel) { // 即将到来消息的迭代器
-        when (msg) {
-            is IncCounter -> counter++
-            is GetCounter -> msg.response.complete(counter)
-        }
-    }
-}
-
-//sampleStart
-fun main() = runBlocking<Unit> {
-    val counter = counterActor() // 创建该 actor
-    withContext(Dispatchers.Default) {
-        massiveRun {
-            counter.send(IncCounter)
-        }
-    }
-    // 发送一条消息以用来从一个 actor 中获取计数值
-    val response = CompletableDeferred<Int>()
-    counter.send(GetCounter(response))
-    println("Counter = ${response.await()}")
-    counter.close() // 关闭该actor
-}
-//sampleEnd
-```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
-
-> 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-sync-07.kt)获取完整代码。
->
-{type="note"}
-
-<!--- TEST ARBITRARY_TIME
-Completed 100000 actions in xxx ms
-Counter = 100000
--->
-
-actor 本身执行时所处上下文（就正确性而言）无关紧要。一个 actor 是<!--
--->一个协程，而一个协程是按顺序执行的，因此将状态限制到特定协程<!--
--->可以解决共享可变状态的问题。实际上，actor 可以修改自己的私有状态，
-但只能通过消息互相影响（避免任何锁定）。
-
-actor 在高负载下比锁更有效，因为在这种情况下它总是有工作要做，而且根本不<!--
--->需要切换到不同的上下文。
-
-> 注意，[actor] 协程构建器是一个双重的 [produce] 协程构建器。一个 actor 与它<!--
-> -->接收消息的通道相关联，而一个 producer 与它<!--
-> -->发送元素的通道相关联。
->
-{type="note"}
-
 <!--- MODULE kotlinx-coroutines-core -->
 <!--- INDEX kotlinx.coroutines -->
 
 [Dispatchers.Default]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-default.html
 [withContext]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/with-context.html
-[CompletableDeferred]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-completable-deferred/index.html
 
 <!--- INDEX kotlinx.coroutines.sync -->
 
@@ -504,10 +381,5 @@ actor 在高负载下比锁更有效，因为在这种情况下它总是有工�
 [Mutex.lock]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/lock.html
 [Mutex.unlock]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/unlock.html
 [withLock]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/with-lock.html
-
-<!--- INDEX kotlinx.coroutines.channels -->
-
-[actor]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/actor.html
-[produce]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/produce.html
 
 <!--- END -->

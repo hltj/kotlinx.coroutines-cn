@@ -4,6 +4,9 @@
 
 apply plugin: "com.github.johnrengelman.shadow"
 
+// apply plugin to use autocomplete for Kover DSL
+apply plugin: 'org.jetbrains.kotlinx.kover'
+
 configurations {
     shadowDeps // shaded dependencies, not included into the resulting .pom file
     compileOnly.extendsFrom(shadowDeps)
@@ -30,6 +33,13 @@ java {
     disableAutoTargetJvm()
 }
 
+// This is required for BlockHound tests to work, see https://github.com/Kotlin/kotlinx.coroutines/issues/3701
+tasks.withType(Test).configureEach {
+    if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
+        jvmArgs += ["-XX:+AllowRedefinitionToAddDeleteMethods"]
+    }
+}
+
 jar {
     setEnabled(false)
 }
@@ -53,14 +63,11 @@ configurations {
     }
 }
 
-def commonKoverExcludes =
-        // Never used, safety mechanism
-        ["kotlinx.coroutines.debug.internal.NoOpProbesKt"]
-
-tasks.koverHtmlReport {
-    excludes = commonKoverExcludes
-}
-
-tasks.koverVerify {
-    excludes = commonKoverExcludes
+koverReport {
+    filters {
+        excludes {
+            // Never used, safety mechanism
+            classes("kotlinx.coroutines.debug.internal.NoOpProbesKt")
+        }
+    }
 }

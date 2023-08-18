@@ -242,7 +242,6 @@ fun main() {
 //sampleEnd    
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3"}
 
 > 可以在[这里](../../kotlinx-coroutines-core/jvm/test/guide/example-context-04.kt)获取完整代码。
 >

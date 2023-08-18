@@ -27,11 +27,7 @@ repositories {
     }
 }
 
-kotlinDslPluginOptions {
-    experimentalWarning.set(false)
-}
-
-val props = Properties().apply {
+val gradleProperties = Properties().apply {
     file("../gradle.properties").inputStream().use { load(it) }
 }
 
@@ -41,7 +37,9 @@ fun version(target: String): String {
         val snapshotVersion = properties["kotlin_snapshot_version"]
         if (snapshotVersion != null) return snapshotVersion.toString()
     }
-    return props.getProperty("${target}_version")
+    val version = "${target}_version"
+    // Read from CLI first, used in aggregate builds
+    return properties[version]?.let{"$it"} ?: gradleProperties.getProperty(version)
 }
 
 dependencies {
@@ -62,7 +60,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
     }
     implementation("ru.vyarus:gradle-animalsniffer-plugin:1.5.3") // Android API check
-    implementation("org.jetbrains.kotlinx:kover:${version("kover")}") {
+    implementation("org.jetbrains.kotlinx:kover-gradle-plugin:${version("kover")}") {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")

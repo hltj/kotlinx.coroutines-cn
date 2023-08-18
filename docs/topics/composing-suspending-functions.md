@@ -189,6 +189,12 @@ Completed in 1017 ms
 
 ## async 风格的函数
 
+> This programming style with async functions is provided here only for illustration, because it is a popular style
+> in other programming languages. Using this style with Kotlin coroutines is **strongly discouraged** for the
+> reasons explained below.
+>
+{type="note"}
+
 We can define async-style functions that invoke `doSomethingUsefulOne` and `doSomethingUsefulTwo`
 _asynchronously_ using the [async] coroutine builder using a [GlobalScope] reference to 
 opt-out of the structured concurrency.
@@ -274,12 +280,6 @@ suspend fun doSomethingUsefulTwo(): Int {
 The answer is 42
 Completed in 1085 ms
 -->
-
-> 这种带有异步函数的编程风格仅供参考，因为这在其它编程语言中<!--
-> -->是一种受欢迎的风格。在 Kotlin 的协程中使用这种风格是**强烈不推荐**的，
-> 原因如下所述。
->
-{type="note"}
 
 考虑一下如果 `val one = somethingUsefulOneAsync()` 这一行和 `one.await()` 表达式这里在代码中有逻辑错误，
 并且程序抛出了异常以及程序在操作的过程中中止，将会发生什么。
