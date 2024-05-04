@@ -241,7 +241,7 @@ internal open class BufferedChannel<E>(
     /**
      * Abstract send implementation.
      */
-    protected inline fun <R> sendImpl(
+    private inline fun <R> sendImpl(
         /* The element to be sent. */
         element: E,
         /* The waiter to be stored in case of suspension,
@@ -349,6 +349,29 @@ internal open class BufferedChannel<E>(
             }
         }
     }
+
+    // Note: this function is temporarily moved from ConflatedBufferedChannel to BufferedChannel class, because of this issue: KT-65554. 
+    // For now, an inline function, which invokes atomic operations, may only be called within a parent class.
+    protected fun trySendDropOldest(element: E): ChannelResult<Unit> =
+        sendImpl( // <-- this is an inline function
+            element = element,
+            // Put the element into the logical buffer even
+            // if this channel is already full, the `onSuspend`
+            // callback below extract the first (oldest) element.
+            waiter = BUFFERED,
+            // Finish successfully when a rendezvous has happened
+            // or the element has been buffered.
+            onRendezvousOrBuffered = { return success(Unit) },
+            // In case the algorithm decided to suspend, the element
+            // was added to the buffer. However, as the buffer is now
+            // overflowed, the first (oldest) element has to be extracted.
+            onSuspend = { segm, i ->
+                dropFirstElementUntilTheSpecifiedCellIsInTheBuffer(segm.id * SEGMENT_SIZE + i)
+                return success(Unit)
+            },
+            // If the channel is closed, return the corresponding result.
+            onClosed = { return closed(sendException) }
+        )
 
     private inline fun sendImplOnNoWaiter(
         /* The working cell is specified by
@@ -1582,7 +1605,12 @@ internal open class BufferedChannel<E>(
          * When [hasNext] suspends, this field stores the corresponding
          * continuation. The [tryResumeHasNext] and [tryResumeHasNextOnClosedChannel]
          * function resume this continuation when the [hasNext] invocation should complete.
+         *
+         * This property is the subject to bening data race:
+         * It is nulled-out on both completion and cancellation paths that
+         * could happen concurrently.
          */
+        @BenignDataRace
         private var continuation: CancellableContinuationImpl<Boolean>? = null
 
         // `hasNext()` is just a special receive operation.
@@ -1690,8 +1718,11 @@ internal open class BufferedChannel<E>(
         }
 
         fun tryResumeHasNextOnClosedChannel() {
-            // Read the current continuation and clean
-            // the corresponding field to avoid memory leaks.
+            /*
+             * Read the current continuation of the suspended `hasNext()` call and clean the corresponding field to avoid memory leaks.
+             * While this nulling out is unnecessary, it eliminates memory leaks (through the continuation)
+             * if the channel iterator accidentally remains GC-reachable after the channel is closed.
+             */
             val cont = this.continuation!!
             this.continuation = null
             // Update the `hasNext()` internal result and inform

@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import org.junit.*
 import org.junit.Test
 import java.util.concurrent.*
@@ -53,7 +50,7 @@ class JobChildStressTest : TestBase() {
             assertNull(unhandledException)
             if (wasLaunched) {
                 val exception = parent.getCompletionExceptionOrNull()
-                assertTrue(exception is TestException, "exception=$exception")
+                assertIs<TestException>(exception, "exception=$exception")
             }
         }
     }

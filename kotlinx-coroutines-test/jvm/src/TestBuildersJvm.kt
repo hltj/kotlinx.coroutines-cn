@@ -1,6 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 package kotlinx.coroutines.test
 
 import kotlinx.coroutines.*
@@ -14,6 +11,13 @@ internal actual fun createTestResult(testProcedure: suspend CoroutineScope.() ->
         testProcedure()
     }
 }
+
+internal actual fun systemPropertyImpl(name: String): String? =
+    try {
+        System.getProperty(name)
+    } catch (e: SecurityException) {
+        null
+    }
 
 internal actual fun dumpCoroutines() {
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")

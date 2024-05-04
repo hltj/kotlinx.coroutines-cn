@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.test.*
@@ -314,5 +311,11 @@ class DebounceTest : TestBase() {
 
         assertEquals(listOf("A", "C", "D", "E"), result)
         finish(5)
+    }
+
+    @Test
+    fun testFailsWithIllegalArgument() {
+        val flow = emptyFlow<Int>()
+        assertFailsWith<IllegalArgumentException> { flow.debounce(-1) }
     }
 }

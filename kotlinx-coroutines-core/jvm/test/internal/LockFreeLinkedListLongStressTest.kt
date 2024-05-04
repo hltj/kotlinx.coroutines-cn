@@ -1,10 +1,7 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.internal
 
-import kotlinx.coroutines.TestBase
+import kotlinx.coroutines.testing.*
+import kotlinx.coroutines.testing.TestBase
 import org.junit.Test
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -69,5 +66,17 @@ class LockFreeLinkedListLongStressTest : TestBase() {
             require(node.i == expected.next())
         }
         require(!expected.hasNext())
+    }
+
+    private fun LockFreeLinkedListHead.validate() {
+        var prev: LockFreeLinkedListNode = this
+        var cur: LockFreeLinkedListNode = next as LockFreeLinkedListNode
+        while (cur != this) {
+            val next = cur.nextNode
+            cur.validateNode(prev, next)
+            prev = cur
+            cur = next
+        }
+        validateNode(prev, next as LockFreeLinkedListNode)
     }
 }

@@ -1,6 +1,4 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
+@file:OptIn(BetaInteropApi::class)
 
 package kotlinx.coroutines
 
@@ -8,7 +6,7 @@ import kotlinx.cinterop.*
 import platform.CoreFoundation.*
 import platform.darwin.*
 import kotlin.coroutines.*
-import kotlin.native.concurrent.*
+import kotlin.concurrent.*
 import kotlin.native.internal.NativePtr
 
 internal fun isMainThread(): Boolean = CFRunLoopGetCurrent() == CFRunLoopGetMain()
@@ -65,7 +63,7 @@ private class DarwinMainDispatcher(
     }
 
     override fun toString(): String =
-        "MainDispatcher${ if(invokeImmediately) "[immediate]" else "" }"
+        if (invokeImmediately) "Dispatchers.Main.immediate" else "Dispatchers.Main"
 }
 
 private typealias TimerBlock = (CFRunLoopTimerRef?) -> Unit

@@ -1,11 +1,9 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.test
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.testing.*
 import kotlin.test.*
+import kotlin.test.assertFailsWith
 import kotlin.time.*
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Duration.Companion.milliseconds
@@ -312,7 +310,6 @@ class TestCoroutineSchedulerTest {
     }
 
     @Test
-    @ExperimentalTime
     fun testAdvanceTimeSource() = runTest {
         val expected = 1.seconds
         val before = testTimeSource.markNow()

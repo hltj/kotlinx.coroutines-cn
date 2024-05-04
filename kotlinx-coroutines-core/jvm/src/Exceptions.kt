@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("FunctionName")
 
 package kotlinx.coroutines
@@ -17,7 +13,6 @@ public actual typealias CancellationException = java.util.concurrent.Cancellatio
 /**
  * Creates a cancellation exception with a specified message and [cause].
  */
-@Suppress("FunctionName")
 public actual fun CancellationException(message: String?, cause: Throwable?) : CancellationException =
     CancellationException(message).apply { initCause(cause) }
 
@@ -69,7 +64,3 @@ internal actual class JobCancellationException public actual constructor(
     override fun hashCode(): Int =
         (message!!.hashCode() * 31 + job.hashCode()) * 31 + (cause?.hashCode() ?: 0)
 }
-
-@Suppress("NOTHING_TO_INLINE")
-internal actual inline fun Throwable.addSuppressedThrowable(other: Throwable) =
-    addSuppressed(other)

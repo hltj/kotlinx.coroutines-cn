@@ -1,13 +1,14 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow.operators
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.internal.*
+import kotlin.coroutines.*
 import kotlin.test.*
+import kotlin.time.*
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class TimeoutTest : TestBase() {
     @Test
@@ -227,5 +228,32 @@ class TimeoutTest : TestBase() {
 
         assertEquals((0 until 10).toList(), list)
         finish(6)
+    }
+
+    @Test
+    fun testImmediateTimeout() {
+        testImmediateTimeout(Duration.ZERO)
+        reset()
+        testImmediateTimeout(-1.seconds)
+    }
+
+    @Test
+    fun testClosing() = runTest {
+        assertFailsWith<TestException> {
+            channelFlow<Int> { close(TestException()) }
+                .timeout(Duration.INFINITE)
+                .collect {
+                    expectUnreached()
+                }
+        }
+    }
+
+    private fun testImmediateTimeout(timeout: Duration) {
+        expect(1)
+        val flow = emptyFlow<Int>().timeout(timeout)
+        flow::collect.startCoroutine(NopCollector, Continuation(EmptyCoroutineContext) {
+            assertIs<TimeoutCancellationException>(it.exceptionOrNull())
+            finish(2)
+        })
     }
 }

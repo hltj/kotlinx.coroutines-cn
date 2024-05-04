@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.future
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import org.junit.Test
 import java.util.concurrent.*
@@ -65,7 +62,7 @@ class AsFutureTest : TestBase() {
             expectUnreached()
         } catch (e: ExecutionException) {
             assertTrue(future.isCompletedExceptionally)
-            assertTrue(e.cause is OutOfMemoryError)
+            assertIs<OutOfMemoryError>(e.cause)
             finish(2)
         }
     }
@@ -81,7 +78,7 @@ class AsFutureTest : TestBase() {
             expectUnreached()
         } catch (e: ExecutionException) {
             assertTrue(future.isCompletedExceptionally)
-            assertTrue(e.cause is OutOfMemoryError)
+            assertIs<OutOfMemoryError>(e.cause)
             finish(2)
         }
     }
@@ -119,6 +116,6 @@ class AsFutureTest : TestBase() {
         assertTrue(deferred.isCancelled)
         assertTrue(deferred.isCompleted)
         assertFalse(deferred.isActive)
-        assertTrue(deferred.getCompletionExceptionOrNull() is CancellationException)
+        assertIs<CancellationException>(deferred.getCompletionExceptionOrNull())
     }
 }

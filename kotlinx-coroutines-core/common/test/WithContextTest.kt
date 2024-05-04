@@ -1,12 +1,9 @@
 
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("NAMED_ARGUMENTS_NOT_ALLOWED") // KT-22237
 
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.test.*
 
 class WithContextTest : TestBase() {
@@ -214,7 +211,7 @@ class WithContextTest : TestBase() {
             } catch (e: Throwable) {
                 expect(7)
                 // make sure TestException, not CancellationException is thrown
-                assertTrue(e is TestException, "Caught $e")
+                assertIs<TestException>(e, "Caught $e")
             }
         }
         expect(2)
@@ -244,7 +241,7 @@ class WithContextTest : TestBase() {
             } catch (e: Throwable) {
                 expect(7)
                 // make sure CancellationException is thrown
-                assertTrue(e is CancellationException, "Caught $e")
+                assertIs<CancellationException>(e, "Caught $e")
             }
         }
 

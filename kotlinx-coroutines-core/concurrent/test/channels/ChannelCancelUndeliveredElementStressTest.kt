@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.channels
 
+import kotlinx.coroutines.testing.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.*
@@ -81,7 +78,7 @@ class ChannelCancelUndeliveredElementStressTest : TestBase() {
                 }
             }
         } catch (e: Throwable) {
-            assertTrue(e is CancellationException) // the only exception possible in this test
+            assertIs<CancellationException>(e) // the only exception possible in this test
             dSendExceptionCnt++
             throw e
         }

@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.sync
 
 import kotlinx.atomicfu.*
@@ -44,10 +40,10 @@ public interface Mutex {
     /**
      * Locks this mutex, suspending caller until the lock is acquired (in other words, while the lock is held elsewhere).
      *
-     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this
-     * function is suspended, this function immediately resumes with [CancellationException].
-     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was
-     * suspended, it will not resume successfully. See [suspendCancellableCoroutine] documentation for low-level details.
+     * This suspending function is cancellable: if the [Job] of the current coroutine is cancelled while this
+     * suspending function is waiting, this function immediately resumes with [CancellationException].
+     * There is a **prompt cancellation guarantee**: even if this function is ready to return the result, but was cancelled
+     * while suspended, [CancellationException] will be thrown. See [suspendCancellableCoroutine] for low-level details.
      * This function releases the lock if it was already acquired by this function before the [CancellationException]
      * was thrown.
      *
@@ -121,10 +117,9 @@ public suspend inline fun <T> Mutex.withLock(owner: Any? = null, action: () -> T
     contract {
         callsInPlace(action, InvocationKind.EXACTLY_ONCE)
     }
-
     lock(owner)
-    try {
-        return action()
+    return try {
+        action()
     } finally {
         unlock(owner)
     }

@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.exceptions
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import org.junit.Test
 import java.io.*
@@ -152,7 +149,7 @@ class JobBasicCancellationTest : TestBase() {
         assertTrue(deferred.completeExceptionally(IndexOutOfBoundsException()))
         assertFalse(deferred.completeExceptionally(AssertionError())) // second is too late
         val cause = deferred.getCancellationException().cause!!
-        assertTrue(cause is IndexOutOfBoundsException)
+        assertIs<IndexOutOfBoundsException>(cause)
         assertNull(cause.cause)
         assertTrue(cause.suppressed.isEmpty())
     }

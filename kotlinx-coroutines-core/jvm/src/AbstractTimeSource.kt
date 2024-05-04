@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 // Need InlineOnly for efficient bytecode on Android
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER", "NOTHING_TO_INLINE")
 
@@ -24,7 +20,12 @@ internal abstract class AbstractTimeSource {
 
 // For tests only
 // @JvmField: Don't use JvmField here to enable R8 optimizations via "assumenosideeffects"
-internal var timeSource: AbstractTimeSource? = null
+private var timeSource: AbstractTimeSource? = null
+
+// TODO: without this, there's a compilation error. Why?
+internal inline fun mockTimeSource(source: AbstractTimeSource?) {
+    timeSource = source
+}
 
 @InlineOnly
 internal inline fun currentTimeMillis(): Long =

@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 // This file was automatically generated from coroutine-context-and-dispatchers.md by Knit tool. Do not edit.
 package kotlinx.coroutines.guide.test
 
@@ -81,7 +77,7 @@ class DispatcherGuideTest {
             "[main @main#1] Started main coroutine",
             "[main @v1coroutine#2] Computing v1",
             "[main @v2coroutine#3] Computing v2",
-            "[main @main#1] The answer for v1 / v2 = 42"
+            "[main @main#1] The answer for v1 * v2 = 42"
         )
     }
 

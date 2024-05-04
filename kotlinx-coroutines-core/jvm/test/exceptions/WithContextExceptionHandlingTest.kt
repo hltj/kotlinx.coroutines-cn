@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.exceptions
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import org.junit.Test
 import org.junit.runner.*
@@ -29,7 +26,7 @@ class WithContextExceptionHandlingTest(private val mode: Mode) : TestBase() {
          * Result: TE2
          */
         runCancellation(null, TestException2()) { e ->
-            assertTrue(e is TestException2)
+            assertIs<TestException2>(e)
             assertNull(e.cause)
             val suppressed = e.suppressed
             assertTrue(suppressed.isEmpty())
@@ -45,7 +42,7 @@ class WithContextExceptionHandlingTest(private val mode: Mode) : TestBase() {
          */
         val cancellationCause = TestCancellationException()
         runCancellation(cancellationCause, TestException2()) { e ->
-            assertTrue(e is TestException2)
+            assertIs<TestException2>(e)
             assertNull(e.cause)
             val suppressed = e.suppressed
             assertTrue(suppressed.isEmpty())
@@ -61,7 +58,7 @@ class WithContextExceptionHandlingTest(private val mode: Mode) : TestBase() {
          */
         val cancellationCause = TestCancellationException()
         runCancellation(cancellationCause, cancellationCause) { e ->
-            assertTrue(e is TestCancellationException)
+            assertIs<TestCancellationException>(e)
             assertNull(e.cause)
             val suppressed = e.suppressed
             assertTrue(suppressed.isEmpty())

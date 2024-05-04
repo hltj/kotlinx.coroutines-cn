@@ -1,6 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 @file:OptIn(ExperimentalContracts::class)
 
 package kotlinx.coroutines
@@ -45,9 +42,9 @@ import kotlin.coroutines.intrinsics.*
  * responsible for launching child coroutines. The corresponding instance of `CoroutineScope` shall be created
  * with either `CoroutineScope()` or `MainScope()`:
  *
- * * `CoroutineScope()` uses the [context][CoroutineContext] provided to it as a parameter for its coroutines 
+ * - `CoroutineScope()` uses the [context][CoroutineContext] provided to it as a parameter for its coroutines 
  *   and adds a [Job] if one is not provided as part of the context.
- * * `MainScope()` uses [Dispatchers.Main] for its coroutines and has a [SupervisorJob].
+ * - `MainScope()` uses [Dispatchers.Main] for its coroutines and has a [SupervisorJob].
  *
  * **The key part of custom usage of `CoroutineScope` is cancelling it at the end of the lifecycle.**
  * The [CoroutineScope.cancel] extension function shall be used when the entity that was launching coroutines
@@ -90,7 +87,7 @@ public interface CoroutineScope {
  * Adds the specified coroutine context to this scope, overriding existing elements in the current
  * scope's context with the corresponding keys.
  *
- * This is a shorthand for `CoroutineScope(thisScope + context)`.
+ * This is a shorthand for `CoroutineScope(thisScope.coroutineContext + context)`.
  */
 public operator fun CoroutineScope.plus(context: CoroutineContext): CoroutineScope =
     ContextScope(coroutineContext + context)
@@ -223,13 +220,13 @@ public object GlobalScope : CoroutineScope {
 
 /**
  * Creates a [CoroutineScope] and calls the specified suspend block with this scope.
- * The provided scope inherits its [coroutineContext][CoroutineScope.coroutineContext] from the outer scope, but overrides
- * the context's [Job].
+ * The provided scope inherits its [coroutineContext][CoroutineScope.coroutineContext] from the outer scope, using the
+ * [Job] from that context as the parent for a new [Job].
  *
- * This function is designed for _parallel decomposition_ of work. When any child coroutine in this scope fails,
- * this scope fails and all the rest of the children are cancelled (for a different behavior see [supervisorScope]).
- * This function returns as soon as the given block and all its children coroutines are completed.
- * A usage example of a scope looks like this:
+ * This function is designed for _concurrent decomposition_ of work. When any child coroutine in this scope fails,
+ * this scope fails, cancelling all the other children (for a different behavior, see [supervisorScope]).
+ * This function returns as soon as the given block and all its child coroutines are completed.
+ * A usage of a scope looks like this:
  *
  * ```
  * suspend fun showSomeData() = coroutineScope {
@@ -251,8 +248,8 @@ public object GlobalScope : CoroutineScope {
  * 3) If the outer scope of `showSomeData` is cancelled, both started `async` and `withContext` blocks are cancelled.
  * 4) If the `async` block fails, `withContext` will be cancelled.
  *
- * The method may throw a [CancellationException] if the current job was cancelled externally
- * or may throw a corresponding unhandled [Throwable] if there is any unhandled exception in this scope
+ * The method may throw a [CancellationException] if the current job was cancelled externally,
+ * rethrow the exception thrown by [block], or throw an unhandled [Throwable] if there is one
  * (for example, from a crashed coroutine that was started with [launch][CoroutineScope.launch] in this scope).
  */
 public suspend fun <R> coroutineScope(block: suspend CoroutineScope.() -> R): R {

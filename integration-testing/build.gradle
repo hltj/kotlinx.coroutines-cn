@@ -1,8 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
-
 buildscript {
 
     /*
@@ -178,4 +173,9 @@ compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+}
+
+// Drop this when node js version become stable
+tasks.withType(org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstallTask.class).configureEach {
+    it.args.add("--ignore-engines")
 }

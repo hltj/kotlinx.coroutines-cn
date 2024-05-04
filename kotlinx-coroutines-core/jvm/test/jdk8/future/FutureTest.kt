@@ -1,13 +1,11 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.future
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import org.junit.*
 import org.junit.Test
+import java.lang.IllegalArgumentException
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
 import java.util.concurrent.locks.*
@@ -157,7 +155,7 @@ class FutureTest : TestBase() {
             future.get()
             fail("'get' should've throw an exception")
         } catch (e: ExecutionException) {
-            assertTrue(e.cause is IllegalStateException)
+            assertIs<IllegalStateException>(e.cause)
             assertEquals("OK", e.cause!!.message)
         }
     }
@@ -239,14 +237,14 @@ class FutureTest : TestBase() {
 
         assertTrue(deferred.isCancelled)
         val completionException = deferred.getCompletionExceptionOrNull()!!
-        assertTrue(completionException is TestException)
+        assertIs<TestException>(completionException)
         assertEquals("something went wrong", completionException.message)
 
         try {
             deferred.await()
             fail("deferred.await() should throw an exception")
         } catch (e: Throwable) {
-            assertTrue(e is TestException)
+            assertIs<TestException>(e)
             assertEquals("something went wrong", e.message)
         }
     }
@@ -473,7 +471,7 @@ class FutureTest : TestBase() {
     private inline fun <reified T: Throwable> CompletableFuture<*>.checkFutureException(vararg suppressed: KClass<out Throwable>) {
         val e = assertFailsWith<ExecutionException> { get() }
         val cause = e.cause!!
-        assertTrue(cause is T)
+        assertIs<T>(cause)
         for ((index, clazz) in suppressed.withIndex()) {
             assertTrue(clazz.isInstance(cause.suppressed[index]))
         }
@@ -588,6 +586,13 @@ class FutureTest : TestBase() {
         withTimeout(60_000) {
             children.forEach { it.join() }
             assertEquals(count, completed.get())
+        }
+    }
+
+    @Test
+    fun testFailsIfLazy() {
+        assertFailsWith<IllegalArgumentException> {
+            GlobalScope.future<Unit>(start = CoroutineStart.LAZY) {  }
         }
     }
 }

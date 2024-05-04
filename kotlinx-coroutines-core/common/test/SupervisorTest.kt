@@ -1,11 +1,8 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("NAMED_ARGUMENTS_NOT_ALLOWED") // KT-21913
 
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.test.*
 
 class SupervisorTest : TestBase() {
@@ -86,10 +83,12 @@ class SupervisorTest : TestBase() {
 
     @Test
     fun testThrowingSupervisorScope() = runTest {
+        var childJob: Job? = null
+        var supervisorJob: Job? = null
         try {
             expect(1)
             supervisorScope {
-                async {
+                childJob = async {
                     try {
                         delay(Long.MAX_VALUE)
                     } finally {
@@ -99,9 +98,13 @@ class SupervisorTest : TestBase() {
 
                 expect(2)
                 yield()
+                supervisorJob = coroutineContext.job
                 throw TestException2()
             }
         } catch (e: Throwable) {
+            assertIs<TestException2>(e)
+            assertTrue(childJob!!.isCancelled)
+            assertTrue(supervisorJob!!.isCancelled)
             finish(4)
         }
     }
@@ -158,6 +161,31 @@ class SupervisorTest : TestBase() {
         }
     }
 
+    /**
+     * Tests that [supervisorScope] cancels all its children when the current coroutine is cancelled.
+     */
+    @Test
+    fun testSupervisorScopeExternalCancellation() = runTest {
+        var childJob: Job? = null
+        val job = launch {
+            supervisorScope {
+                childJob = launch(start = CoroutineStart.UNDISPATCHED) {
+                    try {
+                        delay(Long.MAX_VALUE)
+                    } finally {
+                        expect(2)
+                    }
+                }
+            }
+        }
+        while (childJob == null) yield()
+        expect(1)
+        job.cancel()
+        assertTrue(childJob!!.isCancelled)
+        job.join()
+        finish(3)
+    }
+
     @Test
     fun testAsyncCancellation() = runTest {
         val parent = SupervisorJob()
@@ -173,7 +201,7 @@ class SupervisorTest : TestBase() {
             expectUnreached()
         } catch (e: CancellationException) {
             val cause = if (RECOVER_STACK_TRACES) e.cause?.cause!! else e.cause
-            assertTrue(cause is TestException1)
+            assertIs<TestException1>(cause)
             finish(3)
         }
     }

@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.test.*
 
 class CompletableJobTest : TestBase() {
@@ -56,8 +53,8 @@ class CompletableJobTest : TestBase() {
                 // KT-33840
                 hang {}
             } catch (e: Throwable) {
-                assertTrue(e is CancellationException)
-                assertTrue((if (RECOVER_STACK_TRACES) e.cause?.cause else e.cause) is TestException)
+                assertIs<CancellationException>(e)
+                assertIs<TestException>(if (RECOVER_STACK_TRACES) e.cause?.cause else e.cause)
                 expect(4)
                 throw e
             }
@@ -78,8 +75,8 @@ class CompletableJobTest : TestBase() {
                 // KT-33840
                 hang {}
             } catch (e: Throwable) {
-                assertTrue(e is CancellationException)
-                assertTrue((if (RECOVER_STACK_TRACES) e.cause?.cause else e.cause) is TestException)
+                assertIs<CancellationException>(e)
+                assertIs<TestException>(if (RECOVER_STACK_TRACES) e.cause?.cause else e.cause)
                 expect(4)
                 throw e
             }

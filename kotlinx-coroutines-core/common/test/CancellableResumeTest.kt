@@ -1,11 +1,8 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("NAMED_ARGUMENTS_NOT_ALLOWED") // KT-21913
 
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.test.*
 
 /**
@@ -37,7 +34,7 @@ class CancellableResumeTest : TestBase() {
             expect(4)
             cont.resume("OK") { cause ->
                 expect(5)
-                assertTrue(cause is TestException)
+                assertIs<TestException>(cause)
             }
             finish(6)
         }
@@ -63,7 +60,7 @@ class CancellableResumeTest : TestBase() {
             expect(4)
             cont.resume("OK") { cause ->
                 expect(5)
-                assertTrue(cause is TestException)
+                assertIs<TestException>(cause)
                 throw TestException3("FAIL") // onCancellation block fails with exception
             }
             finish(6)
@@ -158,7 +155,7 @@ class CancellableResumeTest : TestBase() {
         expect(6)
         cc.resume("OK") { cause ->
             expect(7)
-            assertTrue(cause is TestCancellationException)
+            assertIs<TestCancellationException>(cause)
         }
         expect(8)
     }
@@ -193,7 +190,7 @@ class CancellableResumeTest : TestBase() {
         expect(6)
         cc.resume("OK") { cause ->
             expect(7)
-            assertTrue(cause is TestCancellationException)
+            assertIs<TestCancellationException>(cause)
             throw TestException3("FAIL") // onCancellation block fails with exception
         }
         expect(8)
@@ -212,7 +209,7 @@ class CancellableResumeTest : TestBase() {
                     cont.invokeOnCancellation { cause ->
                         // Note: invokeOnCancellation is called before cc.resume(value) { ... } handler
                         expect(7)
-                        assertTrue(cause is TestCancellationException)
+                        assertIs<TestCancellationException>(cause)
                     }
                     cc = cont
                 }
@@ -225,7 +222,7 @@ class CancellableResumeTest : TestBase() {
         cc.resume("OK") { cause ->
             // Note: this handler is called after invokeOnCancellation handler
             expect(8)
-            assertTrue(cause is TestCancellationException)
+            assertIs<TestCancellationException>(cause)
         }
         expect(5)
         job.cancel(TestCancellationException()) // cancel while execution is dispatched
@@ -252,7 +249,7 @@ class CancellableResumeTest : TestBase() {
                     cont.invokeOnCancellation { cause ->
                         // Note: invokeOnCancellation is called before cc.resume(value) { ... } handler
                         expect(7)
-                        assertTrue(cause is TestCancellationException)
+                        assertIs<TestCancellationException>(cause)
                         throw TestException2("FAIL") // invokeOnCancellation handler fails with exception
                     }
                     cc = cont
@@ -266,7 +263,7 @@ class CancellableResumeTest : TestBase() {
         cc.resume("OK") { cause ->
             // Note: this handler is called after invokeOnCancellation handler
             expect(8)
-            assertTrue(cause is TestCancellationException)
+            assertIs<TestCancellationException>(cause)
             throw TestException3("FAIL") // onCancellation block fails with exception
         }
         expect(5)

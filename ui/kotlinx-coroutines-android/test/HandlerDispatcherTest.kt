@@ -1,11 +1,9 @@
-/*
- * Copyright 2016-2022 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.android
 
+import kotlinx.coroutines.testing.*
 import android.os.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.testing.*
 import org.junit.Test
 import org.junit.runner.*
 import org.robolectric.*
@@ -15,29 +13,9 @@ import java.util.concurrent.*
 import kotlin.test.*
 
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE, sdk = [28])
 @LooperMode(LooperMode.Mode.LEGACY)
-class HandlerDispatcherTest : TestBase() {
-    @Test
-    fun testImmediateDispatcherYield() = runBlocking(Dispatchers.Main) {
-        expect(1)
-        // launch in the immediate dispatcher
-        launch(Dispatchers.Main.immediate) {
-            expect(2)
-            yield()
-            expect(4)
-        }
-        expect(3) // after yield
-        yield() // yield back
-        finish(5)
-    }
-
-    @Test
-    fun testMainDispatcherToString() {
-        assertEquals("Dispatchers.Main", Dispatchers.Main.toString())
-        assertEquals("Dispatchers.Main.immediate", Dispatchers.Main.immediate.toString())
-    }
-
+@Config(manifest = Config.NONE, sdk = [28])
+class HandlerDispatcherTest : MainDispatcherTestBase.WithRealTimeDelay() {
     @Test
     fun testDefaultDelayIsNotDelegatedToMain() = runTest {
         val mainLooper = Shadows.shadowOf(Looper.getMainLooper())
@@ -131,5 +109,21 @@ class HandlerDispatcherTest : TestBase() {
         expect(3)
         mainLooper.scheduler.advanceBy(51, TimeUnit.MILLISECONDS)
         finish(5)
+    }
+
+    override fun isMainThread(): Boolean = Looper.getMainLooper().thread === Thread.currentThread()
+
+    override fun scheduleOnMainQueue(block: () -> Unit) {
+        Handler(Looper.getMainLooper()).post(block)
+    }
+
+    // by default, Robolectric only schedules tasks on the main thread but doesn't run them.
+    // This function nudges it to run them, 10 milliseconds of virtual time at a time.
+    override suspend fun spinTest(testBody: Job) {
+        val mainLooper = Shadows.shadowOf(Looper.getMainLooper())
+        while (testBody.isActive) {
+            Thread.sleep(10, 0)
+            mainLooper.idleFor(10, TimeUnit.MILLISECONDS)
+        }
     }
 }

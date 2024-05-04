@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.scheduling
 
 import kotlinx.atomicfu.*
@@ -12,15 +8,14 @@ import java.util.concurrent.*
 import java.util.concurrent.locks.*
 import kotlin.jvm.internal.Ref.ObjectRef
 import kotlin.math.*
-import kotlin.random.*
 
 /**
  * Coroutine scheduler (pool of shared threads) which primary target is to distribute dispatched coroutines
  * over worker threads, including both CPU-intensive and blocking tasks, in the most efficient manner.
  *
  * Current scheduler implementation has two optimization targets:
- * * Efficiency in the face of communication patterns (e.g. actors communicating via channel)
- * * Dynamic resizing to support blocking calls without re-dispatching coroutine to separate "blocking" thread pool.
+ * - Efficiency in the face of communication patterns (e.g. actors communicating via channel)
+ * - Dynamic resizing to support blocking calls without re-dispatching coroutine to separate "blocking" thread pool.
  *
  * ### Structural overview
  *
@@ -112,6 +107,7 @@ internal class CoroutineScheduler(
 
     @JvmField
     val globalCpuQueue = GlobalQueue()
+
     @JvmField
     val globalBlockingQueue = GlobalQueue()
 
@@ -349,12 +345,13 @@ internal class CoroutineScheduler(
         for (i in 1..created) {
             val worker = workers[i]!!
             if (worker !== currentWorker) {
-                while (worker.isAlive) {
+                // Note: this is java.lang.Thread.getState() of type java.lang.Thread.State
+                while (worker.getState() != Thread.State.TERMINATED) {
                     LockSupport.unpark(worker)
                     worker.join(timeout)
                 }
-                val state = worker.state
-                assert { state === WorkerState.TERMINATED } // Expected TERMINATED state
+                // Note: this is CoroutineScheduler.Worker.state of type CoroutineScheduler.WorkerState
+                assert { worker.state === WorkerState.TERMINATED } // Expected TERMINATED state
                 worker.localQueue.offloadAllWorkTo(globalBlockingQueue) // Doesn't actually matter which queue to use
             }
         }
@@ -386,8 +383,8 @@ internal class CoroutineScheduler(
      * If `true`, then  the task will be dispatched in a FIFO manner and no additional workers will be requested,
      * but only if the current thread is a corresponding worker thread.
      * Note that caller cannot be ensured that it is being executed on worker thread for the following reasons:
-     *   * [CoroutineStart.UNDISPATCHED]
-     *   * Concurrent [close] that effectively shutdowns the worker thread
+     *   - [CoroutineStart.UNDISPATCHED]
+     *   - Concurrent [close] that effectively shutdowns the worker thread
      */
     fun dispatch(block: Runnable, taskContext: TaskContext = NonBlockingContext, tailDispatch: Boolean = false) {
         trackTask() // this is needed for virtual time support
@@ -547,36 +544,39 @@ internal class CoroutineScheduler(
                     ++blockingWorkers
                     queueSizes += queueSize.toString() + "b" // Blocking
                 }
+
                 WorkerState.CPU_ACQUIRED -> {
                     ++cpuWorkers
                     queueSizes += queueSize.toString() + "c" // CPU
                 }
+
                 WorkerState.DORMANT -> {
                     ++dormant
                     if (queueSize > 0) queueSizes += queueSize.toString() + "d" // Retiring
                 }
+
                 WorkerState.TERMINATED -> ++terminated
             }
         }
         val state = controlState.value
         return "$schedulerName@$hexAddress[" +
-                "Pool Size {" +
-                    "core = $corePoolSize, " +
-                    "max = $maxPoolSize}, " +
-                "Worker States {" +
-                    "CPU = $cpuWorkers, " +
-                    "blocking = $blockingWorkers, " +
-                    "parked = $parkedWorkers, " +
-                    "dormant = $dormant, " +
-                    "terminated = $terminated}, " +
-                "running workers queues = $queueSizes, "+
-                "global CPU queue size = ${globalCpuQueue.size}, " +
-                "global blocking queue size = ${globalBlockingQueue.size}, " +
-                "Control State {" +
-                    "created workers= ${createdWorkers(state)}, " +
-                    "blocking tasks = ${blockingTasks(state)}, " +
-                    "CPUs acquired = ${corePoolSize - availableCpuPermits(state)}" +
-                "}]"
+            "Pool Size {" +
+            "core = $corePoolSize, " +
+            "max = $maxPoolSize}, " +
+            "Worker States {" +
+            "CPU = $cpuWorkers, " +
+            "blocking = $blockingWorkers, " +
+            "parked = $parkedWorkers, " +
+            "dormant = $dormant, " +
+            "terminated = $terminated}, " +
+            "running workers queues = $queueSizes, " +
+            "global CPU queue size = ${globalCpuQueue.size}, " +
+            "global blocking queue size = ${globalBlockingQueue.size}, " +
+            "Control State {" +
+            "created workers= ${createdWorkers(state)}, " +
+            "blocking tasks = ${blockingTasks(state)}, " +
+            "CPUs acquired = ${corePoolSize - availableCpuPermits(state)}" +
+            "}]"
     }
 
     fun runSafely(task: Task) {
@@ -593,6 +593,13 @@ internal class CoroutineScheduler(
     internal inner class Worker private constructor() : Thread() {
         init {
             isDaemon = true
+            /*
+             * `Dispatchers.Default` is used as *the* dispatcher in the containerized environments,
+             * isolated by their own classloaders. Workers are populated lazily, thus we are inheriting
+             * `Dispatchers.Default` context class loader here instead of using parent' thread one
+             * in order not to accidentally capture temporary application classloader.
+             */
+            contextClassLoader = this@CoroutineScheduler.javaClass.classLoader
         }
 
         // guarded by scheduler lock, index in workers array, 0 when not in array (terminated)
@@ -650,11 +657,21 @@ internal class CoroutineScheduler(
         var nextParkedWorker: Any? = NOT_IN_STACK
 
         /*
-         * The delay until at least one task in other worker queues will  become stealable.
+         * The delay until at least one task in other worker queues will become stealable.
          */
         private var minDelayUntilStealableTaskNs = 0L
 
-        private var rngState = Random.nextInt()
+        /**
+         * The state of embedded Marsaglia xorshift random number generator, used for work-stealing purposes.
+         * It is initialized with a seed.
+         */
+        private var rngState: Int = run {
+            // This could've been Random.nextInt(), but we are shaving an extra initialization cost, see #4051
+            val seed = System.nanoTime().toInt()
+            // rngState shouldn't be zero, as required for the xorshift algorithm
+            if (seed != 0) return@run seed
+            42
+        }
 
         /**
          * Tries to acquire CPU token if worker doesn't have one
@@ -666,6 +683,7 @@ internal class CoroutineScheduler(
                 state = WorkerState.CPU_ACQUIRED
                 true
             }
+
             else -> false
         }
 
@@ -673,7 +691,7 @@ internal class CoroutineScheduler(
          * Releases CPU token if worker has any and changes state to [newState].
          * Returns `true` if CPU permit was returned to the pool
          */
-      fun tryReleaseCpu(newState: WorkerState): Boolean {
+        fun tryReleaseCpu(newState: WorkerState): Boolean {
             val previousState = state
             val hadCpu = previousState == WorkerState.CPU_ACQUIRED
             if (hadCpu) releaseCpuPermit()
@@ -739,7 +757,7 @@ internal class CoroutineScheduler(
          */
         fun runSingleTask(): Long {
             val stateSnapshot = state
-            val isCpuThread  = state == WorkerState.CPU_ACQUIRED
+            val isCpuThread = state == WorkerState.CPU_ACQUIRED
             val task = if (isCpuThread) {
                 findCpuTask()
             } else {
@@ -751,7 +769,7 @@ internal class CoroutineScheduler(
             }
             runSafely(task)
             if (!isCpuThread) decrementBlockingTasks()
-            assert { state == stateSnapshot}
+            assert { state == stateSnapshot }
             return 0L
         }
 
@@ -913,8 +931,8 @@ internal class CoroutineScheduler(
             if (tryAcquireCpuPermit()) return findAnyTask(mayHaveLocalTasks)
             /*
              * If we can't acquire a CPU permit, attempt to find blocking task:
-             * * Check if our queue has one (maybe mixed in with CPU tasks)
-             * * Poll global and try steal
+             * - Check if our queue has one (maybe mixed in with CPU tasks)
+             * - Poll global and try steal
              */
             return findBlockingTask()
         }

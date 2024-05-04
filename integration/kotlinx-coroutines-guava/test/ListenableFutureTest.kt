@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.guava
 
+import kotlinx.coroutines.testing.*
 import com.google.common.util.concurrent.*
 import kotlinx.coroutines.*
 import org.junit.*
@@ -87,7 +84,7 @@ class ListenableFutureTest : TestBase() {
             try {
                 toAwait.await()
             } catch (e: RuntimeException) {
-                assertTrue(e is IllegalArgumentException)
+                assertIs<IllegalArgumentException>(e)
                 e.message!!
             } + "K"
         }
@@ -101,7 +98,7 @@ class ListenableFutureTest : TestBase() {
             try {
                 toAwait.await()
             } catch (e: RuntimeException) {
-                assertTrue(e is IllegalArgumentException)
+                assertIs<IllegalArgumentException>(e)
                 e.message!!
             } + "K"
         }
@@ -123,7 +120,7 @@ class ListenableFutureTest : TestBase() {
             future.get()
             fail("'get' should've throw an exception")
         } catch (e: ExecutionException) {
-            assertTrue(e.cause is IllegalStateException)
+            assertIs<IllegalStateException>(e.cause)
             assertEquals("OK", e.cause!!.message)
         }
     }
@@ -176,7 +173,7 @@ class ListenableFutureTest : TestBase() {
             future.get()
         } catch (e: ExecutionException) {
             assertTrue(future.isDone)
-            assertTrue(e.cause is OutOfMemoryError)
+            assertIs<OutOfMemoryError>(e.cause)
         }
     }
 
@@ -356,11 +353,11 @@ class ListenableFutureTest : TestBase() {
         val asFuture = deferred.asListenableFuture()
 
         val outputCancellationException =
-          assertFailsWith<CancellationException> { asFuture.get() }
+            assertFailsWith<CancellationException> { asFuture.get() }
         val cause = outputCancellationException.cause
         assertNotNull(cause)
         assertEquals(cause.message, "Foobar")
-        assertTrue(cause.cause is OutOfMemoryError)
+        assertIs<OutOfMemoryError>(cause.cause)
         assertEquals(cause.cause?.message, "Foobaz")
     }
 
@@ -396,7 +393,7 @@ class ListenableFutureTest : TestBase() {
         assertTrue(asFutureAsDeferred.isCompleted)
         // By documentation, join() shouldn't throw when asDeferred is already complete.
         asFutureAsDeferred.join()
-        assertTrue(asFutureAsDeferred.getCompletionExceptionOrNull() is CancellationException)
+        assertIs<CancellationException>(asFutureAsDeferred.getCompletionExceptionOrNull())
     }
 
     @Test
@@ -419,7 +416,7 @@ class ListenableFutureTest : TestBase() {
         assertTrue(asDeferred.isCompleted)
         // By documentation, join() shouldn't throw when asDeferred is already complete.
         asDeferred.join()
-        assertTrue(asDeferred.getCompletionExceptionOrNull() is CancellationException)
+        assertIs<CancellationException>(asDeferred.getCompletionExceptionOrNull())
     }
 
     @Test
@@ -447,13 +444,13 @@ class ListenableFutureTest : TestBase() {
         val deferred = future.asDeferred()
         assertTrue(deferred.isCancelled && deferred.isCompleted)
         val completionException = deferred.getCompletionExceptionOrNull()!!
-        assertTrue(completionException is TestException)
+        assertIs<TestException>(completionException)
 
         try {
             deferred.await()
             expectUnreached()
         } catch (e: Throwable) {
-            assertTrue(e is TestException)
+            assertIs<TestException>(e)
         }
     }
 
@@ -493,7 +490,7 @@ class ListenableFutureTest : TestBase() {
             future.asDeferred().await()
             expectUnreached()
         } catch (e: Throwable) {
-            assertTrue(e is TestException)
+            assertIs<TestException>(e)
         }
     }
 
@@ -610,9 +607,9 @@ class ListenableFutureTest : TestBase() {
         val thrown = assertFailsWith<CancellationException> { future.get() }
         val cause = thrown.cause
         assertNotNull(cause)
-        assertTrue(cause is CancellationException)
+        assertIs<CancellationException>(cause)
         assertEquals("Parent cancelled", cause.message)
-        assertTrue(cause.cause is TestException)
+        assertIs<TestException>(cause.cause)
         finish(5)
     }
 
@@ -707,7 +704,7 @@ class ListenableFutureTest : TestBase() {
     private inline fun <reified T: Throwable> ListenableFuture<*>.checkFutureException() {
         val e = assertFailsWith<ExecutionException> { get() }
         val cause = e.cause!!
-        assertTrue(cause is T)
+        assertIs<T>(cause)
     }
 
     @Suppress("SuspendFunctionOnCoroutineScope")

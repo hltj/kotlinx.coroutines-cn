@@ -1,10 +1,7 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("PackageDirectoryMismatch")
 package definitely.not.kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.debug.*
 import kotlinx.coroutines.selects.*
@@ -18,6 +15,7 @@ class SanitizedProbesTest : DebugTestBase() {
     override fun setUp() {
         super.setUp()
         DebugProbes.sanitizeStackTraces = true
+        DebugProbes.enableCreationStackTraces = true
     }
 
     @Test
@@ -33,7 +31,7 @@ class SanitizedProbesTest : DebugTestBase() {
                     "\tat _COROUTINE._CREATION._(CoroutineDebugging.kt)\n" +
                     "\tat kotlin.coroutines.intrinsics.IntrinsicsKt__IntrinsicsJvmKt.createCoroutineUnintercepted(IntrinsicsJvm.kt:116)\n" +
                     "\tat kotlinx.coroutines.intrinsics.CancellableKt.startCoroutineCancellable(Cancellable.kt:23)\n" +
-                    "\tat kotlinx.coroutines.TestBase.runTest\$default(TestBase.kt:141)\n" +
+                    "\tat kotlinx.coroutines.testing.TestBase.runTest\$default(TestBase.kt:141)\n" +
                     "\tat definitely.not.kotlinx.coroutines.SanitizedProbesTest.testRecoveredStackTrace(SanitizedProbesTest.kt:33)",
             "Caused by: java.util.concurrent.ExecutionException\n" +
                     "\tat definitely.not.kotlinx.coroutines.SanitizedProbesTest\$createDeferredNested\$1.invokeSuspend(SanitizedProbesTest.kt:57)\n" +
@@ -53,7 +51,7 @@ class SanitizedProbesTest : DebugTestBase() {
                 "\tat _COROUTINE._CREATION._(CoroutineDebugging.kt)\n" +
                 "\tat kotlin.coroutines.intrinsics.IntrinsicsKt__IntrinsicsJvmKt.createCoroutineUnintercepted(IntrinsicsJvm.kt:116)\n" +
                 "\tat kotlinx.coroutines.intrinsics.CancellableKt.startCoroutineCancellable(Cancellable.kt:23)\n" +
-                "\tat kotlinx.coroutines.TestBase.runTest\$default(TestBase.kt:141)\n" +
+                "\tat kotlinx.coroutines.testing.TestBase.runTest\$default(TestBase.kt:141)\n" +
                 "\tat definitely.not.kotlinx.coroutines.SanitizedProbesTest.testCoroutinesDump(SanitizedProbesTest.kt:56)",
 
             "Coroutine \"coroutine#4\":DeferredCoroutine{Active}@75c072cb, state: SUSPENDED\n" +
@@ -68,7 +66,7 @@ class SanitizedProbesTest : DebugTestBase() {
                     "\tat definitely.not.kotlinx.coroutines.SanitizedProbesTest\$testCoroutinesDump\$1.invokeSuspend(SanitizedProbesTest.kt:57)\n" +
                     "\tat kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:32)\n" +
                     "\tat kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:237)\n" +
-                    "\tat kotlinx.coroutines.TestBase.runTest\$default(TestBase.kt:141)\n" +
+                    "\tat kotlinx.coroutines.testing.TestBase.runTest\$default(TestBase.kt:141)\n" +
                     "\tat definitely.not.kotlinx.coroutines.SanitizedProbesTest.testCoroutinesDump(SanitizedProbesTest.kt:56)"
         )
         deferred.cancelAndJoin()
@@ -97,7 +95,7 @@ class SanitizedProbesTest : DebugTestBase() {
                 "\tat definitely.not.kotlinx.coroutines.SanitizedProbesTest\$testSelectBuilder\$1.invokeSuspend(SanitizedProbesTest.kt:89)\n" +
                 "\tat kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:32)\n" +
                 "\tat kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:233)\n" +
-                "\tat kotlinx.coroutines.TestBase.runTest\$default(TestBase.kt:154)\n" +
+                "\tat kotlinx.coroutines.testing.TestBase.runTest\$default(TestBase.kt:154)\n" +
                 "\tat definitely.not.kotlinx.coroutines.SanitizedProbesTest.testSelectBuilder(SanitizedProbesTest.kt:88)")
         finish(4)
         selector.cancelAndJoin()

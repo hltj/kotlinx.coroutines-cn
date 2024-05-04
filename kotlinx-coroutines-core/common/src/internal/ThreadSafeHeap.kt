@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.internal
 
 import kotlinx.atomicfu.*
@@ -31,11 +27,6 @@ public open class ThreadSafeHeap<T> : SynchronizedObject() where T: ThreadSafeHe
         private set(value) { _size.value = value }
 
     public val isEmpty: Boolean get() = size == 0
-
-    public fun clear(): Unit = synchronized(this) {
-        a?.fill(null)
-        _size.value = 0
-    }
 
     public fun find(
         predicate: (value: T) -> Boolean

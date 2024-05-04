@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.test
 
 import kotlinx.coroutines.*
@@ -55,7 +51,7 @@ public class TestCoroutineExceptionHandler :
     private val _lock = SynchronizedObject()
     private var _coroutinesCleanedUp = false
 
-    @Suppress("INVISIBLE_MEMBER")
+    @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE") // do not remove the INVISIBLE_REFERENCE suppression: required in K2
     override fun handleException(context: CoroutineContext, exception: Throwable) {
         synchronized(_lock) {
             if (_coroutinesCleanedUp) {

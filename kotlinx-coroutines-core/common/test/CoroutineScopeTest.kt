@@ -1,11 +1,8 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("UNREACHABLE_CODE")
 
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.internal.*
 import kotlin.coroutines.*
 import kotlin.test.*

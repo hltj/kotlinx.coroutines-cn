@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.internal.*
 import org.junit.*
@@ -12,7 +9,6 @@ import org.junit.*
  * Tests that shared flows keep strong reference to their source flows.
  * See https://github.com/Kotlin/kotlinx.coroutines/issues/2557
  */
-@OptIn(DelicateCoroutinesApi::class)
 class SharingReferenceTest : TestBase() {
     private val token = object {}
 

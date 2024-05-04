@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.rx3
 
+import kotlinx.coroutines.testing.*
 import io.reactivex.rxjava3.exceptions.*
 import kotlinx.coroutines.*
 import org.junit.*
@@ -88,8 +85,8 @@ class ObservableExceptionHandlingTest : TestBase() {
             expect(1)
             val result = trySend(Unit)
             val exception = result.exceptionOrNull()
-            assertTrue(exception is UndeliverableException)
-            assertTrue(exception.cause is LinkageError)
+            assertIs<UndeliverableException>(exception)
+            assertIs<LinkageError>(exception.cause)
             assertTrue(isClosedForSend)
             expect(4)
             latch.countDown()

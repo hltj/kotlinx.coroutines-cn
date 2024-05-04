@@ -1,8 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.exceptions.*
 import kotlin.coroutines.*
 import kotlin.test.*
@@ -26,7 +24,7 @@ class RunBlockingTest : TestBase() {
         expect(1)
         runBlocking {
             expect(2)
-            assertTrue(coroutineContext[ContinuationInterceptor] is EventLoop)
+            assertIs<EventLoop>(coroutineContext[ContinuationInterceptor])
             yield() // is supported!
             expect(3)
         }

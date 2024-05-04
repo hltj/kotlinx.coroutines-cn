@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.test.*
 
 class CoroutineExceptionHandlerTest : TestBase() {
@@ -23,7 +20,7 @@ class CoroutineExceptionHandlerTest : TestBase() {
         expect(2)
         job.join()
         finish(4)
-        assertTrue(coroutineException is TestException)
+        assertIs<TestException>(coroutineException)
         assertTrue(parent.isCancelled)
     }
 
@@ -42,6 +39,6 @@ class CoroutineExceptionHandlerTest : TestBase() {
         job.join()
         finish(3)
         assertTrue(parent.isCancelled)
-        assertTrue(parent.getCompletionExceptionOrNull() is TestException)
+        assertIs<TestException>(parent.getCompletionExceptionOrNull())
     }
 }

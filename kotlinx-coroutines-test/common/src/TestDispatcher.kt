@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.test
 
 import kotlinx.coroutines.*
@@ -13,8 +9,8 @@ import kotlin.time.*
  * A test dispatcher that can interface with a [TestCoroutineScheduler].
  *
  * The available implementations are:
- * * [StandardTestDispatcher] is a dispatcher that places new tasks into a queue.
- * * [UnconfinedTestDispatcher] is a dispatcher that behaves like [Dispatchers.Unconfined] while allowing to control
+ * - [StandardTestDispatcher] is a dispatcher that places new tasks into a queue.
+ * - [UnconfinedTestDispatcher] is a dispatcher that behaves like [Dispatchers.Unconfined] while allowing to control
  *   the virtual time.
  */
 @Suppress("INVISIBLE_REFERENCE")

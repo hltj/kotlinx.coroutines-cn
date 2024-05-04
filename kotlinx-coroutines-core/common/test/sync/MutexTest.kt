@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.sync
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.*
 import kotlin.test.*
@@ -56,6 +53,37 @@ class MutexTest : TestBase() {
         mutex.withLock {
             assertTrue(mutex.isLocked)
         }
+        assertFalse(mutex.isLocked)
+    }
+
+    @Test
+    fun testWithLockFailureUnlocksTheMutex() = runTest {
+        val mutex = Mutex()
+        assertFalse(mutex.isLocked)
+        try {
+            mutex.withLock {
+                expect(1)
+                assertTrue(mutex.isLocked)
+                throw TestException()
+            }
+        } catch (e: TestException) {
+            expect(2)
+        }
+        assertFalse(mutex.isLocked)
+        finish(3)
+    }
+
+    @Test
+    fun withLockOnEarlyReturnTest() = runTest {
+        val mutex = Mutex()
+        assertFalse(mutex.isLocked)
+        suspend fun f() {
+            mutex.withLock {
+                assertTrue(mutex.isLocked)
+                return@f
+            }
+        }
+        f()
         assertFalse(mutex.isLocked)
     }
 
@@ -147,5 +175,21 @@ class MutexTest : TestBase() {
         assertFailsWith<IllegalStateException> { mutex.tryLock(owner) }
         assertFailsWith<IllegalStateException> { mutex.lock(owner) }
         assertFailsWith<IllegalStateException> { select { mutex.onLock(owner) {} } }
+    }
+
+    @Test
+    fun testWithLockJsMiscompilation() = runTest {
+        // This is a reproducer for KT-58685
+        // On Kotlin/JS IR, the compiler miscompiles calls to 'unlock' in an inlined finally
+        // This is visible on the withLock function
+        // Until the compiler bug is fixed, this test case checks that we do not suffer from it
+        val mutex = Mutex()
+        assertFailsWith<IndexOutOfBoundsException> {
+            try {
+                mutex.withLock { null } ?: throw IndexOutOfBoundsException() // should throw…
+            } catch (e: Exception) {
+                throw e // …but instead fails here
+            }
+        }
     }
 }

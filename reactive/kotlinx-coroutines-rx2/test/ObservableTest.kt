@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.rx2
 
+import kotlinx.coroutines.testing.*
 import io.reactivex.*
 import io.reactivex.plugins.*
 import kotlinx.coroutines.*
@@ -48,7 +45,7 @@ class ObservableTest : TestBase() {
             expectUnreached()
         }, { error ->
             expect(5)
-            assertTrue(error is RuntimeException)
+            assertIs<RuntimeException>(error)
             assertEquals("OK", error.message)
         })
         expect(3)

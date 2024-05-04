@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.rx3
 
 import io.reactivex.rxjava3.core.*
@@ -136,7 +132,7 @@ private fun CoroutineScope.scheduleTask(
     if (delayMillis <= 0) {
         toSchedule.run()
     } else {
-        @Suppress("INVISIBLE_MEMBER")
+        @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE") // do not remove the INVISIBLE_REFERENCE suppression: required in K2
         ctx.delay.invokeOnTimeout(delayMillis, toSchedule, ctx).let { handle = it }
     }
     return disposable

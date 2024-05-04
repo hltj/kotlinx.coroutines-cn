@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.guava
 
+import kotlinx.coroutines.testing.*
 import com.google.common.base.*
 import com.google.common.util.concurrent.*
 import kotlinx.coroutines.*

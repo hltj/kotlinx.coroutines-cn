@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.coroutines.*
 import kotlin.test.*
 
@@ -79,8 +76,8 @@ class JobExtensionsTest : TestBase() {
     private inline fun checkException(block: () -> Unit) {
         val result = runCatching(block)
         val exception = result.exceptionOrNull() ?: fail()
-        assertTrue(exception is JobCancellationException)
-        assertTrue(exception.cause is TestException)
+        assertIs<JobCancellationException>(exception)
+        assertIs<TestException>(exception.cause)
     }
 
     @Test

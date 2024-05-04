@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.test.*
@@ -104,7 +101,7 @@ class ShareInTest : TestBase() {
         sharingJob.join() // should complete sharing
         assertEquals(listOf("OK"), shared.replayCache) // cache is still there
         if (failed) {
-            assertTrue(sharingJob.getCompletionExceptionOrNull() is TestException)
+            assertIs<TestException>(sharingJob.getCompletionExceptionOrNull())
         } else {
             assertNull(sharingJob.getCompletionExceptionOrNull())
         }
@@ -235,5 +232,10 @@ class ShareInTest : TestBase() {
         yield()
         assertEquals(239, shared.first())
         j.cancel()
+    }
+
+    @Test
+    fun testSubscriptionByFirstSuspensionInSharedFlow() = runTest {
+        testSubscriptionByFirstSuspensionInCollect(flowOf(1).stateIn(this@runTest), emit = { })
     }
 }

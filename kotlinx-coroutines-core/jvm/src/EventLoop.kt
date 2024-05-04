@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
 import kotlinx.coroutines.Runnable
@@ -9,6 +5,7 @@ import kotlinx.coroutines.scheduling.*
 import kotlinx.coroutines.scheduling.CoroutineScheduler
 
 internal actual abstract class EventLoopImplPlatform: EventLoop() {
+
     protected abstract val thread: Thread
 
     protected actual fun unpark() {
@@ -32,9 +29,9 @@ internal actual fun createEventLoop(): EventLoop = BlockingEventLoop(Thread.curr
  * Processes next event in the current thread's event loop.
  *
  * The result of this function is to be interpreted like this:
- * * `<= 0` -- there are potentially more events for immediate processing;
- * * `> 0` -- a number of nanoseconds to wait for the next scheduled event;
- * * [Long.MAX_VALUE] -- no more events or no thread-local event loop.
+ * - `<= 0` -- there are potentially more events for immediate processing;
+ * - `> 0` -- a number of nanoseconds to wait for the next scheduled event;
+ * - [Long.MAX_VALUE] -- no more events or no thread-local event loop.
  *
  * Sample usage of this function:
  *

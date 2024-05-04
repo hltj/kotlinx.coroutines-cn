@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.internal
 
 import java.lang.reflect.*
@@ -13,6 +9,9 @@ import kotlin.concurrent.withLock as withLockJvm
 internal actual typealias ReentrantLock = java.util.concurrent.locks.ReentrantLock
 
 internal actual inline fun <T> ReentrantLock.withLock(action: () -> T) = this.withLockJvm(action)
+
+@Suppress("ACTUAL_WITHOUT_EXPECT") // Visibility
+internal actual typealias WorkaroundAtomicReference<T> = java.util.concurrent.atomic.AtomicReference<T>
 
 @Suppress("NOTHING_TO_INLINE") // So that R8 can completely remove ConcurrentKt class
 internal actual inline fun <E> identitySet(expectedSize: Int): MutableSet<E> =

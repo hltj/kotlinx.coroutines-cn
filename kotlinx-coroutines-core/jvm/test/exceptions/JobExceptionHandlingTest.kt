@@ -1,11 +1,9 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.exceptions
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CoroutineStart.*
+import kotlinx.coroutines.testing.exceptions.*
 import org.junit.Test
 import java.io.*
 import kotlin.test.*
@@ -192,9 +190,7 @@ class JobExceptionHandlingTest : TestBase() {
             finish(5)
         }
 
-        assertTrue(exception is ArithmeticException)
-        assertNull(exception.cause)
-        assertTrue(exception.suppressed.isEmpty())
+        checkException<ArithmeticException>(exception)
     }
 
     @Test
@@ -232,11 +228,12 @@ class JobExceptionHandlingTest : TestBase() {
             finish(6)
         }
 
-        assertTrue(exception is ArithmeticException)
+        assertIs<ArithmeticException>(exception)
+        assertNull(exception.cause)
         val suppressed = exception.suppressed
         assertEquals(2, suppressed.size)
-        assertTrue(suppressed[0] is IOException)
-        assertTrue(suppressed[1] is IllegalArgumentException)
+        assertIs<IOException>(suppressed[0])
+        assertIs<IllegalArgumentException>(suppressed[1])
     }
 
     @Test
@@ -269,11 +266,11 @@ class JobExceptionHandlingTest : TestBase() {
             finish(5)
         }
 
-        assertTrue(exception is AssertionError)
+        assertIs<AssertionError>(exception)
         val suppressed = exception.suppressed
         assertEquals(2, suppressed.size)
-        assertTrue(suppressed[0] is IOException)
-        assertTrue(suppressed[1] is IllegalArgumentException)
+        assertIs<IOException>(suppressed[0])
+        assertIs<IllegalArgumentException>(suppressed[1])
     }
 
     @Test

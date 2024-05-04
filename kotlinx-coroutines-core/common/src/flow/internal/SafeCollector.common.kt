@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow.internal
 
 import kotlinx.coroutines.*
@@ -10,6 +6,8 @@ import kotlinx.coroutines.internal.ScopeCoroutine
 import kotlin.coroutines.*
 import kotlin.jvm.*
 
+// Collector that ensures exception transparency and context preservation on a best-effort basis.
+// See an explanation in SafeCollector JVM actualization.
 internal expect class SafeCollector<T>(
     collector: FlowCollector<T>,
     collectContext: CoroutineContext

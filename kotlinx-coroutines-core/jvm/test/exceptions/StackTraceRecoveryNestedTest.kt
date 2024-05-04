@@ -1,11 +1,8 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("DeferredResultUnused")
 
 package kotlinx.coroutines.exceptions
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import org.junit.Test
 import kotlin.test.*

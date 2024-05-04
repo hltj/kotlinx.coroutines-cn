@@ -1,16 +1,13 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.selects
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.*
 import org.junit.Test
 import kotlin.test.*
 
 class SelectPhilosophersStressTest : TestBase() {
-    private val TEST_DURATION = 3000L * stressTestMultiplier
+    private val TEST_DURATION = 3000L * stressTestMultiplierSqrt
 
     val n = 10 // number of philosophers
     private val forks = Array(n) { Mutex() }

@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.internal
 
 internal expect class ReentrantLock() {
@@ -12,3 +8,33 @@ internal expect class ReentrantLock() {
 internal expect inline fun <T> ReentrantLock.withLock(action: () -> T): T
 
 internal expect fun <E> identitySet(expectedSize: Int): MutableSet<E>
+
+/**
+ * Annotation indicating that the marked property is the subject of benign data race.
+ * LLVM does not support this notion, so on K/N platforms we alias it into `@Volatile` to prevent potential OoTA.
+ *
+ * The purpose of this annotation is not to save an extra-volatile on JVM platform, but rather to explicitly emphasize
+ * that data-race is benign.
+ */
+@OptionalExpectation
+@Target(AnnotationTarget.FIELD)
+internal expect annotation class BenignDataRace()
+
+// Used **only** as a workaround for #3820 in StateFlow. Do not use anywhere else
+internal expect class WorkaroundAtomicReference<T>(value: T) {
+    public fun get(): T
+    public fun set(value: T)
+    public fun getAndSet(value: T): T
+    public fun compareAndSet(expected: T, value: T): Boolean
+}
+
+@Suppress("UNUSED_PARAMETER", "EXTENSION_SHADOWED_BY_MEMBER")
+internal var <T> WorkaroundAtomicReference<T>.value: T
+    get() = this.get()
+    set(value) = this.set(value)
+
+internal inline fun <T> WorkaroundAtomicReference<T>.loop(action: WorkaroundAtomicReference<T>.(value: T) -> Unit) {
+    while (true) {
+        action(value)
+    }
+}

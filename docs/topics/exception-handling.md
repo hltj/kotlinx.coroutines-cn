@@ -9,7 +9,7 @@
 
 ## 异常的传播
 
-协程构建器有两种形式：自动传播异常（[launch] 与 [actor]）或<!--
+协程构建器有两种形式：自动传播异常（[launch]）或<!--
 -->向用户暴露异常（[async] 与 [produce]）。
 当这些构建器用于创建一个*根*协程时，即该协程不是另一个协程的*子*协程，
 前者这类构建器将异常视为**未捕获**异常，类似 Java 的 `Thread.uncaughtExceptionHandler`，
@@ -60,7 +60,7 @@ fun main() = runBlocking {
 
 ```text
 Throwing exception from launch
-Exception in thread "DefaultDispatcher-worker-2 @coroutine#2" java.lang.IndexOutOfBoundsException
+Exception in thread "DefaultDispatcher-worker-1 @coroutine#2" java.lang.IndexOutOfBoundsException
 Joined failed job
 Throwing exception from async
 Caught ArithmeticException
@@ -73,7 +73,7 @@ Caught ArithmeticException
 将**未捕获**异常打印到控制台的默认行为是可自定义的。
 *根*协程中的 [CoroutineExceptionHandler] 上下文元素可以被用于这个根协程<!--
 -->通用的 `catch` 块，及其所有可能自定义了异常处理的子协程。
-它类似于 [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)) 。
+它类似于 [`Thread.uncaughtExceptionHandler`](https://docs.oracle.com/javase/8/docs/api/java/lang/Thread.html#setUncaughtExceptionHandler-java.lang.Thread.UncaughtExceptionHandler-) 。
 你无法从 `CoroutineExceptionHandler` 的异常中恢复。当调用处理者的时候，协程已经完成<!--
 -->并带有相应的异常。通常，该处理者用于<!--
 -->记录异常，显示某种错误消息，终止和（或）重新启动应用程序。
@@ -276,10 +276,6 @@ fun main() = runBlocking {
 >
 {type="note"}
 
-> 注意：上面的代码将只在 JDK7 以上支持 `suppressed` 异常的环境中才能正确工作。
->
-{type="note"}
-
 这段代码的输出如下：
 
 ```text
@@ -306,7 +302,7 @@ fun main() = runBlocking {
         println("CoroutineExceptionHandler got $exception")
     }
     val job = GlobalScope.launch(handler) {
-        val inner = launch { // 该栈内的协程都将被取消
+        val innerJob = launch { // 该栈内的协程都将被取消
             launch {
                 launch {
                     throw IOException() // 原始异常
@@ -314,7 +310,7 @@ fun main() = runBlocking {
             }
         }
         try {
-            inner.join()
+            innerJob.join()
         } catch (e: CancellationException) {
             println("Rethrowing CancellationException with original cause")
             throw e // 取消异常被重新抛出，但原始 IOException 得到了处理
@@ -523,7 +519,6 @@ The scope is completed
 
 <!--- INDEX kotlinx.coroutines.channels -->
 
-[actor]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/actor.html
 [produce]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/produce.html
 [ReceiveChannel.receive]: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.channels/-receive-channel/receive.html
 

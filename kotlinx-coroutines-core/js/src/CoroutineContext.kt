@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
 import kotlinx.browser.*
@@ -12,7 +8,7 @@ private external val navigator: dynamic
 private const val UNDEFINED = "undefined"
 internal external val process: dynamic
 
-internal fun createDefaultDispatcher(): CoroutineDispatcher = when {
+internal actual fun createDefaultDispatcher(): CoroutineDispatcher = when {
     // Check if we are running under jsdom. WindowDispatcher doesn't work under jsdom because it accesses MessageEvent#source.
     // It is not implemented in jsdom, see https://github.com/jsdom/jsdom/blob/master/Changelog.md
     // "It's missing a few semantics, especially around origins, as well as MessageEvent source."

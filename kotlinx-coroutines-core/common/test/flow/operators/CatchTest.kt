@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 import kotlin.test.*
@@ -103,7 +100,7 @@ class CatchTest : TestBase() {
         flow
             .catch { e ->
                 expect(4)
-                assertTrue(e is TestException)
+                assertIs<TestException>(e)
                 assertEquals("A", kotlin.coroutines.coroutineContext[CoroutineName]?.name)
                 assertSame(d1, kotlin.coroutines.coroutineContext[ContinuationInterceptor] as CoroutineContext)
                 throw e // rethrow downstream
@@ -111,7 +108,7 @@ class CatchTest : TestBase() {
             .flowOn(CoroutineName("A"))
             .catch { e ->
                 expect(5)
-                assertTrue(e is TestException)
+                assertIs<TestException>(e)
                 assertEquals("B", kotlin.coroutines.coroutineContext[CoroutineName]?.name)
                 assertSame(d1, kotlin.coroutines.coroutineContext[ContinuationInterceptor] as CoroutineContext)
                 throw e // rethrow downstream
@@ -119,14 +116,14 @@ class CatchTest : TestBase() {
             .flowOn(CoroutineName("B"))
             .catch { e ->
                 expect(6)
-                assertTrue(e is TestException)
+                assertIs<TestException>(e)
                 assertSame(d1, kotlin.coroutines.coroutineContext[ContinuationInterceptor] as CoroutineContext)
                 throw e // rethrow downstream
             }
             .flowOn(d1)
             .catch { e ->
                 expect(7)
-                assertTrue(e is TestException)
+                assertIs<TestException>(e)
                 assertSame(d2, kotlin.coroutines.coroutineContext[ContinuationInterceptor] as CoroutineContext)
                 throw e // rethrow downstream
             }
@@ -138,7 +135,7 @@ class CatchTest : TestBase() {
             }
             .catch { e ->
                 expect(8)
-                assertTrue(e is TestException)
+                assertIs<TestException>(e)
                 assertSame(d0, kotlin.coroutines.coroutineContext[ContinuationInterceptor] as CoroutineContext)
             }
             .collect()

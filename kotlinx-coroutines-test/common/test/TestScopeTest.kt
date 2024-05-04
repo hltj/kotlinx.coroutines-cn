@@ -1,14 +1,12 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.test
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.testing.*
 import kotlin.coroutines.*
 import kotlin.test.*
+import kotlin.test.assertFailsWith
 import kotlin.time.Duration.Companion.milliseconds
 
 class TestScopeTest {
@@ -495,9 +493,11 @@ class TestScopeTest {
      * Tests that the [TestScope] exception reporting mechanism will report the exceptions that happen between
      * different tests.
      *
-     * This test must be ran manually, because such exceptions still go through the global exception handler
+     * This test must be run manually, because such exceptions still go through the global exception handler
      * (as there's no guarantee that another test will happen), and the global exception handler will
      * log the exceptions or, on Native, crash the test suite.
+     *
+     * The JVM-only source set contains a test equivalent to this one that isn't ignored.
      */
     @Test
     @Ignore

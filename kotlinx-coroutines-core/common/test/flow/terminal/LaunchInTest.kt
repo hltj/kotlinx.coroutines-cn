@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlin.test.*
 
@@ -19,7 +16,7 @@ class LaunchInTest : TestBase() {
             assertEquals(1, it)
             expect(2)
         }.onCompletion {
-            assertTrue(it is TestException)
+            assertIs<TestException>(it)
             expect(3)
         }.catch {
             assertTrue { it is TestException }

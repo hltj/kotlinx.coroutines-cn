@@ -1,11 +1,8 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("NAMED_ARGUMENTS_NOT_ALLOWED") // KT-21913
 
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.test.*
 
 class CoroutinesTest : TestBase() {
@@ -240,7 +237,7 @@ class CoroutinesTest : TestBase() {
             job.cancelAndJoin() // join should crash on child's exception but it will be wrapped into CancellationException
         } catch (e: Throwable) {
             e as CancellationException // type assertion
-            assertTrue(e.cause is TestException)
+            assertIs<TestException>(e.cause)
             throw e
         }
         expectUnreached()

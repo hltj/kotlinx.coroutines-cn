@@ -1,16 +1,12 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.jdk9
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.exceptions.*
 import org.junit.Test
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.testing.exceptions.*
 import org.junit.runner.*
 import org.junit.runners.*
-import kotlin.contracts.*
 import java.util.concurrent.Flow as JFlow
 import kotlin.coroutines.*
 import kotlin.test.*
@@ -133,18 +129,3 @@ class IntegrationTest(
 
 }
 
-@OptIn(ExperimentalContracts::class)
-internal suspend inline fun <reified E: Throwable> assertCallsExceptionHandlerWith(
-    crossinline operation: suspend (CoroutineExceptionHandler) -> Unit): E {
-    contract {
-        callsInPlace(operation, InvocationKind.EXACTLY_ONCE)
-    }
-    val handler = CapturingHandler()
-    return withContext(handler) {
-        operation(handler)
-        handler.getException().let {
-            assertTrue(it is E, it.toString())
-            it
-        }
-    }
-}

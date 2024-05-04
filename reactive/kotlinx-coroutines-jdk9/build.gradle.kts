@@ -1,6 +1,4 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
+import org.jetbrains.kotlin.gradle.dsl.*
 
 dependencies {
     implementation(project(":kotlinx-coroutines-reactive"))
@@ -13,11 +11,11 @@ java {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "9"
+        compilerOptions.jvmTarget = JvmTarget.JVM_9
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "9"
+        compilerOptions.jvmTarget = JvmTarget.JVM_9
     }
 }
 

@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.intrinsics
 
 import kotlinx.coroutines.*
@@ -17,19 +13,6 @@ import kotlin.coroutines.intrinsics.*
 internal fun <T> (suspend () -> T).startCoroutineUnintercepted(completion: Continuation<T>) {
     startDirect(completion) { actualCompletion ->
         startCoroutineUninterceptedOrReturn(actualCompletion)
-    }
-}
-
-/**
- * Use this function to start a new coroutine in [CoroutineStart.UNDISPATCHED] mode &mdash;
- * immediately execute the coroutine in the current thread until the next suspension.
- * It does not use [ContinuationInterceptor], but updates the context of the current thread for the new coroutine.
- */
-internal fun <T> (suspend () -> T).startCoroutineUndispatched(completion: Continuation<T>) {
-    startDirect(completion) { actualCompletion ->
-        withCoroutineContext(completion.context, null) {
-            startCoroutineUninterceptedOrReturn(actualCompletion)
-        }
     }
 }
 

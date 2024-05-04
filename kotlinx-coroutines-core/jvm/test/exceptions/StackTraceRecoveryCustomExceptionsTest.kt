@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.exceptions
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.junit.Test
@@ -51,7 +48,7 @@ class StackTraceRecoveryCustomExceptionsTest : TestBase() {
         } catch (e: Copyable) {
             assertEquals(239, e.customData)
             val cause = e.cause
-            assertTrue(cause is Copyable)
+            assertIs<Copyable>(cause)
             assertEquals(239, cause.customData)
         }
     }
@@ -68,7 +65,7 @@ class StackTraceRecoveryCustomExceptionsTest : TestBase() {
         } catch (e: WithDefault) {
             assertEquals("custom", e.message)
             val cause = e.cause
-            assertTrue(cause is WithDefault)
+            assertIs<WithDefault>(cause)
             assertEquals("custom", cause.message)
         }
     }
@@ -83,7 +80,7 @@ class StackTraceRecoveryCustomExceptionsTest : TestBase() {
             }
         }
         val ex = result.exceptionOrNull() ?: error("Expected to fail")
-        assertTrue(ex is WrongMessageException)
+        assertIs<WrongMessageException>(ex)
         assertEquals("Token OK", ex.message)
     }
 
@@ -118,7 +115,7 @@ class StackTraceRecoveryCustomExceptionsTest : TestBase() {
                 // Iterator has a special code path
             }
         }.exceptionOrNull() ?: error("Expected to fail")
-        assertTrue(ex is WrongMessageException)
+        assertIs<WrongMessageException>(ex)
         assertEquals("Token OK", ex.message)
     }
 
@@ -141,7 +138,7 @@ class StackTraceRecoveryCustomExceptionsTest : TestBase() {
             }
         }
         val ex = result.exceptionOrNull() ?: error("Expected to fail")
-        assertTrue(ex is CopyableWithCustomMessage)
+        assertIs<CopyableWithCustomMessage>(ex)
         assertEquals("Recovered: [OK]", ex.message)
     }
 

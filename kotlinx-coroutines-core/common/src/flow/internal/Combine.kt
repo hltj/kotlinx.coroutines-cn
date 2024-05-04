@@ -1,6 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 @file:Suppress("UNCHECKED_CAST") // KT-32203
 
 package kotlinx.coroutines.flow.internal
@@ -105,7 +102,7 @@ internal fun <T1, T2, R> zipImpl(flow: Flow<T1>, flow2: Flow<T2>, transform: sus
             val collectJob = Job()
             (second as SendChannel<*>).invokeOnClose {
                 // Optimization to avoid AFE allocation when the other flow is done
-                if (collectJob.isActive) collectJob.cancel(AbortFlowException(this@unsafeFlow))
+                if (collectJob.isActive) collectJob.cancel(AbortFlowException(collectJob))
             }
 
             try {
@@ -127,14 +124,14 @@ internal fun <T1, T2, R> zipImpl(flow: Flow<T1>, flow2: Flow<T2>, transform: sus
                     flow.collect { value ->
                         withContextUndispatched(scopeContext, Unit, cnt) {
                             val otherValue = second.receiveCatching().getOrElse {
-                                throw it ?:AbortFlowException(this@unsafeFlow)
+                                throw it ?: AbortFlowException(collectJob)
                             }
                             emit(transform(value, NULL.unbox(otherValue)))
                         }
                     }
                 }
             } catch (e: AbortFlowException) {
-                e.checkOwnership(owner = this@unsafeFlow)
+                e.checkOwnership(owner = collectJob)
             } finally {
                 second.cancel()
             }

@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.test.*
@@ -145,7 +142,7 @@ class StateFlowTest : TestBase() {
                 }
             }
             .catch { e ->
-                assertTrue(e is TestException)
+                assertIs<TestException>(e)
                 expect(6)
             }
             .launchIn(this)
@@ -180,5 +177,10 @@ class StateFlowTest : TestBase() {
         assertEquals(2, state.value)
         state.update { it + 3 }
         assertEquals(5, state.value)
+    }
+
+    @Test
+    fun testSubscriptionByFirstSuspensionInStateFlow() = runTest {
+        testSubscriptionByFirstSuspensionInCollect(MutableStateFlow(0)) { value = it; yield() }
     }
 }

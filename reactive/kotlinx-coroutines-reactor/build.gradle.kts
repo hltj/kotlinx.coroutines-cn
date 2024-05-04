@@ -1,16 +1,12 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
+import org.jetbrains.kotlin.gradle.dsl.*
 
 plugins {
     // apply plugin to use autocomplete for Kover DSL
     id("org.jetbrains.kotlinx.kover")
 }
 
-val reactorVersion = version("reactor")
-
 dependencies {
-    api("io.projectreactor:reactor-core:$reactorVersion")
+    api("io.projectreactor:reactor-core:${version("reactor")}")
     api(project(":kotlinx-coroutines-reactive"))
 }
 
@@ -21,26 +17,30 @@ java {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        compilerOptions.jvmTarget = JvmTarget.JVM_1_8
     }
 }
 
+// the version of the docs can be different from the version of the Reactor
+// library itself: https://github.com/reactor/reactor-core/issues/3794
 externalDocumentationLink(
-    url = "https://projectreactor.io/docs/core/$reactorVersion/api/"
+    url = "https://projectreactor.io/docs/core/${version("reactor_docs")}/api/"
 )
 
 
-koverReport {
-    filters {
-        excludes {
-            classes(
-                "kotlinx.coroutines.reactor.FlowKt", // Deprecated
-                "kotlinx.coroutines.reactor.ConvertKt\$asFlux$1" // Deprecated
-            )
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "kotlinx.coroutines.reactor.FlowKt", // Deprecated
+                    "kotlinx.coroutines.reactor.ConvertKt\$asFlux$1" // Deprecated
+                )
+            }
         }
     }
 }

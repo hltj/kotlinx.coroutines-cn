@@ -1,13 +1,10 @@
 import kotlinx.kover.gradle.plugin.dsl.*
 
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 plugins {
     id("org.jetbrains.kotlinx.kover")
 }
 
-val notCovered = sourceless + internal + unpublished
+val notCovered = sourceless + unpublished
 
 val expectedCoverage = mutableMapOf(
     // These have lower coverage in general, it can be eventually fixed
@@ -40,33 +37,37 @@ subprojects {
         }
     }
 
-    extensions.configure<KoverReportExtension>("koverReport") {
-        defaults {
-            html {
-                setReportDir(conventionProject.layout.buildDirectory.dir("kover/${project.name}/html"))
-            }
+    extensions.configure<KoverProjectExtension>("kover") {
+        reports {
+            total {
+                html {
+                    htmlDir = conventionProject.layout.buildDirectory.dir("kover/${project.name}/html")
+                }
 
-            verify {
-                rule {
-                    /*
-                    * 85 is our baseline that we aim to raise to 90+.
-                    * Missing coverage is typically due to bugs in the agent
-                    * (e.g. signatures deprecated with an error are counted),
-                    * sometimes it's various diagnostic `toString` or `catch` for OOMs/VerificationErrors,
-                    * but some places are definitely worth visiting.
-                    */
-                    minBound(expectedCoverage[projectName] ?: 85) // COVERED_LINES_PERCENTAGE
+                verify {
+                    rule {
+                        /*
+                        * 85 is our baseline that we aim to raise to 90+.
+                        * Missing coverage is typically due to bugs in the agent
+                        * (e.g. signatures deprecated with an error are counted),
+                        * sometimes it's various diagnostic `toString` or `catch` for OOMs/VerificationErrors,
+                        * but some places are definitely worth visiting.
+                        */
+                        minBound(expectedCoverage[projectName] ?: 85) // COVERED_LINES_PERCENTAGE
+                    }
                 }
             }
         }
     }
 }
 
-koverReport {
-    defaults {
-        verify {
-            rule {
-                minBound(85) // COVERED_LINES_PERCENTAGE
+kover {
+    reports {
+        total {
+            verify {
+                rule {
+                    minBound(85) // COVERED_LINES_PERCENTAGE
+                }
             }
         }
     }

@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
 import kotlinx.coroutines.internal.*
@@ -35,7 +31,7 @@ public fun handleCoroutineException(context: CoroutineContext, exception: Throwa
 internal fun handlerException(originalException: Throwable, thrownException: Throwable): Throwable {
     if (originalException === thrownException) return originalException
     return RuntimeException("Exception while trying to handle coroutine exception", thrownException).apply {
-        addSuppressedThrowable(originalException)
+        addSuppressed(originalException)
     }
 }
 
@@ -85,9 +81,9 @@ public inline fun CoroutineExceptionHandler(crossinline handler: (CoroutineConte
  * ### Uncaught exceptions with no handler
  *
  * When no handler is installed, exception are handled in the following way:
- * * If exception is [CancellationException], it is ignored, as these exceptions are used to cancel coroutines.
- * * Otherwise, if there is a [Job] in the context, then [Job.cancel] is invoked.
- * * Otherwise, as a last resort, the exception is processed in a platform-specific manner:
+ * - If exception is [CancellationException], it is ignored, as these exceptions are used to cancel coroutines.
+ * - Otherwise, if there is a [Job] in the context, then [Job.cancel] is invoked.
+ * - Otherwise, as a last resort, the exception is processed in a platform-specific manner:
  *   - On JVM, all instances of [CoroutineExceptionHandler] found via [ServiceLoader], as well as
  *     the current thread's [Thread.uncaughtExceptionHandler], are invoked.
  *   - On Native, the whole application crashes with the exception.

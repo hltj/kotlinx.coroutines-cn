@@ -1,10 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:JvmMultifileClass
 @file:JvmName("FlowKt")
-@file:Suppress("UNCHECKED_CAST", "NON_APPLICABLE_CALL_FOR_BUILDER_INFERENCE") // KT-32203
+@file:Suppress("UNCHECKED_CAST")
 
 package kotlinx.coroutines.flow
 

@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.exceptions.*
 import kotlinx.coroutines.internal.*
 import kotlin.test.*
@@ -48,7 +45,7 @@ class ConcurrentExceptionsStressTest : TestBase() {
         val completionException = deferred.getCompletionExceptionOrNull()
         val cause = completionException as? StressException
             ?: unexpectedException("completion", completionException)
-        val suppressed = cause.suppressed
+        val suppressed = cause.suppressedExceptions
         val indices = listOf(cause.index) + suppressed.mapIndexed { index, e ->
             (e as? StressException)?.index ?: unexpectedException("suppressed $index", e)
         }
@@ -62,6 +59,6 @@ class ConcurrentExceptionsStressTest : TestBase() {
         throw IllegalStateException("Unexpected $msg exception", e)
     }
 
-    private class StressException(val index: Int) : SuppressSupportingThrowable()
+    private class StressException(val index: Int) : Throwable()
 }
 

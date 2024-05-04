@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.internal
 
 import kotlinx.coroutines.*
@@ -19,7 +15,7 @@ internal fun <E> OnUndeliveredElement<E>.callUndeliveredElementCatchingException
         // undeliveredElementException.cause !== ex is an optimization in case the same exception is thrown
         // over and over again by on OnUndeliveredElement
         if (undeliveredElementException != null && undeliveredElementException.cause !== ex) {
-            undeliveredElementException.addSuppressedThrowable(ex)
+            undeliveredElementException.addSuppressed(ex)
         } else {
             return UndeliveredElementException("Exception in undelivered element handler for $element", ex)
         }

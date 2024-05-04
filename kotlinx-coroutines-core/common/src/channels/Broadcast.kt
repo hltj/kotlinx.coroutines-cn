@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("DEPRECATION")
 
 package kotlinx.coroutines.channels
@@ -78,10 +74,10 @@ public fun <E> ReceiveChannel<E>.broadcast(
  * the resulting channel becomes _failed_, so that any attempt to receive from such a channel throws exception.
  *
  * The kind of the resulting channel depends on the specified [capacity] parameter:
- * * when `capacity` is positive (1 by default), but less than [UNLIMITED] -- uses [BroadcastChannel] with a buffer of given capacity,
- * * when `capacity` is [CONFLATED] -- uses [ConflatedBroadcastChannel] that conflates back-to-back sends;
+ * - when `capacity` is positive (1 by default), but less than [UNLIMITED] -- uses [BroadcastChannel] with a buffer of given capacity,
+ * - when `capacity` is [CONFLATED] -- uses [ConflatedBroadcastChannel] that conflates back-to-back sends;
  *   Note that resulting channel behaves like [ConflatedBroadcastChannel] but is not an instance of [ConflatedBroadcastChannel].
- * * otherwise -- throws [IllegalArgumentException].
+ * - otherwise -- throws [IllegalArgumentException].
  *
  * **Note:** By default, the coroutine does not start until the first subscriber appears via [BroadcastChannel.openSubscription]
  * as [start] parameter has a value of [CoroutineStart.LAZY] by default.
@@ -147,12 +143,14 @@ private open class BroadcastCoroutine<E>(
     override val channel: SendChannel<E>
         get() = this
 
+    @Suppress("MULTIPLE_DEFAULTS_INHERITED_FROM_SUPERTYPES_DEPRECATION_WARNING") // do not remove the MULTIPLE_DEFAULTS suppression: required in K2
     @Deprecated(level = DeprecationLevel.HIDDEN, message = "Since 1.2.0, binary compatibility with versions <= 1.1.x")
     final override fun cancel(cause: Throwable?): Boolean {
         cancelInternal(cause ?: defaultCancellationException())
         return true
     }
 
+    @Suppress("MULTIPLE_DEFAULTS_INHERITED_FROM_SUPERTYPES_DEPRECATION_WARNING") // do not remove the MULTIPLE_DEFAULTS suppression: required in K2
     final override fun cancel(cause: CancellationException?) {
         cancelInternal(cause ?: defaultCancellationException())
     }

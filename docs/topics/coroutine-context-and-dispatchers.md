@@ -227,7 +227,6 @@ import kotlinx.coroutines.*
 fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
 
 fun main() {
-//sampleStart
     newSingleThreadContext("Ctx1").use { ctx1 ->
         newSingleThreadContext("Ctx2").use { ctx2 ->
             runBlocking(ctx1) {
@@ -239,7 +238,6 @@ fun main() {
             }
         }
     }
-//sampleEnd    
 }
 ```
 
@@ -420,14 +418,14 @@ fun main() = runBlocking(CoroutineName("main")) {
     val v1 = async(CoroutineName("v1coroutine")) {
         delay(500)
         log("Computing v1")
-        252
+        6
     }
     val v2 = async(CoroutineName("v2coroutine")) {
         delay(1000)
         log("Computing v2")
-        6
+        7
     }
-    log("The answer for v1 / v2 = ${v1.await() / v2.await()}")
+    log("The answer for v1 * v2 = ${v1.await() * v2.await()}")
 //sampleEnd    
 }
 ```
@@ -443,7 +441,7 @@ fun main() = runBlocking(CoroutineName("main")) {
 [main @main#1] Started main coroutine
 [main @v1coroutine#2] Computing v1
 [main @v2coroutine#3] Computing v2
-[main @main#1] The answer for v1 / v2 = 42
+[main @main#1] The answer for v1 * v2 = 42
 ```
 
 <!--- TEST FLEXIBLE_THREAD -->
@@ -504,7 +502,7 @@ class Activity {
     // 继续运行……
 ```
 
-现在，我们可以使用定义的 `scope` 在这个 `Activity` 的作用域内启动协程。
+现在，我们可以使用定义的 `mainScope` 在这个 `Activity` 的作用域内启动协程。
 对于该示例，我们启动了十个协程，它们会延迟不同的时间：
 
 ```kotlin

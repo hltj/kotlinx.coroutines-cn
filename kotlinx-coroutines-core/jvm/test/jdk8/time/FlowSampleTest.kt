@@ -1,10 +1,7 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.time
 
-import kotlinx.coroutines.TestBase
+import kotlinx.coroutines.testing.*
+import kotlinx.coroutines.testing.TestBase
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withVirtualTime

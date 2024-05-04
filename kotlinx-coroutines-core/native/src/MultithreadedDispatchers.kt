@@ -1,6 +1,4 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
+@file:OptIn(ObsoleteWorkersApi::class)
 
 package kotlinx.coroutines
 
@@ -8,6 +6,7 @@ import kotlinx.atomicfu.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.internal.*
 import kotlin.coroutines.*
+import kotlin.concurrent.AtomicReference
 import kotlin.native.concurrent.*
 import kotlin.time.*
 import kotlin.time.Duration.Companion.milliseconds
@@ -17,7 +16,6 @@ public actual fun newFixedThreadPoolContext(nThreads: Int, name: String): Closea
     return MultiWorkerDispatcher(name, nThreads)
 }
 
-@OptIn(ExperimentalTime::class)
 internal class WorkerDispatcher(name: String) : CloseableCoroutineDispatcher(), Delay {
     private val worker = Worker.start(name = name)
 

@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.debug.junit5
 
 import kotlinx.coroutines.debug.*
@@ -21,7 +17,7 @@ internal class CoroutinesTimeoutException(val timeoutMs: Long): Exception("test 
  * Additionally, it installs [DebugProbes] and dumps all coroutines at the moment of the timeout. It also cancels
  * coroutines on timeout if [cancelOnTimeout] set to `true`.
  * [enableCoroutineCreationStackTraces] controls the corresponding [DebugProbes.enableCreationStackTraces] property
- * and can be optionally disabled to speed-up tests if creation stack traces are not needed.
+ * and can be optionally enabled if the creation stack traces are necessary.
  *
  * Beware that if several tests that use this extension set [enableCoroutineCreationStackTraces] to different values and
  * execute in parallel, the behavior is ill-defined. In order to avoid conflicts between different instances of this
@@ -55,7 +51,7 @@ internal class CoroutinesTimeoutException(val timeoutMs: Long): Exception("test 
  * */
 // NB: the constructor is not private so that JUnit is able to call it via reflection.
 internal class CoroutinesTimeoutExtension internal constructor(
-    private val enableCoroutineCreationStackTraces: Boolean = true,
+    private val enableCoroutineCreationStackTraces: Boolean = false,
     private val timeoutMs: Long? = null,
     private val cancelOnTimeout: Boolean? = null): InvocationInterceptor
 {
@@ -112,14 +108,14 @@ internal class CoroutinesTimeoutExtension internal constructor(
      * However, extension instances can be reused with different value stores, and value stores can be reused across
      * extension instances. This leads to a tricky scheme of performing [DebugProbes.uninstall]:
      *
-     * * If neither the ownership of this instance's [DebugProbes] was yet passed nor there is any cleanup procedure
+     * - If neither the ownership of this instance's [DebugProbes] was yet passed nor there is any cleanup procedure
      *   stored, it means that we can just store our cleanup procedure, passing the ownership.
-     * * If the ownership was not yet passed, but a cleanup procedure is already stored, we can't just replace it with
+     * - If the ownership was not yet passed, but a cleanup procedure is already stored, we can't just replace it with
      *   another one, as this would lead to imbalance between [DebugProbes.install] and [DebugProbes.uninstall].
      *   Instead, we know that this extension context will at least outlive this use of this instance, so some debug
      *   probes other than the ones from our constructor are already installed and won't be uninstalled during our
      *   operation. We simply uninstall the debug probes that were installed in our constructor.
-     * * If the ownership was passed, but the store is empty, it means that this test instance is reused and, possibly,
+     * - If the ownership was passed, but the store is empty, it means that this test instance is reused and, possibly,
      *   the debug probes installed in its constructor were already uninstalled. This means that we have to install them
      *   anew and store an uninstaller.
      */

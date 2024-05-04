@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.coroutines.*
 import kotlin.jvm.*
 
@@ -83,6 +80,6 @@ public fun TestBase.withVirtualTime(block: suspend CoroutineScope.() -> Unit) = 
         // Create a platform-independent event loop
         val dispatcher = VirtualTimeDispatcher(this)
         withContext(dispatcher) { block() }
-        ensureFinished()
+        checkFinishCall(allowNotUsingExpect = false)
     }
 }

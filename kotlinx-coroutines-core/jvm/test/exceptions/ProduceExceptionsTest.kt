@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.exceptions
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.junit.Test
@@ -65,7 +62,7 @@ class ProduceExceptionsTest : TestBase() {
             produce.receive()
             expectUnreached()
         } catch (e: TestException) {
-            assertTrue(e.suppressed[0] is TestException2)
+            assertIs<TestException2>(e.suppressed[0])
         }
     }
 
@@ -162,7 +159,7 @@ class ProduceExceptionsTest : TestBase() {
             channel.receive()
         } catch (e: CancellationException) {
             // RECOVER_STACK_TRACES
-            assertTrue(e.cause?.cause is TestException2)
+            assertIs<TestException2>(e.cause?.cause)
             finish(4)
         }
     }

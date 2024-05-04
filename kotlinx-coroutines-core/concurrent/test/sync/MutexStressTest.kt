@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.sync
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.exceptions.*
 import kotlinx.coroutines.selects.*
@@ -11,7 +8,7 @@ import kotlin.test.*
 
 class MutexStressTest : TestBase() {
 
-    private val n = (if (isNative) 1_000 else 10_000) * stressTestMultiplier
+    private val n = 1000 * stressTestMultiplier // It mostly stresses K/N as JVM Mutex is tested by lincheck
 
     @Test
     fun testDefaultDispatcher() = runTest { testBody(Dispatchers.Default) }

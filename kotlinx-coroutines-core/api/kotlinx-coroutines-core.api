@@ -87,7 +87,6 @@ public final class kotlinx/coroutines/CancellableContinuationKt {
 public final class kotlinx/coroutines/ChildContinuation {
 	public final field child Lkotlinx/coroutines/CancellableContinuationImpl;
 	public fun <init> (Lkotlinx/coroutines/CancellableContinuationImpl;)V
-	public synthetic fun invoke (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun invoke (Ljava/lang/Throwable;)V
 }
 
@@ -264,7 +263,7 @@ public final class kotlinx/coroutines/CoroutineStart : java/lang/Enum {
 	public static final field DEFAULT Lkotlinx/coroutines/CoroutineStart;
 	public static final field LAZY Lkotlinx/coroutines/CoroutineStart;
 	public static final field UNDISPATCHED Lkotlinx/coroutines/CoroutineStart;
-	public final fun invoke (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)V
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun invoke (Lkotlin/jvm/functions/Function2;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)V
 	public final fun isLazy ()Z
 	public static fun valueOf (Ljava/lang/String;)Lkotlinx/coroutines/CoroutineStart;
@@ -320,7 +319,7 @@ public abstract interface annotation class kotlinx/coroutines/DelicateCoroutines
 }
 
 public final class kotlinx/coroutines/DispatchedCoroutine {
-	public static final fun get_decision$FU ()Ljava/util/concurrent/atomic/AtomicIntegerFieldUpdater;
+	public static final synthetic fun get_decision$volatile$FU$kotlinx_coroutines_core ()Ljava/util/concurrent/atomic/AtomicIntegerFieldUpdater;
 }
 
 public abstract class kotlinx/coroutines/DispatchedTask : kotlinx/coroutines/scheduling/Task {
@@ -672,6 +671,7 @@ public final class kotlinx/coroutines/channels/BufferOverflow : java/lang/Enum {
 	public static final field DROP_LATEST Lkotlinx/coroutines/channels/BufferOverflow;
 	public static final field DROP_OLDEST Lkotlinx/coroutines/channels/BufferOverflow;
 	public static final field SUSPEND Lkotlinx/coroutines/channels/BufferOverflow;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lkotlinx/coroutines/channels/BufferOverflow;
 	public static fun values ()[Lkotlinx/coroutines/channels/BufferOverflow;
 }
@@ -912,6 +912,7 @@ public final class kotlinx/coroutines/channels/TickerChannelsKt {
 public final class kotlinx/coroutines/channels/TickerMode : java/lang/Enum {
 	public static final field FIXED_DELAY Lkotlinx/coroutines/channels/TickerMode;
 	public static final field FIXED_PERIOD Lkotlinx/coroutines/channels/TickerMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lkotlinx/coroutines/channels/TickerMode;
 	public static fun values ()[Lkotlinx/coroutines/channels/TickerMode;
 }
@@ -1183,6 +1184,7 @@ public final class kotlinx/coroutines/flow/SharingCommand : java/lang/Enum {
 	public static final field START Lkotlinx/coroutines/flow/SharingCommand;
 	public static final field STOP Lkotlinx/coroutines/flow/SharingCommand;
 	public static final field STOP_AND_RESET_REPLAY_CACHE Lkotlinx/coroutines/flow/SharingCommand;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lkotlinx/coroutines/flow/SharingCommand;
 	public static fun values ()[Lkotlinx/coroutines/flow/SharingCommand;
 }
@@ -1329,12 +1331,11 @@ public abstract interface class kotlinx/coroutines/selects/SelectClause1 : kotli
 public abstract interface class kotlinx/coroutines/selects/SelectClause2 : kotlinx/coroutines/selects/SelectClause {
 }
 
-public class kotlinx/coroutines/selects/SelectImplementation : kotlinx/coroutines/selects/SelectBuilder, kotlinx/coroutines/selects/SelectInstanceInternal {
+public class kotlinx/coroutines/selects/SelectImplementation : kotlinx/coroutines/CancelHandler, kotlinx/coroutines/selects/SelectBuilder, kotlinx/coroutines/selects/SelectInstanceInternal {
 	public fun <init> (Lkotlin/coroutines/CoroutineContext;)V
 	public fun disposeOnCompletion (Lkotlinx/coroutines/DisposableHandle;)V
 	public fun doSelect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getContext ()Lkotlin/coroutines/CoroutineContext;
-	public synthetic fun invoke (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun invoke (Ljava/lang/Throwable;)V
 	public fun invoke (Lkotlinx/coroutines/selects/SelectClause0;Lkotlin/jvm/functions/Function1;)V
 	public fun invoke (Lkotlinx/coroutines/selects/SelectClause1;Lkotlin/jvm/functions/Function2;)V

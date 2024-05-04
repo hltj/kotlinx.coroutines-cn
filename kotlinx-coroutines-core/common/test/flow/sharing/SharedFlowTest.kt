@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.random.*
@@ -614,7 +611,7 @@ class SharedFlowTest : TestBase() {
                 throw TestException()
             }
             .catch { e ->
-                assertTrue(e is TestException)
+                assertIs<TestException>(e)
                 expect(3)
             }
             .collect {
@@ -818,4 +815,24 @@ class SharedFlowTest : TestBase() {
         j2.cancelAndJoin()
         assertEquals(0, flow.subscriptionCount.first())
     }
+
+    @Test
+    fun testSubscriptionByFirstSuspensionInSharedFlow() = runTest {
+        testSubscriptionByFirstSuspensionInCollect(MutableSharedFlow()) { emit(it) }
+    }
+}
+
+/**
+ * Check that, by the time [SharedFlow.collect] suspends for the first time, its subscription is already active.
+ */
+inline fun<T: Flow<Int>> CoroutineScope.testSubscriptionByFirstSuspensionInCollect(flow: T, emit: T.(Int) -> Unit) {
+    var received = 0
+    val job = launch(start = CoroutineStart.UNDISPATCHED) {
+        flow.collect {
+            received = it
+        }
+    }
+    flow.emit(1)
+    assertEquals(1, received)
+    job.cancel()
 }

@@ -1,6 +1,3 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 @file:JvmMultifileClass
 @file:JvmName("ChannelsKt")
 @file:Suppress("unused")
@@ -10,6 +7,39 @@ package kotlinx.coroutines.channels
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 import kotlin.jvm.*
+
+/**
+ * Opens subscription to this [BroadcastChannel] and makes sure that the given [block] consumes all elements
+ * from it by always invoking [cancel][ReceiveChannel.cancel] after the execution of the block.
+ *
+ * **Note: This API is obsolete since 1.5.0 and deprecated for removal since 1.7.0**
+ * It is replaced with [SharedFlow][kotlinx.coroutines.flow.SharedFlow].
+ *
+ * Safe to remove in 1.9.0 as was inline before.
+ */
+@ObsoleteCoroutinesApi
+@Suppress("DEPRECATION")
+@Deprecated(level = DeprecationLevel.ERROR, message = "BroadcastChannel is deprecated in the favour of SharedFlow and is no longer supported")
+public inline fun <E, R> BroadcastChannel<E>.consume(block: ReceiveChannel<E>.() -> R): R {
+    val channel = openSubscription()
+    try {
+        return channel.block()
+    } finally {
+        channel.cancel()
+    }
+}
+
+/**
+ * Subscribes to this [BroadcastChannel] and performs the specified action for each received element.
+ *
+ * **Note: This API is obsolete since 1.5.0 and deprecated for removal since 1.7.0**
+ */
+@Deprecated(level = DeprecationLevel.ERROR, message = "BroadcastChannel is deprecated in the favour of SharedFlow and is no longer supported")
+@Suppress("DEPRECATION", "DEPRECATION_ERROR")
+public suspend inline fun <E> BroadcastChannel<E>.consumeEach(action: (E) -> Unit): Unit =
+    consume {
+        for (element in this) action(element)
+    }
 
 /** @suppress **/
 @PublishedApi // Binary compatibility
@@ -23,7 +53,7 @@ internal fun consumesAll(vararg channels: ReceiveChannel<*>): CompletionHandler 
                 if (exception == null) {
                     exception = e
                 } else {
-                    exception.addSuppressedThrowable(e)
+                    exception.addSuppressed(e)
                 }
             }
         exception?.let { throw it }

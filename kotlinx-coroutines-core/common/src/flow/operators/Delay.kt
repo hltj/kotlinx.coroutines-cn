@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:JvmMultifileClass
 @file:JvmName("FlowKt")
 
@@ -111,7 +107,6 @@ public fun <T> Flow<T>.debounce(timeoutMillis: Long): Flow<T> {
  * @param timeoutMillis [T] is the emitted value and the return value is timeout in milliseconds.
  */
 @FlowPreview
-@OptIn(kotlin.experimental.ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 public fun <T> Flow<T>.debounce(timeoutMillis: (T) -> Long): Flow<T> =
     debounceInternal(timeoutMillis)
@@ -196,7 +191,6 @@ public fun <T> Flow<T>.debounce(timeout: Duration): Flow<T> =
  */
 @FlowPreview
 @JvmName("debounceDuration")
-@OptIn(kotlin.experimental.ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 public fun <T> Flow<T>.debounce(timeout: (T) -> Duration): Flow<T> =
     debounceInternal { emittedItem ->
@@ -308,12 +302,9 @@ public fun <T> Flow<T>.sample(periodMillis: Long): Flow<T> {
  */
 internal fun CoroutineScope.fixedPeriodTicker(
     delayMillis: Long,
-    initialDelayMillis: Long = delayMillis
 ): ReceiveChannel<Unit> {
-    require(delayMillis >= 0) { "Expected non-negative delay, but has $delayMillis ms" }
-    require(initialDelayMillis >= 0) { "Expected non-negative initial delay, but has $initialDelayMillis ms" }
     return produce(capacity = 0) {
-        delay(initialDelayMillis)
+        delay(delayMillis)
         while (true) {
             channel.send(Unit)
             delay(delayMillis)
@@ -403,6 +394,7 @@ private fun <T> Flow<T>.timeoutInternal(
             value.onSuccess {
                 downStream.emit(it)
             }.onClosed {
+                it?.let { throw it }
                 return@onReceiveCatching false
             }
             return@onReceiveCatching true

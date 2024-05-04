@@ -1,10 +1,8 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
 package kotlinx.coroutines.lincheck
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED

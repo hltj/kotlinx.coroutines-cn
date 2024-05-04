@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
 import java.io.*
@@ -13,14 +9,14 @@ private const val SHUTDOWN_TIMEOUT = 1000L
 internal inline fun withVirtualTimeSource(log: PrintStream? = null, block: () -> Unit) {
     DefaultExecutor.shutdownForTests(SHUTDOWN_TIMEOUT) // shutdown execution with old time source (in case it was working)
     val testTimeSource = VirtualTimeSource(log)
-    timeSource = testTimeSource
+    mockTimeSource(testTimeSource)
     DefaultExecutor.ensureStarted() // should start with new time source
     try {
         block()
     } finally {
         DefaultExecutor.shutdownForTests(SHUTDOWN_TIMEOUT)
         testTimeSource.shutdown()
-        timeSource = null // restore time source
+        mockTimeSource(null) // restore time source
     }
 }
 

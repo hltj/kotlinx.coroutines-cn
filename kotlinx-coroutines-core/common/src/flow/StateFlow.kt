@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
 import kotlinx.atomicfu.*
@@ -90,15 +86,15 @@ import kotlin.coroutines.*
  * and is designed to completely replace it.
  * It has the following important differences:
  *
- * * `StateFlow` is simpler, because it does not have to implement all the [Channel] APIs, which allows
+ * - `StateFlow` is simpler, because it does not have to implement all the [Channel] APIs, which allows
  *   for faster, garbage-free implementation, unlike `ConflatedBroadcastChannel` implementation that
  *   allocates objects on each emitted value.
- * * `StateFlow` always has a value which can be safely read at any time via [value] property.
+ * - `StateFlow` always has a value which can be safely read at any time via [value] property.
  *    Unlike `ConflatedBroadcastChannel`, there is no way to create a state flow without a value.
- * * `StateFlow` has a clear separation into a read-only `StateFlow` interface and a [MutableStateFlow].
- * * `StateFlow` conflation is based on equality like [distinctUntilChanged] operator,
+ * - `StateFlow` has a clear separation into a read-only `StateFlow` interface and a [MutableStateFlow].
+ * - `StateFlow` conflation is based on equality like [distinctUntilChanged] operator,
  *    unlike conflation in `ConflatedBroadcastChannel` that is based on reference identity.
- * * `StateFlow` cannot be closed like `ConflatedBroadcastChannel` and can never represent a failure.
+ * - `StateFlow` cannot be closed like `ConflatedBroadcastChannel` and can never represent a failure.
  *    All errors and completion signals should be explicitly _materialized_ if needed.
  *
  * `StateFlow` is designed to better cover typical use-cases of keeping track of state changes in time, taking
@@ -247,15 +243,21 @@ private class StateFlowSlot : AbstractSharedFlowSlot<StateFlowImpl<*>>() {
     /**
      * Each slot can have one of the following states:
      *
-     * * `null` -- it is not used right now. Can [allocateLocked] to new collector.
-     * * `NONE` -- used by a collector, but neither suspended nor has pending value.
-     * * `PENDING` -- pending to process new value.
-     * * `CancellableContinuationImpl<Unit>` -- suspended waiting for new value.
+     * - `null` -- it is not used right now. Can [allocateLocked] to new collector.
+     * - `NONE` -- used by a collector, but neither suspended nor has pending value.
+     * - `PENDING` -- pending to process new value.
+     * - `CancellableContinuationImpl<Unit>` -- suspended waiting for new value.
      *
      * It is important that default `null` value is used, because there can be a race between allocation
      * of a new slot and trying to do [makePending] on this slot.
+     *
+     * ===
+     * This should be `atomic<Any?>(null)` instead of the atomic reference, but because of #3820
+     * it is used as a **temporary** solution starting from 1.8.1 version.
+     * Depending on the fix rollout on Android, it will be removed in 1.9.0 or 2.0.0.
+     * See https://issuetracker.google.com/issues/325123736
      */
-    private val _state = atomic<Any?>(null)
+    private val _state = WorkaroundAtomicReference<Any?>(null)
 
     override fun allocateLocked(flow: StateFlowImpl<*>): Boolean {
         // No need for atomic check & update here, since allocated happens under StateFlow lock
@@ -294,7 +296,6 @@ private class StateFlowSlot : AbstractSharedFlowSlot<StateFlowImpl<*>>() {
         return state === PENDING
     }
 
-    @Suppress("UNCHECKED_CAST")
     suspend fun awaitPending(): Unit = suspendCancellableCoroutine sc@ { cont ->
         assert { _state.value !is CancellableContinuationImpl<*> } // can be NONE or PENDING
         if (_state.compareAndSet(NONE, cont)) return@sc // installed continuation, waiting for pending
@@ -310,7 +311,6 @@ private class StateFlowImpl<T>(
     private val _state = atomic(initialState) // T | NULL
     private var sequence = 0 // serializes updates, value update is in process when sequence is odd
 
-    @Suppress("UNCHECKED_CAST")
     public override var value: T
         get() = NULL.unbox(_state.value)
         set(value) { updateState(null, value ?: NULL) }

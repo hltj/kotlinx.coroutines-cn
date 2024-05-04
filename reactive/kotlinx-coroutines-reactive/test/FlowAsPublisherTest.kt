@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.reactive
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
@@ -41,7 +38,7 @@ class FlowAsPublisherTest : TestBase() {
             }
 
             override fun onError(t: Throwable?) {
-                assertTrue(t is TestException)
+                assertIs<TestException>(t)
                 expect(4)
             }
         })

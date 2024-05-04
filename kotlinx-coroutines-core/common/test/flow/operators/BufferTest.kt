@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlin.math.*
@@ -183,6 +180,15 @@ class BufferTest : TestBase() {
             .take(2)
             .toList()
         assertEquals(listOf(1, 2), result)
+    }
+
+    @Test
+    fun testFailsOnIllegalArguments() {
+        val flow = emptyFlow<Int>()
+        assertFailsWith<IllegalArgumentException> { flow.buffer(capacity = -3) }
+        assertFailsWith<IllegalArgumentException> { flow.buffer(capacity = Int.MIN_VALUE) }
+        assertFailsWith<IllegalArgumentException> { flow.buffer(capacity = Channel.CONFLATED, onBufferOverflow = BufferOverflow.DROP_LATEST) }
+        assertFailsWith<IllegalArgumentException> { flow.buffer(capacity = Channel.CONFLATED, onBufferOverflow = BufferOverflow.DROP_OLDEST) }
     }
 }
 

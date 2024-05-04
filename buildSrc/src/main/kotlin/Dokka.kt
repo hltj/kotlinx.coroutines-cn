@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 import org.gradle.api.*
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.dokka.gradle.*
@@ -18,8 +14,8 @@ fun Project.externalDocumentationLink(
     tasks.withType<AbstractDokkaLeafTask>().configureEach {
         dokkaSourceSets.configureEach {
             externalDocumentationLink {
-                this.url.set(URL(url))
-                packageListUrl.set(packageList.toPath().toUri().toURL())
+                this.url = URL(url)
+                packageListUrl = packageList.toPath().toUri().toURL()
             }
         }
     }

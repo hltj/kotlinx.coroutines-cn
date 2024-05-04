@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.debug.junit4
 
 import kotlinx.coroutines.debug.*
@@ -18,7 +14,7 @@ import java.util.concurrent.*
  * Additionally, this rule installs [DebugProbes] and dumps all coroutines at the moment of the timeout.
  * It may cancel coroutines on timeout if [cancelOnTimeout] set to `true`.
  * [enableCoroutineCreationStackTraces] controls the corresponding [DebugProbes.enableCreationStackTraces] property
- * and can be optionally disabled to speed-up tests if creation stack traces are not needed.
+ * and can be optionally enabled if the creation stack traces are necessary.
  *
  * Example of usage:
  * ```
@@ -38,7 +34,7 @@ import java.util.concurrent.*
 public class CoroutinesTimeout(
     private val testTimeoutMs: Long,
     private val cancelOnTimeout: Boolean = false,
-    private val enableCoroutineCreationStackTraces: Boolean = true
+    private val enableCoroutineCreationStackTraces: Boolean = false
 ) : TestRule {
 
     @Suppress("UNUSED") // Binary compatibility

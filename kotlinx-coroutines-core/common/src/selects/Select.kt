@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.selects
 
 import kotlinx.atomicfu.*
@@ -42,10 +38,10 @@ import kotlin.jvm.*
  * | [ReceiveChannel] | [receiveCatching][ReceiveChannel.receiveCatching] | [onReceiveCatching][ReceiveChannel.onReceiveCatching]
  * | none             | [delay]                                           | [onTimeout][SelectBuilder.onTimeout]
  *
- * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this
- * function is suspended, this function immediately resumes with [CancellationException].
- * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was
- * suspended, it will not resume successfully. See [suspendCancellableCoroutine] documentation for low-level details.
+ * This suspending function is cancellable: if the [Job] of the current coroutine is cancelled while this
+ * suspending function is waiting, this function immediately resumes with [CancellationException].
+ * There is a **prompt cancellation guarantee**: even if this function is ready to return the result, but was cancelled
+ * while suspended, [CancellationException] will be thrown. See [suspendCancellableCoroutine] for low-level details.
  *
  * Note that this function does not check for cancellation when it is not suspended.
  * Use [yield] or [CoroutineScope.isActive] to periodically check for cancellation in tight loops if needed.
@@ -243,7 +239,7 @@ internal interface SelectInstanceInternal<R>: SelectInstance<R>, Waiter
 @PublishedApi
 internal open class SelectImplementation<R>(
     override val context: CoroutineContext
-) : CancelHandler(), SelectBuilder<R>, SelectInstanceInternal<R> {
+) : CancelHandler, SelectBuilder<R>, SelectInstanceInternal<R> {
 
     /**
      * Essentially, the `select` operation is split into three phases: REGISTRATION, WAITING, and COMPLETION.
@@ -372,7 +368,12 @@ internal open class SelectImplementation<R>(
 
     /**
      * List of clauses waiting on this `select` instance.
+     *
+     * This property is the subject to bening data race: concurrent cancellation might null-out this property
+     * while [trySelect] operation reads it and iterates over its content.
+     * A logical race is resolved by the consensus on [state] property.
      */
+    @BenignDataRace
     private var clauses: MutableList<ClauseData>? = ArrayList(2)
 
     /**
@@ -407,7 +408,13 @@ internal open class SelectImplementation<R>(
      * one that stores either result when the clause is successfully registered ([inRegistrationPhase] is `true`),
      * or [DisposableHandle] instance when the clause is completed during registration ([inRegistrationPhase] is `false`).
      * Yet, this optimization is omitted for code simplicity.
+     *
+     * This property is the subject to benign data race:
+     * [Cleanup][cleanup] procedure can be invoked both as part of the completion sequence
+     * and as a cancellation handler triggered by an external cancellation.
+     * In both scenarios, [NO_RESULT] is written to this property via race.
      */
+    @BenignDataRace
     private var internalResult: Any? = NO_RESULT
 
     /**
@@ -558,7 +565,7 @@ internal open class SelectImplementation<R>(
                     // Also, we MUST guarantee that this dispose handle is _visible_
                     // according to the memory model, and we CAN guarantee this when
                     // the state is updated.
-                    cont.invokeOnCancellation(this.asHandler)
+                    cont.invokeOnCancellation(this)
                     return@sc
                 }
                 // This `select` is in REGISTRATION phase, but there are clauses that has to be registered again.
@@ -621,9 +628,8 @@ internal open class SelectImplementation<R>(
                         // try to resume the continuation.
                         this.internalResult = internalResult
                         if (cont.tryResume(onCancellation)) return TRY_SELECT_SUCCESSFUL
-                        // If the resumption failed, we need to clean
-                        // the [result] field to avoid memory leaks.
-                        this.internalResult = null
+                        // If the resumption failed, we need to clean the [result] field to avoid memory leaks.
+                        this.internalResult = NO_RESULT
                         return TRY_SELECT_CANCELLED
                     }
                 }

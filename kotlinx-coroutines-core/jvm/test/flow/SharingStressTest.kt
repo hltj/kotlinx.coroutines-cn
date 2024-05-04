@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import org.junit.*
 import org.junit.Test
@@ -14,7 +11,6 @@ import kotlin.test.*
 import kotlin.time.*
 import kotlin.time.TimeSource
 
-@OptIn(ExperimentalTime::class)
 class SharingStressTest : TestBase() {
     private val testDuration = 1000L * stressTestMultiplier
     private val nSubscribers = 5

@@ -1,6 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 @file:JvmName("TestBuildersKt")
 @file:JvmMultifileClass
 
@@ -14,22 +11,21 @@ import kotlin.jvm.*
 import kotlin.time.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.internal.*
 
 /**
  * A test result.
  *
- * * On JVM and Native, this resolves to [Unit], representing the fact that tests are run in a blocking manner on these
+ * - On JVM and Native, this resolves to [Unit], representing the fact that tests are run in a blocking manner on these
  *   platforms: a call to a function returning a [TestResult] will simply execute the test inside it.
- * * On JS, this is a `Promise`, which reflects the fact that the test-running function does not wait for a test to
+ * - On JS, this is a `Promise`, which reflects the fact that the test-running function does not wait for a test to
  *   finish. The JS test frameworks typically support returning `Promise` from a test and will correctly handle it.
  *
  * Because of the behavior on JS, extra care must be taken when writing multiplatform tests to avoid losing test errors:
- * * Don't do anything after running the functions returning a [TestResult]. On JS, this code will execute *before* the
+ * - Don't do anything after running the functions returning a [TestResult]. On JS, this code will execute *before* the
  *   test finishes.
- * * As a corollary, don't run functions returning a [TestResult] more than once per test. The only valid thing to do
+ * - As a corollary, don't run functions returning a [TestResult] more than once per test. The only valid thing to do
  *   with a [TestResult] is to immediately `return` it from a test.
- * * Don't nest functions returning a [TestResult].
+ * - Don't nest functions returning a [TestResult].
  */
 @Suppress("NO_ACTUAL_FOR_EXPECT")
 public expect class TestResult
@@ -122,8 +118,14 @@ public expect class TestResult
  *
  * #### Timing out
  *
- * There's a built-in timeout of 10 seconds for the test body. If the test body doesn't complete within this time,
- * then the test fails with an [AssertionError]. The timeout can be changed by setting the [timeout] parameter.
+ * There's a built-in timeout of 60 seconds for the test body. If the test body doesn't complete within this time,
+ * then the test fails with an [AssertionError]. The timeout can be changed for each test separately by setting the
+ * [timeout] parameter.
+ *
+ * Additionally, setting the `kotlinx.coroutines.test.default_timeout` system property on the
+ * JVM to any string that can be parsed using [Duration.parse] (like `1m`, `30s` or `1500ms`) will change the default
+ * timeout to that value for all tests whose [timeout] is not set explicitly; setting it to anything else will throw an
+ * exception every time [runTest] is invoked.
  *
  * On timeout, the test body is cancelled so that the test finishes. If the code inside the test body does not
  * respond to cancellation, the timeout will not be able to make the test execution stop.
@@ -157,7 +159,7 @@ public expect class TestResult
  */
 public fun runTest(
     context: CoroutineContext = EmptyCoroutineContext,
-    timeout: Duration = DEFAULT_TIMEOUT,
+    timeout: Duration = DEFAULT_TIMEOUT.getOrThrow(),
     testBody: suspend TestScope.() -> Unit
 ): TestResult {
     check(context[RunningInRunTest] == null) {
@@ -301,7 +303,7 @@ public fun runTest(
  * Performs [runTest] on an existing [TestScope]. See the documentation for [runTest] for details.
  */
 public fun TestScope.runTest(
-    timeout: Duration = DEFAULT_TIMEOUT,
+    timeout: Duration = DEFAULT_TIMEOUT.getOrThrow(),
     testBody: suspend TestScope.() -> Unit
 ): TestResult = asSpecificImplementation().let { scope ->
     scope.enter()
@@ -421,8 +423,15 @@ internal const val DEFAULT_DISPATCH_TIMEOUT_MS = 60_000L
 
 /**
  * The default timeout to use when running a test.
+ *
+ * It's not just a [Duration] but a [Result] so that every access to [runTest]
+ * throws the same clear exception if parsing the environment variable failed.
+ * Otherwise, the parsing error would only be thrown in one tests, while the
+ * other ones would get an incomprehensible `NoClassDefFoundError`.
  */
-internal val DEFAULT_TIMEOUT = 10.seconds
+private val DEFAULT_TIMEOUT: Result<Duration> = runCatching {
+    systemProperty("kotlinx.coroutines.test.default_timeout", Duration::parse, 60.seconds)
+}
 
 /**
  * Run the [body][testBody] of the [test coroutine][coroutine], waiting for asynchronous completions for at most
@@ -453,11 +462,11 @@ internal suspend fun <T : AbstractCoroutine<Unit>> CoroutineScope.runTestCorouti
      * 1. Try running the work that the scheduler knows about, both background and foreground.
      *
      * 2. Wait until we run out of foreground work to do. This could mean one of the following:
-     *    * The main coroutine is already completed. This is checked separately; then we leave the procedure.
-     *    * It's switched to another dispatcher that doesn't know about the [TestCoroutineScheduler].
-     *    * Generally, it's waiting for something external (like a network request, or just an arbitrary callback).
-     *    * The test simply hanged.
-     *    * The main coroutine is waiting for some background work.
+     *    - The main coroutine is already completed. This is checked separately; then we leave the procedure.
+     *    - It's switched to another dispatcher that doesn't know about the [TestCoroutineScheduler].
+     *    - Generally, it's waiting for something external (like a network request, or just an arbitrary callback).
+     *    - The test simply hanged.
+     *    - The main coroutine is waiting for some background work.
      *
      * 3. We await progress from things that are not the code under test:
      *    the background work that the scheduler knows about, the external callbacks,
@@ -570,6 +579,17 @@ internal fun throwAll(head: Throwable?, other: List<Throwable>) {
 }
 
 internal expect fun dumpCoroutines()
+
+private fun <T: Any> systemProperty(
+    name: String,
+    parse: (String) -> T,
+    default: T,
+): T {
+    val value = systemPropertyImpl(name) ?: return default
+    return parse(value)
+}
+
+internal expect fun systemPropertyImpl(name: String): String?
 
 @Deprecated(
     "This is for binary compatibility with the `runTest` overload that existed at some point",

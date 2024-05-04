@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2022 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.internal
 
 import kotlinx.atomicfu.*
@@ -11,10 +7,10 @@ import org.jetbrains.kotlinx.lincheck.annotations.*
 
 /**
  * Test that:
- * * All elements allocated in [OnDemandAllocatingPool] get returned when [close] is invoked.
- * * After reaching the maximum capacity, new elements are not added.
- * * After [close] is invoked, [OnDemandAllocatingPool.allocate] returns `false`.
- * * [OnDemandAllocatingPool.close] will return an empty list after the first invocation.
+ * - All elements allocated in [OnDemandAllocatingPool] get returned when [close] is invoked.
+ * - After reaching the maximum capacity, new elements are not added.
+ * - After [close] is invoked, [OnDemandAllocatingPool.allocate] returns `false`.
+ * - [OnDemandAllocatingPool.close] will return an empty list after the first invocation.
  */
 abstract class OnDemandAllocatingPoolLincheckTest(maxCapacity: Int) : AbstractLincheckTest() {
     private val counter = atomic(0)

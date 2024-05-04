@@ -1,9 +1,7 @@
-/*
- * Copyright 2016-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 @file:Suppress("unused")
 package kotlinx.coroutines.lincheck
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.*
 import org.jetbrains.kotlinx.lincheck.*

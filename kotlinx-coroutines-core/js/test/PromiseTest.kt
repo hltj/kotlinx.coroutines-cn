@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
+import kotlinx.coroutines.testing.*
 import kotlin.js.*
 import kotlin.test.*
 
@@ -30,7 +27,7 @@ class PromiseTest : TestBase() {
             deferred.await()
             expectUnreached()
         } catch (e: Throwable) {
-            assertTrue(e is TestException)
+            assertIs<TestException>(e)
             assertEquals("Rejected", e.message)
         }
     }

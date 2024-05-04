@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.jdk9
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import org.junit.*
 import java.util.concurrent.Flow as JFlow

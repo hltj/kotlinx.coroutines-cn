@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2023 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
 import kotlinx.atomicfu.*
@@ -63,7 +59,7 @@ private const val FINISHED = 1
 private const val INTERRUPTING = 2
 private const val INTERRUPTED = 3
 
-private class ThreadState(private val job: Job) : CompletionHandler {
+private class ThreadState(private val job: Job) : InternalCompletionHandler {
     /*
        === States ===
 

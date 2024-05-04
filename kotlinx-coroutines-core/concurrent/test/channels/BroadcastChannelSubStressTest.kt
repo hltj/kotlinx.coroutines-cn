@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.channels
 
+import kotlinx.coroutines.testing.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlin.test.*
@@ -15,13 +12,13 @@ import kotlin.test.*
  */
 class BroadcastChannelSubStressTest: TestBase() {
 
-    private val nSeconds = 5 * stressTestMultiplier
+    private val nSeconds = maxOf(5, stressTestMultiplier)
     private val sentTotal = atomic(0L)
     private val receivedTotal = atomic(0L)
 
     @Test
     fun testStress() = runTest {
-        TestBroadcastChannelKind.values().forEach { kind ->
+        TestBroadcastChannelKind.entries.forEach { kind ->
             println("--- BroadcastChannelSubStressTest $kind")
             val broadcast = kind.create<Long>()
             val sender =

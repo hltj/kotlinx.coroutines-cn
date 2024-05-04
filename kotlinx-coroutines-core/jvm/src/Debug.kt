@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 // Need InlineOnly for efficient bytecode on Android
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 
@@ -23,9 +19,9 @@ import kotlin.internal.InlineOnly
  * Enable debugging facilities with "`kotlinx.coroutines.debug`" ([DEBUG_PROPERTY_NAME]) system property,
  * use the following values:
  *
- * * "`auto`" (default mode, [DEBUG_PROPERTY_VALUE_AUTO]) -- enabled when assertions are enabled with "`-ea`" JVM option.
- * * "`on`" ([DEBUG_PROPERTY_VALUE_ON]) or empty string -- enabled.
- * * "`off`" ([DEBUG_PROPERTY_VALUE_OFF]) -- disabled.
+ * - "`auto`" (default mode, [DEBUG_PROPERTY_VALUE_AUTO]) -- enabled when assertions are enabled with "`-ea`" JVM option.
+ * - "`on`" ([DEBUG_PROPERTY_VALUE_ON]) or empty string -- enabled.
+ * - "`off`" ([DEBUG_PROPERTY_VALUE_OFF]) -- disabled.
  *
  * Coroutine name can be explicitly assigned using [CoroutineName] context element.
  * The string "coroutine" is used as a default name.

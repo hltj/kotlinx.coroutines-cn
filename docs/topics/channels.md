@@ -19,7 +19,8 @@ fun main() = runBlocking {
 //sampleStart
     val channel = Channel<Int>()
     launch {
-        // 这里可能是消耗大量 CPU 运算的异步逻辑，我们将仅仅做 5 次整数的平方并发送
+        // 这里可能是消耗大量 CPU 运算的异步逻辑，
+        // 我们将仅仅做 5 次整数的平方并发送
         for (x in 1..5) channel.send(x * x)
     }
     // 这里我们打印了 5 次被接收的整数：
@@ -103,12 +104,12 @@ Done!
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 
+//sampleStart
 fun CoroutineScope.produceSquares(): ReceiveChannel<Int> = produce {
     for (x in 1..5) send(x * x)
 }
 
 fun main() = runBlocking {
-//sampleStart
     val squares = produceSquares()
     squares.consumeEach { println(it) }
     println("Done!")
@@ -575,25 +576,25 @@ import kotlinx.coroutines.channels.*
 
 //sampleStart
 fun main() = runBlocking<Unit> {
-    val tickerChannel = ticker(delayMillis = 100, initialDelayMillis = 0) //创建计时器通道
+    val tickerChannel = ticker(delayMillis = 200, initialDelayMillis = 0) //创建计时器通道
     var nextElement = withTimeoutOrNull(1) { tickerChannel.receive() }
     println("Initial element is available immediately: $nextElement") // no initial delay
 
-    nextElement = withTimeoutOrNull(50) { tickerChannel.receive() } // all subsequent elements have 100ms delay
-    println("Next element is not ready in 50 ms: $nextElement")
+    nextElement = withTimeoutOrNull(100) { tickerChannel.receive() } // all subsequent elements have 200ms delay
+    println("Next element is not ready in 100 ms: $nextElement")
 
-    nextElement = withTimeoutOrNull(60) { tickerChannel.receive() }
-    println("Next element is ready in 100 ms: $nextElement")
+    nextElement = withTimeoutOrNull(120) { tickerChannel.receive() }
+    println("Next element is ready in 200 ms: $nextElement")
 
     // 模拟大量消费延迟
-    println("Consumer pauses for 150ms")
-    delay(150)
+    println("Consumer pauses for 300ms")
+    delay(300)
     // 下一个元素立即可用
     nextElement = withTimeoutOrNull(1) { tickerChannel.receive() }
     println("Next element is available immediately after large consumer delay: $nextElement")
     // 请注意，`receive` 调用之间的暂停被考虑在内，下一个元素的到达速度更快
-    nextElement = withTimeoutOrNull(60) { tickerChannel.receive() } 
-    println("Next element is ready in 50ms after consumer pause in 150ms: $nextElement")
+    nextElement = withTimeoutOrNull(120) { tickerChannel.receive() }
+    println("Next element is ready in 100ms after consumer pause in 300ms: $nextElement")
 
     tickerChannel.cancel() // 表明不再需要更多的元素
 }
@@ -609,11 +610,11 @@ fun main() = runBlocking<Unit> {
 
 ```text
 Initial element is available immediately: kotlin.Unit
-Next element is not ready in 50 ms: null
-Next element is ready in 100 ms: kotlin.Unit
-Consumer pauses for 150ms
+Next element is not ready in 100 ms: null
+Next element is ready in 200 ms: kotlin.Unit
+Consumer pauses for 300ms
 Next element is available immediately after large consumer delay: kotlin.Unit
-Next element is ready in 50ms after consumer pause in 150ms: kotlin.Unit
+Next element is ready in 100ms after consumer pause in 300ms: kotlin.Unit
 ```
 
 <!--- TEST -->

@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.reactive
 
 import kotlinx.atomicfu.*
@@ -59,7 +55,7 @@ private class PublisherAsFlow<T : Any>(
      * It's too counter-intuitive to be public, and moving it to Flow companion
      * will also create undesired effect.
      */
-    @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+    @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE") // do not remove the INVISIBLE_REFERENCE suppression: required in K2
     private val requestSize: Long
         get() =
             if (onBufferOverflow != BufferOverflow.SUSPEND) {
@@ -208,7 +204,7 @@ public class FlowSubscription<T>(
         try {
             consumeFlow()
         } catch (cause: Throwable) {
-            @Suppress("INVISIBLE_MEMBER")
+            @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE") // do not remove the INVISIBLE_REFERENCE suppression: required in K2
             val unwrappedCause = unwrap(cause)
             if (!cancellationRequested || isActive || unwrappedCause !== getCancellationException()) {
                 try {

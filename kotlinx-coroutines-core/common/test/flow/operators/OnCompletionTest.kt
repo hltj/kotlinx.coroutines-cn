@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.flow
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.flow.internal.*
@@ -34,10 +31,10 @@ class OnCompletionTest : TestBase() {
             expect(1)
             throw TestException()
         }.onCompletion {
-            assertTrue(it is TestException)
+            assertIs<TestException>(it)
             expect(2)
         }.catch {
-            assertTrue(it is TestException)
+            assertIs<TestException>(it)
             expect(3)
         }.collect()
         finish(4)
@@ -51,13 +48,13 @@ class OnCompletionTest : TestBase() {
         }.onEach {
             expect(2)
         }.onCompletion {
-            assertTrue(it is TestException) // flow fails because of this exception
+            assertIs<TestException>(it) // flow fails because of this exception
             expect(4)
         }.onEach {
             expect(3)
             throw TestException()
         }.catch {
-            assertTrue(it is TestException)
+            assertIs<TestException>(it)
             expect(5)
         }.collect()
         finish(6)
@@ -66,16 +63,16 @@ class OnCompletionTest : TestBase() {
     @Test
     fun testMultipleOnCompletions() = runTest {
         flowOf(1).onCompletion {
-            assertTrue(it is TestException)
+            assertIs<TestException>(it)
             expect(2)
         }.onEach {
             expect(1)
             throw TestException()
         }.onCompletion {
-            assertTrue(it is TestException)
+            assertIs<TestException>(it)
             expect(3)
         }.catch {
-            assertTrue(it is TestException)
+            assertIs<TestException>(it)
             expect(4)
         }.collect()
         finish(5)
@@ -90,7 +87,7 @@ class OnCompletionTest : TestBase() {
             expect(2)
             throw TestException2()
         }.catch {
-            assertTrue(it is TestException2)
+            assertIs<TestException2>(it)
             expect(3)
         }.collect()
         finish(4)
@@ -109,7 +106,7 @@ class OnCompletionTest : TestBase() {
                 throw TestException()
             }
             .catch {
-                assertTrue(it is TestException)
+                assertIs<TestException>(it)
                 expect(3)
             }.collect()
         finish(4)
@@ -145,7 +142,7 @@ class OnCompletionTest : TestBase() {
                 }
                 .onCompletion { e ->
                     expect(8)
-                    assertTrue(e is TestException)
+                    assertIs<TestException>(e)
                     emit(TestData.Done(e)) // will fail
                 }.collect {
                     collected += it
@@ -172,7 +169,7 @@ class OnCompletionTest : TestBase() {
                     }
                     .onCompletion { e ->
                         expect(8)
-                        assertTrue(e is CancellationException)
+                        assertIs<CancellationException>(e)
                         try {
                             emit(TestData.Done(e))
                             expectUnreached()
@@ -310,5 +307,91 @@ class OnCompletionTest : TestBase() {
             .onCompletion { emitAll(Channel()) }
             .take(1)
             .collect()
+    }
+
+    /**
+     * Tests that the operators that are used to limit the flow (like [take] and [zip]) faithfully propagate the
+     * cancellation exception to the original owner.
+     */
+    @Test
+    fun testOnCompletionBetweenLimitingOperators() = runTest {
+        // `zip` doesn't eat the exception thrown by `take`:
+        flowOf(1, 2, 3)
+            .zip(flowOf(4, 5)) { a, b -> a + b }
+            .onCompletion {
+                expect(2)
+                assertNotNull(it)
+            }
+            .take(1)
+            .collect {
+                expect(1)
+            }
+
+        // `take` doesn't eat the exception thrown by `zip`:
+        flowOf(1, 2, 3)
+            .take(2)
+            .onCompletion {
+                expect(4)
+                assertNotNull(it)
+            }
+            .zip(flowOf(4)) { a, b -> a + b }
+            .collect {
+                expect(3)
+            }
+
+        // `take` doesn't eat the exception thrown by `first`:
+        flowOf(1, 2, 3)
+            .take(2)
+            .onCompletion {
+                expect(5)
+                assertNotNull(it)
+            }
+            .first()
+
+        // `zip` doesn't eat the exception thrown by `first`:
+        flowOf(1, 2, 3)
+            .zip(flowOf(4, 5)) { a, b -> a + b }
+            .onCompletion {
+                expect(6)
+                assertNotNull(it)
+            }
+            .first()
+
+        // `take` doesn't eat the exception thrown by another `take`:
+        flowOf(1, 2, 3)
+            .take(2)
+            .onCompletion {
+                expect(8)
+                assertNotNull(it)
+            }
+            .take(1)
+            .collect {
+                expect(7)
+            }
+
+        // `zip` doesn't eat the exception thrown by another `zip`:
+        flowOf(1, 2, 3)
+            .zip(flowOf(4, 5)) { a, b -> a + b }
+            .onCompletion {
+                expect(10)
+                assertNotNull(it)
+            }
+            .zip(flowOf(6)) { a, b -> a + b }
+            .collect {
+                expect(9)
+            }
+
+        finish(11)
+    }
+
+    /**
+     * Tests that emitting new elements after completion doesn't overwrite the old elements.
+     */
+    @Test
+    fun testEmittingElementsAfterCancellation() = runTest {
+        assertEquals(1, flowOf(1, 2, 3)
+            .take(100)
+            .onCompletion { emit(4) }
+            .first())
     }
 }

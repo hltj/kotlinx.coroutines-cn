@@ -1,9 +1,6 @@
-/*
- * Copyright 2016-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.rx3
 
+import kotlinx.coroutines.testing.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableSource
 import io.reactivex.rxjava3.core.Observer
@@ -12,6 +9,7 @@ import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.testing.flow.*
 import kotlin.test.*
 
 class ObservableAsFlowTest : TestBase() {

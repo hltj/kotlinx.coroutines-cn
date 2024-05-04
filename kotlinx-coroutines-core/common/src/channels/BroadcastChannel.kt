@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("FunctionName", "DEPRECATION")
 
 package kotlinx.coroutines.channels
@@ -59,11 +55,11 @@ public interface BroadcastChannel<E> : SendChannel<E> {
  *
  * The resulting channel type depends on the specified [capacity] parameter:
  *
- * * when `capacity` positive, but less than [UNLIMITED] -- creates `ArrayBroadcastChannel` with a buffer of given capacity.
+ * - when `capacity` positive, but less than [UNLIMITED] -- creates `ArrayBroadcastChannel` with a buffer of given capacity.
  *   **Note:** this channel looses all items that have been sent to it until the first subscriber appears;
- * * when `capacity` is [CONFLATED] -- creates [ConflatedBroadcastChannel] that conflates back-to-back sends;
- * * when `capacity` is [BUFFERED] -- creates `ArrayBroadcastChannel` with a default capacity.
- * * otherwise -- throws [IllegalArgumentException].
+ * - when `capacity` is [CONFLATED] -- creates [ConflatedBroadcastChannel] that conflates back-to-back sends;
+ * - when `capacity` is [BUFFERED] -- creates `ArrayBroadcastChannel` with a default capacity.
+ * - otherwise -- throws [IllegalArgumentException].
  *
  * **Note: This API is obsolete since 1.5.0 and deprecated for removal since 1.7.0**
  * It is replaced with [SharedFlow][kotlinx.coroutines.flow.SharedFlow] and [StateFlow][kotlinx.coroutines.flow.StateFlow].
@@ -136,6 +132,7 @@ public class ConflatedBroadcastChannel<E> private constructor(
  *
  * This channel is created by `BroadcastChannel(capacity)` factory function invocation.
  */
+@Suppress("MULTIPLE_DEFAULTS_INHERITED_FROM_SUPERTYPES_DEPRECATION_WARNING", "MULTIPLE_DEFAULTS_INHERITED_FROM_SUPERTYPES_WHEN_NO_EXPLICIT_OVERRIDE_DEPRECATION_WARNING") // do not remove the MULTIPLE_DEFAULTS suppression: required in K2
 internal class BroadcastChannelImpl<E>(
     /**
      * Buffer capacity; [Channel.CONFLATED] when this broadcast is conflated.

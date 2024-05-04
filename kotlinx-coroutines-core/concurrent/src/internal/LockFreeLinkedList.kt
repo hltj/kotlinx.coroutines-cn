@@ -1,6 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
 @file:Suppress("NO_EXPLICIT_VISIBILITY_IN_API_MODE")
 
 package kotlinx.coroutines.internal
@@ -34,11 +31,11 @@ internal val CONDITION_FALSE: Any = Symbol("CONDITION_FALSE")
  * the update of the next pointer. Removed nodes have their next pointer marked with [Removed] class.
  *
  * Important notes:
- * * There are no operations to add items to left side of the list, only to the end (right side), because we cannot
+ * - There are no operations to add items to left side of the list, only to the end (right side), because we cannot
  *   efficiently linearize them with atomic multi-step head-removal operations. In short,
  *   support for [describeRemoveFirst] operation precludes ability to add items at the beginning.
- * * Previous pointers are not marked for removal. We don't support linearizable backwards traversal.
- * * Remove-helping logic is simplified and consolidated in [correctPrev] method.
+ * - Previous pointers are not marked for removal. We don't support linearizable backwards traversal.
+ * - Remove-helping logic is simplified and consolidated in [correctPrev] method.
  *
  * @suppress **This is unstable API and it is subject to change.**
  */
@@ -85,7 +82,8 @@ public actual open class LockFreeLinkedListNode {
     }
 
     // LINEARIZABLE. Returns next non-removed Node
-    public actual val nextNode: Node get() = next.unwrap()
+    public actual val nextNode: Node get() =
+        next.let { (it as? Removed)?.ref ?: it as Node } // unwraps the `next` node
 
     // LINEARIZABLE WHEN THIS NODE IS NOT REMOVED:
     // Returns prev non-removed Node, makes sure prev is correct (prev.next === this)
@@ -263,7 +261,7 @@ public actual open class LockFreeLinkedListNode {
      *
      * It returns `null` in two special cases:
      *
-     * * When this node is removed. In this case there is no need to waste time on corrections, because
+     * - When this node is removed. In this case there is no need to waste time on corrections, because
      *   remover of this node will ultimately call [correctPrev] on the next node and that will fix all
      *   the links from this node, too.
      */
@@ -323,9 +321,6 @@ private class Removed(@JvmField val ref: Node) {
     override fun toString(): String = "Removed[$ref]"
 }
 
-@PublishedApi
-internal fun Any.unwrap(): Node = (this as? Removed)?.ref ?: this as Node
-
 /**
  * Head (sentinel) item of the linked list that is never removed.
  *
@@ -350,17 +345,6 @@ public actual open class LockFreeLinkedListHead : LockFreeLinkedListNode() {
 
     // optimization: because head is never removed, we don't have to read _next.value to check these:
     override val isRemoved: Boolean get() = false
-    override fun nextIfRemoved(): Node? = null
 
-    internal fun validate() {
-        var prev: Node = this
-        var cur: Node = next as Node
-        while (cur != this) {
-            val next = cur.nextNode
-            cur.validateNode(prev, next)
-            prev = cur
-            cur = next
-        }
-        validateNode(prev, next as Node)
-    }
+    override fun nextIfRemoved(): Node? = null
 }

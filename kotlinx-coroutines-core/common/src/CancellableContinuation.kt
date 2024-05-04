@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines
 
 import kotlinx.coroutines.internal.*
@@ -126,28 +122,27 @@ public interface CancellableContinuation<in T> : Continuation<T> {
 
     /**
      * Registers a [handler] to be **synchronously** invoked on [cancellation][cancel] (regular or exceptional) of this continuation.
-     * When the continuation is already cancelled, the handler is immediately invoked
-     * with the cancellation exception. Otherwise, the handler will be invoked as soon as this
-     * continuation is cancelled.
+     * When the continuation is already cancelled, the handler is immediately invoked with the cancellation exception.
+     * Otherwise, the handler will be invoked as soon as this continuation is cancelled.
      *
      * The installed [handler] should not throw any exceptions.
      * If it does, they will get caught, wrapped into a [CompletionHandlerException] and
      * processed as an uncaught exception in the context of the current coroutine
      * (see [CoroutineExceptionHandler]).
      *
-     * At most one [handler] can be installed on a continuation. Attempt to call `invokeOnCancellation` second
-     * time produces [IllegalStateException].
+     * At most one [handler] can be installed on a continuation.
+     * Attempting to call `invokeOnCancellation` a second time produces an [IllegalStateException].
      *
      * This handler is also called when this continuation [resumes][Continuation.resume] normally (with a value) and then
      * is cancelled while waiting to be dispatched. More generally speaking, this handler is called whenever
      * the caller of [suspendCancellableCoroutine] is getting a [CancellationException].
      *
-     * A typical example for `invokeOnCancellation` usage is given in
+     * A typical example of `invokeOnCancellation` usage is given in
      * the documentation for the [suspendCancellableCoroutine] function.
      *
-     * **Note**: Implementation of `CompletionHandler` must be fast, non-blocking, and thread-safe.
-     * This `handler` can be invoked concurrently with the surrounding code.
-     * There is no guarantee on the execution context in which the `handler` will be invoked.
+     * **Note**: Implementations of [CompletionHandler] must be fast, non-blocking, and thread-safe.
+     * This [handler] can be invoked concurrently with the surrounding code.
+     * There is no guarantee on the execution context in which the [handler] will be invoked.
      */
     public fun invokeOnCancellation(handler: CompletionHandler)
 
@@ -206,6 +201,15 @@ public interface CancellableContinuation<in T> : Continuation<T> {
 }
 
 /**
+ * A version of `invokeOnCancellation` that accepts a class as a handler instead of a lambda, but identical otherwise.
+ * This allows providing a custom [toString] instance that will look better during debugging.
+ */
+internal fun <T> CancellableContinuation<T>.invokeOnCancellation(handler: CancelHandler) = when (this) {
+    is CancellableContinuationImpl -> invokeOnCancellationInternal(handler)
+    else -> throw UnsupportedOperationException("third-party implementation of CancellableContinuation is not supported")
+}
+
+/**
  * Suspends the coroutine like [suspendCoroutine], but providing a [CancellableContinuation] to
  * the [block]. This function throws a [CancellationException] if the [Job] of the coroutine is
  * cancelled or completed while it is suspended.
@@ -242,28 +246,28 @@ public interface CancellableContinuation<in T> : Continuation<T> {
  *
  * This function provides **prompt cancellation guarantee**.
  * If the [Job] of the current coroutine was cancelled while this function was suspended it will not resume
- * successfully.
+ * successfully, even if [CancellableContinuation.resume] was already invoked.
  *
  * The cancellation of the coroutine's job is generally asynchronous with respect to the suspended coroutine.
- * The suspended coroutine is resumed with the call it to its [Continuation.resumeWith] member function or to
+ * The suspended coroutine is resumed with a call to its [Continuation.resumeWith] member function or to the
  * [resume][Continuation.resume] extension function.
  * However, when coroutine is resumed, it does not immediately start executing, but is passed to its
  * [CoroutineDispatcher] to schedule its execution when dispatcher's resources become available for execution.
- * The job's cancellation can happen both before, after, and concurrently with the call to `resume`. In any
- * case, prompt cancellation guarantees that the the coroutine will not resume its code successfully.
+ * The job's cancellation can happen before, after, and concurrently with the call to `resume`. In any
+ * case, prompt cancellation guarantees that the coroutine will not resume its code successfully.
  *
  * If the coroutine was resumed with an exception (for example, using [Continuation.resumeWithException] extension
- * function) and cancelled, then the resulting exception of the `suspendCancellableCoroutine` function is determined
- * by whichever action (exceptional resume or cancellation) that happened first.
+ * function) and cancelled, then the exception thrown by the `suspendCancellableCoroutine` function is determined
+ * by what happened first: exceptional resume or cancellation.
  *
  * ### Returning resources from a suspended coroutine
  *
- * As a result of a prompt cancellation guarantee, when a closeable resource
- * (like open file or a handle to another native resource) is returned from a suspended coroutine as a value
- * it can be lost when the coroutine is cancelled. In order to ensure that the resource can be properly closed
+ * As a result of the prompt cancellation guarantee, when a closeable resource
+ * (like open file or a handle to another native resource) is returned from a suspended coroutine as a value,
+ * it can be lost when the coroutine is cancelled. To ensure that the resource can be properly closed
  * in this case, the [CancellableContinuation] interface provides two functions.
  *
- * * [invokeOnCancellation][CancellableContinuation.invokeOnCancellation] installs a handler that is called
+ * - [invokeOnCancellation][CancellableContinuation.invokeOnCancellation] installs a handler that is called
  *   whenever a suspend coroutine is being cancelled. In addition to the example at the beginning, it can be
  *   used to ensure that a resource that was opened before the call to
  *   `suspendCancellableCoroutine` or in its body is closed in case of cancellation.
@@ -278,7 +282,7 @@ public interface CancellableContinuation<in T> : Continuation<T> {
  * }
  * ```
  *
- * * [resume(value) { ... }][CancellableContinuation.resume] method on a [CancellableContinuation] takes
+ * - [resume(value) { ... }][CancellableContinuation.resume] method on a [CancellableContinuation] takes
  *   an optional `onCancellation` block. It can be used when resuming with a resource that must be closed by
  *   the code that called the corresponding suspending function.
  *
@@ -377,9 +381,9 @@ internal fun <T> getOrCreateCancellableContinuation(delegate: Continuation<T>): 
  */
 @InternalCoroutinesApi
 public fun CancellableContinuation<*>.disposeOnCancellation(handle: DisposableHandle): Unit =
-    invokeOnCancellation(handler = DisposeOnCancel(handle).asHandler)
+    invokeOnCancellation(handler = DisposeOnCancel(handle))
 
-private class DisposeOnCancel(private val handle: DisposableHandle) : CancelHandler() {
+private class DisposeOnCancel(private val handle: DisposableHandle) : CancelHandler {
     override fun invoke(cause: Throwable?) = handle.dispose()
     override fun toString(): String = "DisposeOnCancel[$handle]"
 }

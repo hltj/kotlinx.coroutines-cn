@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:Suppress("FunctionName")
 
 package kotlinx.coroutines.channels
@@ -45,11 +41,12 @@ public interface SendChannel<in E> {
      * All elements sent over the channel are delivered in first-in first-out order. The sent element
      * will be delivered to receivers before the close token.
      *
-     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this
-     * function is suspended, this function immediately resumes with a [CancellationException].
-     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was
-     * suspended, it will not resume successfully. The `send` call can send the element to the channel,
-     * but then throw [CancellationException], thus an exception should not be treated as a failure to deliver the element.
+     * This suspending function is cancellable: if the [Job] of the current coroutine is cancelled while this
+     * suspending function is waiting, this function immediately resumes with [CancellationException].
+     * There is a **prompt cancellation guarantee**: even if [send] managed to send the element, but was cancelled
+     * while suspended, [CancellationException] will be thrown. See [suspendCancellableCoroutine] for low-level details.
+     *
+     * Because of the prompt cancellation guarantee, an exception does not always mean a failure to deliver the element.
      * See "Undelivered elements" section in [Channel] documentation for details on handling undelivered elements.
      *
      * Note that this function does not check for cancellation when it is not suspended.
@@ -147,13 +144,13 @@ public interface SendChannel<in E> {
      * This method was deprecated in the favour of [trySend].
      * It has proven itself as the most error-prone method in Channel API:
      *
-     * * `Boolean` return type creates the false sense of security, implying that `false`
+     * - `Boolean` return type creates the false sense of security, implying that `false`
      *    is returned instead of throwing an exception.
-     * * It was used mostly from non-suspending APIs where CancellationException triggered
+     * - It was used mostly from non-suspending APIs where CancellationException triggered
      *   internal failures in the application (the most common source of bugs).
-     * * Due to signature and explicit `if (ch.offer(...))` checks it was easy to
+     * - Due to signature and explicit `if (ch.offer(...))` checks it was easy to
      *   oversee such error during code review.
-     * * Its name was not aligned with the rest of the API and tried to mimic Java's queue instead.
+     * - Its name was not aligned with the rest of the API and tried to mimic Java's queue instead.
      *
      * **NB** Automatic migration provides best-effort for the user experience, but requires removal
      * or adjusting of the code that relied on the exception handling.
@@ -215,11 +212,20 @@ public interface ReceiveChannel<out E> {
      * If the channel was closed because of an exception, it is called a _failed_ channel and this function
      * will throw the original [close][SendChannel.close] cause exception.
      *
-     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this
+     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled while this
      * function is suspended, this function immediately resumes with a [CancellationException].
      * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was
      * suspended, it will not resume successfully. The `receive` call can retrieve the element from the channel,
      * but then throw [CancellationException], thus failing to deliver the element.
+     * See "Undelivered elements" section in [Channel] documentation for details on handling undelivered elements.
+     *
+     * This suspending function is cancellable: if the [Job] of the current coroutine is cancelled while this
+     * suspending function is waiting, this function immediately resumes with [CancellationException].
+     * There is a **prompt cancellation guarantee**: even if [receive] managed to retrieve the element from the channel,
+     * but was cancelled while suspended, [CancellationException] will be thrown.
+     * See [suspendCancellableCoroutine] for low-level details.
+     *
+     * Because of the prompt cancellation guarantee, some values retrieved from the channel can become lost.
      * See "Undelivered elements" section in [Channel] documentation for details on handling undelivered elements.
      *
      * Note that this function does not check for cancellation when it is not suspended.
@@ -244,11 +250,13 @@ public interface ReceiveChannel<out E> {
      * or the close cause if the channel was closed. Closed cause may be `null` if the channel was closed normally.
      * The result cannot be [failed][ChannelResult.isFailure] without being [closed][ChannelResult.isClosed].
      *
-     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this
-     * function is suspended, this function immediately resumes with a [CancellationException].
-     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was
-     * suspended, it will not resume successfully. The `receiveCatching` call can retrieve the element from the channel,
-     * but then throw [CancellationException], thus failing to deliver the element.
+     * This suspending function is cancellable: if the [Job] of the current coroutine is cancelled while this
+     * suspending function is waiting, this function immediately resumes with [CancellationException].
+     * There is a **prompt cancellation guarantee**: even if [receiveCatching] managed to retrieve the element from the
+     * channel, but was cancelled while suspended, [CancellationException] will be thrown.
+     * See [suspendCancellableCoroutine] for low-level details.
+     *
+     * Because of the prompt cancellation guarantee, some values retrieved from the channel can become lost.
      * See "Undelivered elements" section in [Channel] documentation for details on handling undelivered elements.
      *
      * Note that this function does not check for cancellation when it is not suspended.
@@ -314,11 +322,11 @@ public interface ReceiveChannel<out E> {
      * This method was deprecated in the favour of [tryReceive].
      * It has proven itself as error-prone method in Channel API:
      *
-     * * Nullable return type creates the false sense of security, implying that `null`
+     * - Nullable return type creates the false sense of security, implying that `null`
      *    is returned instead of throwing an exception.
-     * * It was used mostly from non-suspending APIs where CancellationException triggered
+     * - It was used mostly from non-suspending APIs where CancellationException triggered
      *   internal failures in the application (the most common source of bugs).
-     * * Its name was not aligned with the rest of the API and tried to mimic Java's queue instead.
+     * - Its name was not aligned with the rest of the API and tried to mimic Java's queue instead.
      *
      * See https://github.com/Kotlin/kotlinx.coroutines/issues/974 for more context.
      *
@@ -565,11 +573,13 @@ public interface ChannelIterator<out E> {
      * This function retrieves and removes an element from this channel for the subsequent invocation
      * of [next].
      *
-     * This suspending function is cancellable. If the [Job] of the current coroutine is cancelled or completed while this
-     * function is suspended, this function immediately resumes with a [CancellationException].
-     * There is a **prompt cancellation guarantee**. If the job was cancelled while this function was
-     * suspended, it will not resume successfully. The `hasNext` call can retrieve the element from the channel,
-     * but then throw [CancellationException], thus failing to deliver the element.
+     * This suspending function is cancellable: if the [Job] of the current coroutine is cancelled while this
+     * suspending function is waiting, this function immediately resumes with [CancellationException].
+     * There is a **prompt cancellation guarantee**: even if [hasNext] retrieves the element from the channel during
+     * its operation, but was cancelled while suspended, [CancellationException] will be thrown.
+     * See [suspendCancellableCoroutine] for low-level details.
+     *
+     * Because of the prompt cancellation guarantee, some values retrieved from the channel can become lost.
      * See "Undelivered elements" section in [Channel] documentation for details on handling undelivered elements.
      *
      * Note that this function does not check for cancellation when it is not suspended.
@@ -617,35 +627,35 @@ public interface ChannelIterator<out E> {
  * The `Channel(capacity)` factory function is used to create channels of different kinds depending on
  * the value of the `capacity` integer:
  *
- * * When `capacity` is 0 &mdash; it creates a _rendezvous_ channel.
+ * - When `capacity` is 0 &mdash; it creates a _rendezvous_ channel.
  *   This channel does not have any buffer at all. An element is transferred from the sender
  *   to the receiver only when [send] and [receive] invocations meet in time (rendezvous), so [send] suspends
  *   until another coroutine invokes [receive], and [receive] suspends until another coroutine invokes [send].
  *
- * * When `capacity` is [Channel.UNLIMITED] &mdash; it creates a channel with effectively unlimited buffer.
+ * - When `capacity` is [Channel.UNLIMITED] &mdash; it creates a channel with effectively unlimited buffer.
  *   This channel has a linked-list buffer of unlimited capacity (limited only by available memory).
  *   [Sending][send] to this channel never suspends, and [trySend] always succeeds.
  *
- * * When `capacity` is [Channel.CONFLATED] &mdash; it creates a _conflated_ channel
+ * - When `capacity` is [Channel.CONFLATED] &mdash; it creates a _conflated_ channel
  *   This channel buffers at most one element and conflates all subsequent `send` and `trySend` invocations,
  *   so that the receiver always gets the last element sent.
  *   Back-to-back sent elements are conflated &mdash; only the last sent element is received,
  *   while previously sent elements **are lost**.
  *   [Sending][send] to this channel never suspends, and [trySend] always succeeds.
  *
- * * When `capacity` is positive but less than [UNLIMITED] &mdash; it creates an array-based channel with the specified capacity.
+ * - When `capacity` is positive but less than [UNLIMITED] &mdash; it creates an array-based channel with the specified capacity.
  *   This channel has an array buffer of a fixed `capacity`.
  *   [Sending][send] suspends only when the buffer is full, and [receiving][receive] suspends only when the buffer is empty.
  *
  * Buffered channels can be configured with an additional [`onBufferOverflow`][BufferOverflow] parameter. It controls the behaviour
  * of the channel's [send][Channel.send] function on buffer overflow:
  *
- * * [SUSPEND][BufferOverflow.SUSPEND] &mdash; the default, suspend `send` on buffer overflow until there is
+ * - [SUSPEND][BufferOverflow.SUSPEND] &mdash; the default, suspend `send` on buffer overflow until there is
  *   free space in the buffer.
- * * [DROP_OLDEST][BufferOverflow.DROP_OLDEST] &mdash; do not suspend the `send`, add the latest value to the buffer,
+ * - [DROP_OLDEST][BufferOverflow.DROP_OLDEST] &mdash; do not suspend the `send`, add the latest value to the buffer,
  *   drop the oldest one from the buffer.
  *   A channel with `capacity = 1` and `onBufferOverflow = DROP_OLDEST` is a _conflated_ channel.
- * * [DROP_LATEST][BufferOverflow.DROP_LATEST] &mdash; do not suspend the `send`, drop the value that is being sent,
+ * - [DROP_LATEST][BufferOverflow.DROP_LATEST] &mdash; do not suspend the `send`, drop the value that is being sent,
  *   keep the buffer contents intact.
  *
  * A non-default `onBufferOverflow` implicitly creates a channel with at least one buffered element and
@@ -655,11 +665,10 @@ public interface ChannelIterator<out E> {
  * ### Prompt cancellation guarantee
  *
  * All suspending functions with channels provide **prompt cancellation guarantee**.
- * If the job was cancelled while send or receive function was suspended, it will not resume successfully,
- * but throws a [CancellationException].
- * With a single-threaded [dispatcher][CoroutineDispatcher] like [Dispatchers.Main] this gives a
- * guarantee that if a piece code running in this thread cancels a [Job], then a coroutine running this job cannot
- * resume successfully and continue to run, ensuring a prompt response to its cancellation.
+ * If the job was cancelled while send or receive function was suspended, it will not resume successfully, even if it
+ * already changed the channel's state, but throws a [CancellationException].
+ * With a single-threaded [dispatcher][CoroutineDispatcher] like [Dispatchers.Main], this gives a
+ * guarantee that the coroutine promptly reacts to the cancellation of its [Job] and does not resume its execution.
  *
  * > **Prompt cancellation guarantee** for channel operations was added since `kotlinx.coroutines` version `1.4.0`
  * > and had replaced a channel-specific atomic-cancellation that was not consistent with other suspending functions.
@@ -667,21 +676,21 @@ public interface ChannelIterator<out E> {
  *
  * ### Undelivered elements
  *
- * As a result of a prompt cancellation guarantee, when a closeable resource
- * (like open file or a handle to another native resource) is transferred via channel from one coroutine to another
- * it can fail to be delivered and will be lost if either send or receive operations are cancelled in transit.
+ * As a result of the prompt cancellation guarantee, when a closeable resource
+ * (like open file or a handle to another native resource) is transferred via a channel from one coroutine to another,
+ * it can fail to be delivered and will be lost if the receiving operation is cancelled in transit.
  *
  * A `Channel()` constructor function has an `onUndeliveredElement` optional parameter.
  * When `onUndeliveredElement` parameter is set, the corresponding function is called once for each element
  * that was sent to the channel with the call to the [send][SendChannel.send] function but failed to be delivered,
  * which can happen in the following cases:
  *
- * * When [send][SendChannel.send] operation throws an exception because it was cancelled before it had a chance to actually
+ * - When [send][SendChannel.send] operation throws an exception because it was cancelled before it had a chance to actually
  *   send the element or because the channel was [closed][SendChannel.close] or [cancelled][ReceiveChannel.cancel].
- * * When [receive][ReceiveChannel.receive], [receiveOrNull][ReceiveChannel.receiveOrNull], or [hasNext][ChannelIterator.hasNext]
+ * - When [receive][ReceiveChannel.receive], [receiveOrNull][ReceiveChannel.receiveOrNull], or [hasNext][ChannelIterator.hasNext]
  *   operation throws an exception when it had retrieved the element from the
  *   channel but was cancelled before the code following the receive call resumed.
- * * The channel was [cancelled][ReceiveChannel.cancel], in which case `onUndeliveredElement` is called on every
+ * - The channel was [cancelled][ReceiveChannel.cancel], in which case `onUndeliveredElement` is called on every
  *   remaining element in the channel's buffer.
  *
  * Note, that `onUndeliveredElement` function is called synchronously in an arbitrary context. It should be fast, non-blocking,

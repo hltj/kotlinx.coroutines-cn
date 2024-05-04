@@ -1,7 +1,3 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 @file:JvmMultifileClass
 @file:JvmName("JobKt")
 
@@ -42,7 +38,7 @@ private class CancelFutureOnCompletion(
     }
 }
 
-private class CancelFutureOnCancel(private val future: Future<*>) : CancelHandler()  {
+private class CancelFutureOnCancel(private val future: Future<*>) : CancelHandler {
     override fun invoke(cause: Throwable?) {
         // Don't interrupt when cancelling future on completion, because no one is going to reset this
         // interruption flag and it will cause spurious failures elsewhere

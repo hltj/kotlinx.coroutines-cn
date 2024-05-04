@@ -1,11 +1,9 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license.
- */
-
 package kotlinx.coroutines.exceptions
 
+import kotlinx.coroutines.testing.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.testing.exceptions.*
 import java.io.*
 import kotlin.coroutines.*
 import kotlin.test.*
@@ -22,7 +20,7 @@ class SuppressionTests : TestBase() {
             }
 
             override fun onCancelling(cause: Throwable?) {
-                assertTrue(cause is ArithmeticException)
+                assertIs<ArithmeticException>(cause)
                 assertTrue(cause.suppressed.isEmpty())
                 expect(5)
             }
@@ -32,20 +30,20 @@ class SuppressionTests : TestBase() {
             }
 
             override fun onCancelled(cause: Throwable, handled: Boolean) {
-                assertTrue(cause is ArithmeticException)
+                assertIs<ArithmeticException>(cause)
                 checkException<IOException>(cause.suppressed[0])
                 expect(8)
             }
         }
 
         coroutine.invokeOnCompletion(onCancelling = true) {
-            assertTrue(it is ArithmeticException)
+            assertIs<ArithmeticException>(it)
             assertTrue(it.suppressed.isEmpty())
             expect(6)
         }
 
         coroutine.invokeOnCompletion {
-            assertTrue(it is ArithmeticException)
+            assertIs<ArithmeticException>(it)
             checkException<IOException>(it.suppressed[0])
             expect(9)
         }
